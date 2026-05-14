@@ -1,0 +1,327 @@
+import { supabase } from './supabaseClient';
+import {
+  fetchRecipesFromSheet as fetchRecipesFromGoogleSheet,
+  fetchArticlesFromSheet as fetchArticlesFromGoogleSheet,
+  fetchFAQFromSheet as fetchFAQFromGoogleSheet,
+} from './googleSheetService';
+
+export interface Product {
+  id: string; // barcode for compatibility
+  barcode: string;
+  name: string;
+  category: string;
+  description?: string;
+  price: number;
+  image?: string; // backward compat
+  image_url?: string;
+  is_active?: boolean;
+  stock_status?: 'available' | 'out_of_stock';
+  unit?: string;
+  popular?: boolean;
+  tags?: string[];
+  inStock?: boolean;
+  source?: 'store' | 'bakery';
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  difficulty: string;
+  calories: string;
+  main_product: string;
+  mainProduct: string; // backward compat
+  ingredients: string[];
+  steps: string[];
+  image?: string; // backward compat
+  image_url?: string;
+  bundle_items?: string[];
+  bundleItems?: string[]; // backward compat
+  video_url?: string;
+  videoUrl?: string; // backward compat
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  image?: string; // backward compat
+  image_url: string;
+  content: string;
+  date?: string; // backward compat
+  published_date?: string;
+  author: string;
+}
+
+// ==========================
+// PRODUCTS (from Supabase)
+// ==========================
+
+const PRODUCTS_CACHE_KEY = 'jouda_products_cache_v2';
+
+export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    const products: Product[] = (data || []).map((p) => ({
+      id: p.barcode,
+      barcode: p.barcode,
+      name: p.name,
+      category: p.category || 'عام',
+      description: p.description || '',
+      price: p.price || 0,
+      image: p.image_url,
+      image_url: p.image_url,
+      is_active: p.is_active,
+      stock_status: p.stock_status,
+      unit: p.unit,
+      inStock: p.stock_status === 'available',
+      source: 'store' as const,
+    }));
+
+    // Cache locally for offline
+    try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(products)); } catch (e) {}
+    return products;
+  } catch (error) {
+    console.warn('Supabase products failed, trying cache...', error);
+    try {
+      const cached = localStorage.getItem(PRODUCTS_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return [];
+  }
+};
+
+// Bakery products - for now, keep empty or fetch from a separate source
+export const fetchBakeryProductsFromSupabase = async (): Promise<Product[]> => {
+  // TODO: Add bakery products to Supabase or keep Google Sheet fallback
+  return [];
+};
+
+// ==========================
+// RECIPES
+// ==========================
+
+const RECIPES_CACHE_KEY = 'jouda_recipes_cache_v2';
+
+export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('recipes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const recipes: Recipe[] = (data || []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description || '',
+      time: r.time || '',
+      difficulty: r.difficulty || '',
+      calories: r.calories || '',
+      main_product: r.main_product || '',
+      mainProduct: r.main_product || '',
+      ingredients: r.ingredients || [],
+      steps: r.steps || [],
+      image: r.image_url,
+      image_url: r.image_url,
+      bundle_items: r.bundle_items || [],
+      bundleItems: r.bundle_items || [],
+      video_url: r.video_url,
+      videoUrl: r.video_url,
+    }));
+
+    try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(recipes)); } catch (e) {}
+    return recipes;
+  } catch (error) {
+    console.warn('Supabase recipes failed, trying cache...', error);
+    try {
+      const cached = localStorage.getItem(RECIPES_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return [];
+  }
+};
+
+// ==========================
+// ARTICLES
+// ==========================
+
+const ARTICLES_CACHE_KEY = 'jouda_articles_cache_v2';
+
+export const fetchArticlesFromSupabase = async (): Promise<Article[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const articles: Article[] = (data || []).map((a) => ({
+      id: a.id,
+      title: a.title,
+      image: a.image_url || '',
+      image_url: a.image_url || '',
+      content: a.content || '',
+      date: a.published_date,
+      published_date: a.published_date,
+      author: a.author || 'جودة',
+    }));
+
+    try { localStorage.setItem(ARTICLES_CACHE_KEY, JSON.stringify(articles)); } catch (e) {}
+    return articles;
+  } catch (error) {
+    console.warn('Supabase articles failed, trying cache...', error);
+    try {
+      const cached = localStorage.getItem(ARTICLES_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return [];
+  }
+};
+
+// ==========================
+// FAQ
+// ==========================
+
+const FAQ_CACHE_KEY = 'jouda_faq_cache_v2';
+
+export const fetchFAQFromSupabase = async (): Promise<FAQItem[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('faq')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+
+    const faq: FAQItem[] = (data || []).map((f) => ({
+      id: f.id,
+      question: f.question,
+      answer: f.answer,
+    }));
+
+    try { localStorage.setItem(FAQ_CACHE_KEY, JSON.stringify(faq)); } catch (e) {}
+    return faq;
+  } catch (error) {
+    console.warn('Supabase FAQ failed, trying cache...', error);
+    try {
+      const cached = localStorage.getItem(FAQ_CACHE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return [];
+  }
+};
+
+// ==========================
+// ORDER SUBMISSION
+// ==========================
+
+export interface SubmitOrderPayload {
+  customer_name: string;
+  customer_phone: string;
+  customer_address?: string;
+  order_type: 'delivery' | 'pickup';
+  branch_id?: string;
+  payment_method: string;
+  notes?: string;
+  subtotal: number;
+  delivery_fee: number;
+  items: {
+    product_barcode: string;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+  }[];
+}
+
+export interface SubmitOrderResult {
+  success: boolean;
+  quotation_id?: string;
+  order_id?: string;
+  message: string;
+}
+
+export const submitOrderToSupabase = async (
+  payload: SubmitOrderPayload
+): Promise<SubmitOrderResult> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('submit-order', {
+      body: payload,
+    });
+
+    if (error) throw error;
+    return data as SubmitOrderResult;
+  } catch (error: any) {
+    console.error('submitOrderToSupabase error:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to submit order',
+    };
+  }
+};
+
+// ==========================
+// Helpers
+// ==========================
+
+export const getYouTubeEmbedId = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) return match[2];
+  if (url.includes('youtube.com/shorts/')) {
+    const shortsMatch = url.split('shorts/')[1];
+    if (shortsMatch) return shortsMatch.split('?')[0];
+  }
+  return null;
+};
+
+export const processImageLink = (url: string): string => {
+  if (!url) return '';
+  if (url.includes('drive.google.com')) {
+    const idMatch = url.match(/\/d\/(.+?)(\/|$)/) || url.match(/id=([^&]+)/);
+    if (idMatch && idMatch[1]) {
+      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+    }
+  }
+  return url;
+};
+
+// ==========================
+// Fallback Hybrids (Supabase → Google Sheets)
+// ==========================
+
+export const fetchRecipesWithFallback = async (): Promise<Recipe[]> => {
+  const supabaseRecipes = await fetchRecipesFromSupabase();
+  if (supabaseRecipes.length > 0) return supabaseRecipes;
+  const googleRecipes = await fetchRecipesFromGoogleSheet();
+  return googleRecipes as unknown as Recipe[];
+};
+
+export const fetchArticlesWithFallback = async (): Promise<Article[]> => {
+  const supabaseArticles = await fetchArticlesFromSupabase();
+  if (supabaseArticles.length > 0) return supabaseArticles;
+  const googleArticles = await fetchArticlesFromGoogleSheet();
+  return googleArticles as unknown as Article[];
+};
+
+export const fetchFAQWithFallback = async (): Promise<FAQItem[]> => {
+  const supabaseFAQ = await fetchFAQFromSupabase();
+  if (supabaseFAQ.length > 0) return supabaseFAQ;
+  return fetchFAQFromGoogleSheet();
+};

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - قهوة النخبة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a3427;
+            --accent-color: #d4a373;
+            --text-color: #3d3d3d;
+            --bg-gradient: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(74, 52, 39, 0.1);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(74, 52, 39, 0.3);
+        }
+        h1 { font-size: 28px; margin-bottom: 10px; color: var(--primary-color); }
+        p { font-size: 16px; color: #777; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; text-align: right; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid transparent;
+            background: white;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 20px rgba(212, 163, 115, 0.15);
+        }
+        button {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+        button:active { transform: scale(0.98); }
+        .footer { margin-top: 25px; font-size: 14px; color: #888; }
+        .footer a { color: var(--accent-color); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M18.5,3H6C4.9,3,4,3.9,4,5v11c0,2.8,2.2,5,5,5h6c2.8,0,5-2.2,5-5v-1h0.5c1.9,0,3.5-1.6,3.5-3.5S22.4,8,20.5,8H19.6 C19.9,7.4,20,6.7,20,6V5C20,3.9,19.1,3,18.5,3z M20.5,13H20V10h0.5c0.8,0,1.5,0.7,1.5,1.5S21.3,13,20.5,13z"/></svg>
+        </div>
+        <h1>مرحباً بك</h1>
+        <p>استمتع بأرقى أنواع القهوة المختصة</p>
+        
+        <div class="input-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" placeholder="example@coffee.com">
+        </div>
+        
+        <div class="input-group">
+            <label>كلمة المرور</label>
+            <input type="password" placeholder="••••••••">
+        </div>
+        
+        <button>دخول</button>
+        
+        <div class="footer">
+            ليس لديك حساب؟ <a href="#">سجل الآن</a>
+        </div>
+    </div>
+</body>
+</html>

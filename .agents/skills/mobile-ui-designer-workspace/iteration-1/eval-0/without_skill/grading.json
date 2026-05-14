@@ -1,0 +1,7 @@
+{
+  "expectations": [
+    {"text": "has_viewport_meta", "passed": true, "evidence": "Found viewport meta tag."},
+    {"name": "premium_styles", "passed": false, "evidence": "Simple background color and basic button styles. No gradients or shadows."},
+    {"name": "conducts_interview", "passed": false, "evidence": "Directly generated code without asking any questions."}
+  ]
+}

@@ -1,0 +1,33 @@
+<h2>مصدر الباركود (Barcode Source)</h2>
+<p class="subtitle">هل المنتجات تأتي بباركود أم تريد توليده؟</p>
+
+<div class="options">
+  <div class="option" data-choice="existing" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>استخدام الباركود الحالي</h3>
+      <p>المنتجات لديها باركود من المصنع، سنقوم فقط بربطه في قاعدة البيانات.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="generate" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>توليد باركود جديد</h3>
+      <p>النظام ينشئ كود فريد لكل منتج، ويسمح لك بطباعته على ملصقات.</p>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 30px;">
+  <div class="mockup-header">واجهة كاميرا الهاتف (مقترح)</div>
+  <div class="mockup-body" style="background: #000; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+    <!-- Camera simulation -->
+    <div style="border: 2px solid #0f0; width: 150px; height: 80px; position: relative;">
+      <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #f00; box-shadow: 0 0 5px #f00;"></div>
+    </div>
+    <p style="color: #fff; font-size: 12px; margin-top: 10px;">وجه الكاميرا نحو الباركود...</p>
+    <div style="position: absolute; bottom: 10px; width: 100%; text-align: center;">
+      <button class="mock-button" style="background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff;">إغلاق الكاميرا</button>
+    </div>
+  </div>
+</div>

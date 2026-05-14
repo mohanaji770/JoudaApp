@@ -1,0 +1,259 @@
+
+import React, { useState, useEffect } from 'react';
+import { ChefHat, Clock, Flame, ChevronDown, ChevronUp, ShoppingBag, Plus, AlertCircle, RefreshCw, PackageCheck, PlayCircle, ExternalLink, Youtube } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
+import { fetchRecipesWithFallback, Recipe, getYouTubeEmbedId } from '../services/supabaseService';
+
+export const RecipesPage: React.FC = () => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { addToCart, addMultipleToCart } = useCart();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const loadRecipes = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const data = await fetchRecipesWithFallback();
+      if (data.length > 0) {
+        setRecipes(data);
+      } else {
+        setRecipes([]);
+      }
+    } catch (e) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRecipes();
+  }, []);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleBuyBundle = (recipe: Recipe) => {
+    const itemsToBuy = [];
+    if (recipe.mainProduct) itemsToBuy.push(recipe.mainProduct);
+    if (recipe.bundleItems && recipe.bundleItems.length > 0) {
+        itemsToBuy.push(...recipe.bundleItems);
+    }
+    
+    if (itemsToBuy.length > 0) {
+        addMultipleToCart(itemsToBuy);
+    }
+  };
+
+  return (
+    <div className="pb-24 md:pb-8 animate-fade-in">
+       <div className="bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 p-6 rounded-3xl mb-6 border border-orange-100 dark:border-gray-700 flex justify-between items-end">
+        <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">مطبخ جودة 👩‍🍳</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            أطباق شهية ومجربة باستخدام منتجاتنا الآمنة
+            </p>
+        </div>
+        <button 
+          onClick={loadRecipes} 
+          disabled={loading}
+          className="bg-white dark:bg-gray-700 p-2 rounded-full shadow-sm text-gray-500 hover:text-orange-600 transition-colors disabled:animate-spin"
+        >
+          <RefreshCw className="w-5 h-5" />
+        </button>
+      </div>
+
+      {loading ? (
+         <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-warm-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-24 animate-pulse">
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-3xl border border-red-100 dark:border-red-900/30">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">عذراً، لم نتمكن من تحميل الوصفات</h3>
+          <button 
+            onClick={loadRecipes}
+            className="bg-orange-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-orange-700 mt-3"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      ) : recipes.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">
+           <ChefHat className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+           <p className="text-gray-500 font-bold text-sm">لا توجد وصفات متاحة حالياً</p>
+        </div>
+      ) : (
+        <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
+            {recipes.map((recipe) => {
+                const youtubeId = recipe.videoUrl ? getYouTubeEmbedId(recipe.videoUrl) : null;
+                const isExpanded = expandedId === recipe.id;
+
+                return (
+                <div 
+                key={recipe.id}
+                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all ${isExpanded ? 'md:row-span-2' : ''}`}
+                >
+                {/* Card Header */}
+                <button 
+                    onClick={() => toggleExpand(recipe.id)}
+                    className="w-full p-4 text-right flex items-start gap-4"
+                >
+                    <div className={`shrink-0 w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 relative`}>
+                      {recipe.image ? (
+                          <img src={recipe.image} alt={recipe.title} loading="lazy" className="w-full h-full object-cover" />
+                      ) : (
+                         <ChefHat className={`w-8 h-8 ${isExpanded ? 'text-brand-600' : 'text-orange-400'}`} />
+                      )}
+                      {/* Video Indicator Icon on thumbnail */}
+                      {recipe.videoUrl && (
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <PlayCircle className="w-8 h-8 text-white opacity-90" />
+                          </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100 text-base mb-1">{recipe.title}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{recipe.description}</p>
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+                        {recipe.time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {recipe.time}</span>}
+                        {recipe.calories && <span className="flex items-center gap-1"><Flame className="w-3 h-3" /> {recipe.calories}</span>}
+                    </div>
+                    </div>
+                    <div className="mt-2 text-gray-400">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
+                </button>
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                    <div className="px-4 pb-5 pt-0 animate-fade-in">
+                    <div className="h-px w-full bg-gray-100 dark:bg-gray-700 mb-4"></div>
+
+                     {/* VIDEO SECTION */}
+                     {recipe.videoUrl && (
+                        <div className="mb-6">
+                            <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                                <PlayCircle className="w-4 h-4 text-red-500" />
+                                فيديو الطريقة
+                            </h4>
+                            {youtubeId ? (
+                                <div className="w-full aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 bg-black">
+                                    <iframe 
+                                        width="100%" 
+                                        height="100%" 
+                                        src={`https://www.youtube.com/embed/${youtubeId}`} 
+                                        title={recipe.title}
+                                        frameBorder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                            ) : (
+                                <a 
+                                    href={recipe.videoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm text-gray-800 dark:text-white">
+                                            <PlayCircle className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-800 dark:text-gray-200">شاهد الفيديو</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">اضغط لفتح الفيديو في التطبيق</p>
+                                        </div>
+                                    </div>
+                                    <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-brand-600" />
+                                </a>
+                            )}
+                        </div>
+                    )}
+                    
+                    {/* Main Product Badge */}
+                    {recipe.mainProduct && (
+                        <div className="bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900/30 rounded-lg p-3 mb-4 flex items-center justify-between">
+                            <div>
+                            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold block mb-0.5">المنتج الرئيسي</span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{recipe.mainProduct}</span>
+                            </div>
+                            <button 
+                            onClick={() => addToCart(recipe.mainProduct)}
+                            className="bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 p-2 rounded-lg shadow-sm hover:scale-105 transition-transform flex items-center gap-1 text-xs font-bold border border-brand-200 dark:border-brand-900"
+                            >
+                            <Plus className="w-3 h-3" />
+                            <span>أضف</span>
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        {recipe.ingredients.length > 0 && (
+                            <div>
+                            <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">المكونات:</h4>
+                            <ul className="list-disc list-inside text-xs text-gray-600 dark:text-gray-300 space-y-1 marker:text-brand-400">
+                                {recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
+                            </ul>
+                            </div>
+                        )}
+                        {recipe.steps.length > 0 && (
+                            <div>
+                            <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">طريقة التحضير:</h4>
+                            <ol className="list-decimal list-inside text-xs text-gray-600 dark:text-gray-300 space-y-2 marker:text-gray-400 marker:font-bold">
+                                {recipe.steps.map((step, i) => <li key={i} className="leading-relaxed">{step}</li>)}
+                            </ol>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {(recipe.mainProduct || (recipe.bundleItems && recipe.bundleItems.length > 0)) && (
+                        <div className="mt-6">
+                            <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-4">
+                                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                                    <PackageCheck className="w-4 h-4 text-orange-600" />
+                                    باقة مقادير الوصفة
+                                </h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    أضف جميع المكونات المتوفرة في المتجر لهذه الوصفة بضغطة واحدة
+                                </p>
+                                
+                                {recipe.bundleItems && recipe.bundleItems.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                                            {recipe.mainProduct}
+                                        </span>
+                                        {recipe.bundleItems.map((item, idx) => (
+                                             <span key={idx} className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <button 
+                                    onClick={() => handleBuyBundle(recipe)} 
+                                    className="inline-flex items-center justify-center gap-2 w-full bg-gray-900 dark:bg-orange-600 hover:bg-gray-800 dark:hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-orange-100 dark:shadow-none"
+                                >
+                                    <span>طلب جميع المكونات</span>
+                                    <ShoppingBag className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    </div>
+                )}
+                </div>
+            );
+            })}
+        </div>
+      )}
+    </div>
+  );
+};

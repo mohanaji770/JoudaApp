@@ -1,0 +1,7 @@
+{
+  "expectations": [
+    {"text": "has_viewport_meta", "passed": true, "evidence": "Found <meta name='viewport' ...> in the head section."},
+    {"name": "premium_styles", "passed": true, "evidence": "Used linear-gradients, backdrop-filter, and complex box-shadows."},
+    {"name": "conducts_interview", "passed": true, "evidence": "Started with questions about brand vibe and hero action."}
+  ]
+}

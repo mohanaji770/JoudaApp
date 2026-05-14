@@ -1,0 +1,7 @@
+{
+  "expectations": [
+    {"text": "dark_mode_theme", "passed": true, "evidence": "Used slate and blue dark theme colors."},
+    {"name": "has_progress_chart", "passed": true, "evidence": "Implemented a CSS bar chart for weekly activity."},
+    {"name": "conducts_interview", "passed": true, "evidence": "Skill triggered and guided the design process."}
+  ]
+}

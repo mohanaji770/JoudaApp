@@ -1,0 +1,38 @@
+{
+  "skill_name": "mobile-ui-designer",
+  "evals": [
+    {
+      "id": 0,
+      "name": "luxury-coffee-login",
+      "prompt": "I want a mobile login page for a luxury coffee shop app. It should feel premium and warm.",
+      "expected_output": "A modern HTML/CSS mobile login screen with warm colors, clear typography, and a premium feel.",
+      "assertions": [
+        {"name": "has_viewport_meta", "type": "contains", "value": "viewport"},
+        {"name": "premium_styles", "type": "contains_any", "value": ["linear-gradient", "box-shadow", "border-radius"]},
+        {"name": "conducts_interview", "type": "contains_any", "value": ["questions", "interview", "ask", "prefer", "function"]}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "inventory-list-mobile",
+      "prompt": "Make this simple inventory list page mobile friendly. It has product name, stock count, and a 'transfer' button. Focus on ease of use for warehouse workers.",
+      "expected_output": "A functional and clean mobile-friendly inventory list with large tap targets and clear layout.",
+      "assertions": [
+        {"name": "touch_friendly_targets", "type": "contains", "value": "padding"},
+        {"name": "mobile_first_layout", "type": "contains_any", "value": ["flex", "grid", "width: 100%"]},
+        {"name": "conducts_interview", "type": "contains_any", "value": ["questions", "interview", "ask"]}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "fitness-dashboard",
+      "prompt": "Design a mobile dashboard for a fitness tracker showing steps, calories, and a daily progress chart. Use a dark mode theme.",
+      "expected_output": "A sleek dark mode dashboard with vibrant accent colors for data visualization and modern components.",
+      "assertions": [
+        {"name": "dark_mode_theme", "type": "contains_any", "value": ["#1", "#2", "background-color: black", "background: #0"]},
+        {"name": "has_progress_chart", "type": "contains_any", "value": ["chart", "progress", "bar", "svg", "canvas"]},
+        {"name": "conducts_interview", "type": "contains_any", "value": ["questions", "interview", "ask"]}
+      ]
+    }
+  ]
+}
