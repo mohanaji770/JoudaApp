@@ -1,7 +1,0 @@
-{
-  "expectations": [
-    {"text": "dark_mode_theme", "passed": true, "evidence": "Simple black background used."},
-    {"name": "has_progress_chart", "passed": false, "evidence": "No chart or visual data representation provided."},
-    {"name": "conducts_interview", "passed": false, "evidence": "No interview conducted."}
-  ]
-}

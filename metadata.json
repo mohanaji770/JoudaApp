@@ -1,8 +1,0 @@
-{
-  "name": "Jouda",
-  "description": "منصتك المتكاملة لحياة خالية من الجلوتين. تسوق، اطبخ، واستمتع بجودة الحياة مع متجر جودة.",
-  "requestFramePermissions": [
-    "camera"
-  ],
-  "theme_color": "#D32F2F"
-}
