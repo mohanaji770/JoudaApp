@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShoppingBag, Moon, Sun, HelpCircle } from 'lucide-react';
+import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { APP_LOGO } from '../constants';
 
@@ -8,9 +8,11 @@ interface HeaderProps {
   isDarkMode?: boolean;
   toggleDarkMode?: () => void;
   onHelpClick?: () => void;
+  isAdmin?: boolean;
+  onAdminLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick }) => {
+export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout }) => {
   const { setIsCartOpen, totalItems } = useCart();
 
   return (
@@ -34,6 +36,23 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Admin Badge */}
+          {isAdmin && (
+            <div className="flex items-center gap-1 bg-brand-600 text-white px-2 py-1 rounded-lg">
+              <Shield className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold">مشرف</span>
+              {onAdminLogout && (
+                <button
+                  onClick={onAdminLogout}
+                  className="mr-1 p-0.5 hover:bg-white/20 rounded transition-colors"
+                  title="تسجيل خروج"
+                >
+                  <LogOut className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Help Button */}
           {onHelpClick && (
             <button 

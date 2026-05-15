@@ -12,9 +12,11 @@ interface LayoutProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   onHelpClick: () => void;
+  isAdmin?: boolean;
+  onAdminLogout?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDarkMode, onHelpClick }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout }) => {
   const { lastAddedItem } = useCart();
 
   return (
@@ -32,6 +34,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDark
           isDarkMode={isDarkMode} 
           toggleDarkMode={toggleDarkMode} 
           onHelpClick={onHelpClick}
+          isAdmin={isAdmin}
+          onAdminLogout={onAdminLogout}
         />
 
         {/* Main Content Area */}
