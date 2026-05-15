@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/png" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
     <!-- SEO & Social Sharing -->
     <title>Jouda World - عالم جودة المتكامل</title>
@@ -12,67 +14,10 @@
     <meta property="og:image" content="https://i.postimg.cc/qvKhrVZS/pwa-512-511-png.png">
     <meta property="og:url" content="https://jouda.app">
     <meta name="theme-color" content="#D32F2F">
-
-    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Bunny Fonts (Faster & Privacy-Friendly alternative to Google Fonts) -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=cairo:300,400,600,700&display=swap" rel="stylesheet" />
-
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Cairo', 'sans-serif'],
-            },
-            colors: {
-              brand: {
-                50: '#fef2f2',
-                100: '#fee2e2',
-                500: '#ef4444',
-                600: '#D32F2F',
-                900: '#7f1d1d',
-              },
-              warm: {
-                50: '#faf7f4',
-                100: '#f3eeea',
-                white: '#fefcf9',
-              },
-              whatsapp: {
-                DEFAULT: '#25D366',
-                hover: '#128C7E',
-              },
-              receipt: '#fffdf8',
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      body {
-        font-family: 'Cairo', sans-serif;
-        background-color: #faf7f4;
-        -webkit-tap-highlight-color: transparent;
-        transition: background-color 0.3s;
-      }
-      .dark body {
-        background-color: #111827;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-      /* Hide scrollbar for clean mobile look */
-      ::-webkit-scrollbar {
-        width: 0px;
-        background: transparent;
-      }
-    </style>
 <script type="importmap">
 {
   "imports": {

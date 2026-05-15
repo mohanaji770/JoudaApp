@@ -1,21 +1,21 @@
-
 import React from 'react';
-import { Home, ShoppingBag, ChefHat, Info, LayoutDashboard, LogOut } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { ShoppingBag, ChefHat, Info, LayoutDashboard } from 'lucide-react';
 import { APP_LOGO, STORE_CONFIG } from '../constants';
 
 interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDarkMode, toggleDarkMode }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isDarkMode, toggleDarkMode }) => {
+  const location = useLocation();
+  
   const tabs = [
-    { id: 'home', label: 'الرئيسية', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { id: 'products', label: 'المتجر', icon: <ShoppingBag className="w-5 h-5" /> },
-    { id: 'recipes', label: 'مطبخ جودة', icon: <ChefHat className="w-5 h-5" /> },
-    { id: 'about', label: 'من نحن', icon: <Info className="w-5 h-5" /> },
+    { id: 'home', path: '/', label: 'الرئيسية', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { id: 'products', path: '/products', label: 'المتجر', icon: <ShoppingBag className="w-5 h-5" /> },
+    { id: 'recipes', path: '/recipes', label: 'مطبخ جودة', icon: <ChefHat className="w-5 h-5" /> },
+    { id: 'about', path: '/about', label: 'من نحن', icon: <Info className="w-5 h-5" /> },
   ];
 
   return (
@@ -33,14 +33,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDar
       <nav aria-label="التصفح الرئيسي" className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <div className="text-xs font-bold text-gray-400 px-4 mb-2 uppercase tracking-wider">القائمة</div>
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = location.pathname === tab.path || (tab.path !== '/' && location.pathname.startsWith(tab.path));
           return (
-            <button
+            <NavLink
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              to={tab.path}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               aria-current={isActive ? 'page' : undefined}
               className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                 isActive
@@ -55,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isDar
               {isActive && (
                 <div className="mr-auto w-1.5 h-1.5 rounded-full bg-brand-600 dark:bg-brand-400 animate-pulse" />
               )}
-            </button>
+            </NavLink>
           );
         })}
       </nav>

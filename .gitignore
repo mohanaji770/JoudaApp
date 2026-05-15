@@ -41,3 +41,4 @@ skills-lock.json
 # Design & product docs (optional - internal use)
 DESIGN.md
 PRODUCT.md
+scripts/generate-product-images.js
