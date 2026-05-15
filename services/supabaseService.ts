@@ -84,21 +84,25 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 
     if (error) throw error;
 
-    const products: Product[] = (data || []).map((p) => ({
-      id: p.barcode,
-      barcode: p.barcode,
-      name: p.name,
-      category: p.category || 'عام',
-      description: p.description || '',
-      price: p.price || 0,
-      image: p.image_url,
-      image_url: p.image_url,
-      is_active: p.is_active,
-      stock_status: p.stock_status,
-      unit: p.unit,
-      inStock: p.stock_status === 'available',
-      source: 'store' as const,
-    }));
+    const products: Product[] = (data || []).map((p) => {
+      const isBakery = (p.category || '') === 'مخبوزات';
+      return {
+        id: p.barcode,
+        barcode: p.barcode,
+        name: p.name,
+        category: p.category || 'عام',
+        description: p.description || '',
+        price: p.price || 0,
+        image: p.image_url,
+        image_url: p.image_url,
+        is_active: p.is_active,
+        stock_status: p.stock_status,
+        unit: p.unit,
+        // Bakery items are always available (made-to-order)
+        inStock: isBakery ? true : p.stock_status === 'available',
+        source: isBakery ? ('bakery' as const) : ('store' as const),
+      };
+    });
 
     // Cache in IndexedDB for offline
     try { await cacheProducts(products); } catch (e) { console.warn('Failed to cache products', e); }

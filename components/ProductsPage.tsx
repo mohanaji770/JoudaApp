@@ -75,10 +75,10 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
     setLoading(true);
     setError(false);
     try {
-      const [storeData, bakeryData] = await Promise.all([
-        fetchProductsFromSupabase(),
-        fetchBakeryProductsFromSupabase()
-      ]);
+      const allProducts = await fetchProductsFromSupabase();
+      // Split: bakery items go to bakery tab, everything else to store tab
+      const storeData = allProducts.filter(p => p.source !== 'bakery');
+      const bakeryData = allProducts.filter(p => p.source === 'bakery');
       setStoreProducts(storeData);
       setBakeryProducts(bakeryData);
       if (storeData.length === 0 && bakeryData.length === 0) {

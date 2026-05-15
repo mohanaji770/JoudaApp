@@ -25,13 +25,13 @@ Deno.serve(async (_req: Request) => {
     const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
     const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
     const joudaUrl = Deno.env.get('SUPABASE_URL');
-    const joudaAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const joudaServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!inventoryUrl || !inventoryKey) {
       throw new Error('Missing INVENTORY_SUPABASE_URL or INVENTORY_SERVICE_ROLE_KEY');
     }
-    if (!joudaUrl || !joudaAnonKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
+    if (!joudaUrl || !joudaServiceKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
     }
 
     // 1. Connect to Inventory Project
@@ -73,6 +73,7 @@ Deno.serve(async (_req: Request) => {
     // 5. Prepare upsert data
     const productsToUpsert = (inventoryProducts as InventoryProduct[]).map((p) => {
       const stockQty = stockMap.get(p.barcode) ?? 0;
+      const isBakery = (p.category ?? '') === 'مخبوزات';
       return {
         barcode: p.barcode,
         name: p.name,
@@ -80,15 +81,16 @@ Deno.serve(async (_req: Request) => {
         category: p.category ?? 'عام',
         image_url: p.image_url,
         is_active: p.is_active,
-        stock_status: stockQty > 0 ? 'available' : 'out_of_stock',
+        // Bakery items are always available (made-to-order), others follow stock
+        stock_status: isBakery ? 'available' : (stockQty > 0 ? 'available' : 'out_of_stock'),
         unit: p.unit ?? 'piece',
         min_stock: p.min_stock ?? 0,
         last_synced: new Date().toISOString(),
       };
     });
 
-    // 6. Connect to JoudaApp and Upsert
-    const joudaClient = createClient(joudaUrl, joudaAnonKey, {
+    // 6. Connect to JoudaApp and Upsert (using service_role to bypass RLS)
+    const joudaClient = createClient(joudaUrl, joudaServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
