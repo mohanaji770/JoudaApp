@@ -3,7 +3,8 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { Plus, ShoppingBag, AlertCircle, Search, X, Cake, Check, Heart, SlidersHorizontal, ArrowUpDown, Filter, ChevronDown, Clock, Trash2, Sparkles } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { fetchProductsFromSupabase, fetchBakeryProductsFromSupabase, Product } from '../services/supabaseService';
+import { fetchProductsFromSupabase, Product } from '../services/supabaseService';
+import { getCachedProducts } from '../services/db';
 import { ProductDetailsModal } from './ProductDetailsModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { useRecentSearches } from '../hooks/useRecentSearches';
@@ -71,9 +72,29 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
     setViewMode(initialViewMode);
   }, [initialViewMode]);
 
-  const loadAllData = async () => {
-    setLoading(true);
+  // Load from IndexedDB first (instant), then refresh from Supabase (background)
+  const loadAllData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(false);
+    
+    let loadedFromCache = false;
+    
+    // 1. Try IndexedDB cache first (instant display)
+    try {
+      const cached = await getCachedProducts();
+      if (cached.length > 0) {
+        const storeData = cached.filter(p => p.source !== 'bakery');
+        const bakeryData = cached.filter(p => p.source === 'bakery');
+        setStoreProducts(storeData);
+        setBakeryProducts(bakeryData);
+        loadedFromCache = true;
+        if (showLoading) setLoading(false); // Hide loader instantly
+      }
+    } catch (e) {
+      console.warn('Failed to load cached products', e);
+    }
+    
+    // 2. Always refresh from Supabase in background
     try {
       const allProducts = await fetchProductsFromSupabase();
       // Split: bakery items go to bakery tab, everything else to store tab
@@ -86,14 +107,19 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
       }
     } catch (e) {
       console.error(e);
-      setError(true);
+      // Only show error if we didn't load from cache
+      if (!loadedFromCache) {
+        setError(true);
+      }
     } finally {
-      setLoading(false);
+      if (!loadedFromCache || showLoading) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadAllData();
+    loadAllData(true);
   }, []);
 
   const currentProducts = viewMode === 'store' ? storeProducts : bakeryProducts;
@@ -352,7 +378,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-red-50 dark:border-red-900/30">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
           <p className="text-gray-500 text-sm font-medium">فشل تحميل المنتجات</p>
-          <button onClick={loadAllData} className="text-brand-600 font-bold text-sm mt-2 hover:underline">إعادة المحاولة</button>
+          <button onClick={() => loadAllData()} className="text-brand-600 font-bold text-sm mt-2 hover:underline">إعادة المحاولة</button>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">

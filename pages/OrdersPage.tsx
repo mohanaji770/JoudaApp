@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Calendar,
   Repeat,
-  ChevronLeft,
   Trash2,
   Clock,
   MapPin,
@@ -125,25 +124,17 @@ export const OrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="pb-24 md:pb-12 animate-fade-in px-4 w-full max-w-3xl mx-auto">
-      {/* Header — generous breathing room */}
-      <div className="flex items-center gap-3 pt-2 pb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">طلباتي</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {orders.length} طلب مكتمل
-          </p>
-        </div>
+    <div className="pb-24 md:pb-8 animate-fade-in">
+      {/* Title Card — matches RecipesPage header style */}
+      <div className="bg-gradient-to-br from-brand-50 to-white dark:from-gray-800 dark:to-gray-900 p-6 rounded-3xl mb-6 border border-brand-100 dark:border-gray-700">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">طلباتي</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          {orders.length} طلب مكتمل
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-10 p-1 bg-gray-100 dark:bg-gray-800 rounded-2xl">
+      <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-2xl">
         <button
           onClick={() => setActiveTab('orders')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
@@ -244,7 +235,7 @@ export const OrdersPage: React.FC = () => {
                   {/* Total */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      المجموع: {formatPrice(order.total)} ر.س
+                      المجموع: {formatPrice(order.total)}
                     </span>
                     <button
                       onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
@@ -273,7 +264,7 @@ export const OrdersPage: React.FC = () => {
                             </span>
                           </div>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {formatPrice(item.unit_price * item.quantity)} ر.س
+                            {formatPrice(item.unit_price * item.quantity)}
                           </span>
                         </div>
                       ))}
@@ -360,7 +351,7 @@ export const OrdersPage: React.FC = () => {
                     </h3>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-black text-brand-600">
-                        {product.price} ر.س
+                        {product.price}
                       </span>
                       <button
                         onClick={() =>
