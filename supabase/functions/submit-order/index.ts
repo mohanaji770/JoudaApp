@@ -102,6 +102,29 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Check maintenance mode first
+    const joudaUrl = Deno.env.get('SUPABASE_URL');
+    const joudaAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (joudaUrl && joudaAnonKey) {
+      const joudaClient = createClient(joudaUrl, joudaAnonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      
+      const { data: settings } = await joudaClient
+        .from('app_settings')
+        .select('maintenance_mode, maintenance_message')
+        .eq('id', 1)
+        .single();
+        
+      if (settings?.maintenance_mode) {
+        return jsonResponse({ 
+          success: false, 
+          message: settings.maintenance_message || 'النظام تحت الصيانة حالياً' 
+        }, 503);
+      }
+    }
+
     const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
     const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
     const joudaUrl = Deno.env.get('SUPABASE_URL');
