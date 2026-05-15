@@ -6,6 +6,7 @@ import { HistoryList } from '../components/HistoryList';
 import { Onboarding } from '../components/Onboarding';
 import { ProductRequestModal } from '../components/ProductRequestModal';
 import { RecipeOfTheDay } from '../components/RecipeOfTheDay';
+import { PromoBanner } from '../components/PromoBanner';
 import { KnowledgeHub } from '../components/KnowledgeHub';
 import { analyzeImageWithGemini, analyzeTextWithGemini } from '../services/geminiService';
 import { checkDailyQuota, incrementDailyQuota } from '../services/quotaService';
@@ -178,6 +179,9 @@ export const HomePage: React.FC = () => {
                 </div>
              </button>
           </div>
+
+          {/* PROMO BANNERS */}
+          <PromoBanner />
 
           {/* QUICK ACCESS — tight grouping inside, generous separation before */}
           <div className="grid grid-cols-2 gap-3 mb-20">
