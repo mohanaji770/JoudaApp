@@ -4,6 +4,7 @@ import { toBlob } from 'html-to-image';
 import { X, Share2, MapPin, User, FileText, ShoppingBag, Store, Scissors } from 'lucide-react';
 import { CartItem } from '../contexts/CartContext';
 import { STORE_CONFIG, APP_LOGO } from '../constants';
+import { useScrollLock } from '../hooks';
 
 interface ReceiptModalProps {
   items: CartItem[];
@@ -24,6 +25,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Lock body scroll when modal is open
+  useScrollLock(true);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const orderDate = new Date().toLocaleDateString('ar-SA', { 

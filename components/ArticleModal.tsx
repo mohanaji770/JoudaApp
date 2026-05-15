@@ -3,6 +3,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { X, Calendar, User, Share2 } from 'lucide-react';
 import { Article } from '../services/supabaseService';
+import { useScrollLock } from '../hooks';
 
 interface ArticleModalProps {
   article: Article;
@@ -10,6 +11,9 @@ interface ArticleModalProps {
 }
 
 export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) => {
+  // Lock body scroll when modal is open
+  useScrollLock(true);
+
   const handleShare = async () => {
     if (navigator.share) {
       try {

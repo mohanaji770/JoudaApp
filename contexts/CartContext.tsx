@@ -1,7 +1,8 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { STORE_CONFIG } from '../constants';
 import { submitOrderToSupabase } from '../services/supabaseService';
+import { saveCartToDB, loadCartFromDB, addPendingOrder, getPendingOrdersCount, saveCompletedOrder } from '../services/db';
 
 export interface CartItem {
   id: string;
@@ -34,10 +35,11 @@ interface CartContextType {
     notes?: string;
     subtotal: number;
     delivery_fee: number;
-  }) => Promise<{ success: boolean; quotation_id?: string; message: string }>;
+  }) => Promise<{ success: boolean; order_number?: string; quotation_id?: string; order_id?: string; message: string }>;
   totalItems: number;
   getItemQuantity: (name: string) => number;
   lastAddedItem: string | null; // For triggering notifications
+  pendingOrdersCount: number; // Number of offline pending orders
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -46,16 +48,52 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<string | null>(null);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
 
+  // Load cart from IndexedDB on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('jouda_cart_v2');
-    if (savedCart) {
-      setItems(JSON.parse(savedCart));
-    }
+    const loadCart = async () => {
+      try {
+        const savedCart = await loadCartFromDB();
+        if (savedCart.length > 0) {
+          setItems(savedCart);
+        } else {
+          // Fallback to localStorage for migration
+          const legacyCart = localStorage.getItem('jouda_cart_v2');
+          if (legacyCart) {
+            const parsed = JSON.parse(legacyCart);
+            setItems(parsed);
+            // Migrate to IndexedDB
+            await saveCartToDB(parsed);
+            localStorage.removeItem('jouda_cart_v2');
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load cart from IndexedDB', e);
+      }
+    };
+    loadCart();
+
+    // Load pending orders count
+    const loadPending = async () => {
+      try {
+        const count = await getPendingOrdersCount();
+        setPendingOrdersCount(count);
+      } catch (e) {}
+    };
+    loadPending();
   }, []);
 
+  // Save cart to IndexedDB whenever it changes
   useEffect(() => {
-    localStorage.setItem('jouda_cart_v2', JSON.stringify(items));
+    const saveCart = async () => {
+      try {
+        await saveCartToDB(items);
+      } catch (e) {
+        console.warn('Failed to save cart to IndexedDB', e);
+      }
+    };
+    saveCart();
   }, [items]);
 
   // Helper to trigger notification
@@ -234,12 +272,58 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, message: 'لا يمكن إرسال الطلب: المنتجات لا تحتوي على باركود' };
     }
 
-    const result = await submitOrderToSupabase({
+    const fullPayload = {
       ...payload,
       items: validItems,
-    });
+    };
+
+    // Check if online
+    if (!navigator.onLine) {
+      // Queue order for later
+      try {
+        const orderId = await addPendingOrder(fullPayload);
+        setPendingOrdersCount((prev) => prev + 1);
+        clearCart();
+        return {
+          success: true,
+          message: 'تم حفظ الطلب وسيتم إرساله تلقائياً عند عودة الإنترنت',
+          order_number: orderId,
+        };
+      } catch (e) {
+        return { success: false, message: 'فشل حفظ الطلب للإرسال لاحقاً' };
+      }
+    }
+
+    const result = await submitOrderToSupabase(fullPayload);
 
     if (result.success) {
+      // Save to completed orders for history
+      try {
+        await saveCompletedOrder({
+          id: result.order_id || result.order_number || `local_${Date.now()}`,
+          orderNumber: result.order_number || '',
+          quotationId: result.quotation_id,
+          orderId: result.order_id,
+          items: validItems.map((item) => ({
+            product_barcode: item.product_barcode,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+          })),
+          customerName: payload.customer_name,
+          customerPhone: payload.customer_phone,
+          customerAddress: payload.customer_address,
+          orderType: payload.order_type,
+          paymentMethod: payload.payment_method,
+          notes: payload.notes,
+          subtotal: payload.subtotal,
+          deliveryFee: payload.delivery_fee,
+          total: payload.subtotal + payload.delivery_fee,
+          createdAt: Date.now(),
+        });
+      } catch (e) {
+        console.warn('Failed to save completed order', e);
+      }
       clearCart();
     }
 
@@ -264,6 +348,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         totalItems,
         getItemQuantity,
         lastAddedItem,
+        pendingOrdersCount,
       }}
     >
       {children}

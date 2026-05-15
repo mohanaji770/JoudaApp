@@ -4,6 +4,9 @@ import { ShoppingBag, Clock, Flame, ChefHat, Sparkles } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { fetchRecipesWithFallback, Recipe } from '../services/supabaseService';
 
+const RECIPE_OF_DAY_KEY = 'jouda_recipe_of_day_v1';
+const RECIPE_OF_DAY_DATE_KEY = 'jouda_recipe_of_day_date_v1';
+
 export const RecipeOfTheDay: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -11,18 +14,39 @@ export const RecipeOfTheDay: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
+      // Check if we already have today's recipe cached
+      const cachedDate = localStorage.getItem(RECIPE_OF_DAY_DATE_KEY);
+      const today = new Date().toDateString();
+
+      if (cachedDate === today) {
+        const cached = localStorage.getItem(RECIPE_OF_DAY_KEY);
+        if (cached) {
+          try {
+            setRecipe(JSON.parse(cached));
+            setLoading(false);
+            return;
+          } catch (e) {
+            localStorage.removeItem(RECIPE_OF_DAY_KEY);
+          }
+        }
+      }
+
+      // Fetch fresh and cache
       try {
         const recipes = await fetchRecipesWithFallback();
         if (recipes.length > 0) {
-          // Select recipe based on day of year to ensure it changes daily but stays constant throughout the day
           const today = new Date();
           const start = new Date(today.getFullYear(), 0, 0);
           const diff = today.getTime() - start.getTime();
           const oneDay = 1000 * 60 * 60 * 24;
           const dayOfYear = Math.floor(diff / oneDay);
-          
+
           const index = dayOfYear % recipes.length;
-          setRecipe(recipes[index]);
+          const selected = recipes[index];
+
+          setRecipe(selected);
+          localStorage.setItem(RECIPE_OF_DAY_KEY, JSON.stringify(selected));
+          localStorage.setItem(RECIPE_OF_DAY_DATE_KEY, new Date().toDateString());
         }
       } catch (e) {
         console.error("Failed to load daily recipe", e);
@@ -55,7 +79,7 @@ export const RecipeOfTheDay: React.FC = () => {
   };
 
   if (loading) return (
-      <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse my-4 relative overflow-hidden">
+      <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse relative overflow-hidden">
          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 animate-shimmer"></div>
       </div>
   );
@@ -63,7 +87,7 @@ export const RecipeOfTheDay: React.FC = () => {
   if (!recipe) return null;
 
   return (
-    <div className="w-full relative h-[280px] rounded-3xl overflow-hidden shadow-lg my-4 group cursor-pointer border border-gray-100 dark:border-gray-800">
+    <div className="w-full relative h-[320px] rounded-3xl overflow-hidden shadow-lg group cursor-pointer border border-gray-100 dark:border-gray-800">
       {/* Background Image */}
       {recipe.image ? (
           <img 

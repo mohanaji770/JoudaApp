@@ -21,6 +21,73 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+// Telegram Notification Helper
+async function sendTelegramNotification(orderData: {
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress?: string;
+  total: number;
+  items: Array<{ product_name: string; quantity: number }>;
+}) {
+  const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+  const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
+
+  if (!botToken || !chatId) {
+    console.warn('Telegram notification skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_ADMIN_CHAT_ID');
+    return;
+  }
+
+  const { orderNumber, customerName, customerPhone, customerAddress, total, items } = orderData;
+
+  const itemsList = items
+    .map((item) => `• ${item.product_name} × ${item.quantity}`)
+    .join('\n');
+
+  const dateStr = new Date().toLocaleString('ar-SA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const message = `
+🛒 <b>طلب جديد: ${orderNumber}</b>
+
+👤 <b>العميل:</b> ${customerName}
+📱 <b>الهاتف:</b> ${customerPhone}
+📍 <b>العنوان:</b> ${customerAddress || 'غير محدد'}
+💰 <b>المجموع:</b> ${total.toLocaleString('ar-SA')} ر.س
+
+📦 <b>الأصناف:</b>
+${itemsList}
+
+📅 ${dateStr}
+  `.trim();
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Telegram notification failed:', error);
+    } else {
+      console.log('Telegram notification sent successfully');
+    }
+  } catch (e) {
+    console.error('Telegram notification error:', e);
+  }
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -115,10 +182,21 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // Generate order number using database function
+    const { data: orderNumberResult, error: seqError } = await joudaClient
+      .rpc('generate_order_number');
+    
+    if (seqError) {
+      console.error('Sequence Error:', seqError);
+    }
+    
+    const orderNumber = orderNumberResult || 'J-0000';
+
     const { data: orderRecord, error: insertError } = await joudaClient
       .from('customer_orders')
       .insert({
         quotation_id: quotationId,
+        order_number: orderNumber,
         customer_name,
         customer_phone,
         customer_address: customer_address || null,
@@ -159,8 +237,24 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Send Telegram notification on success
+    if (rpcSuccess) {
+      await sendTelegramNotification({
+        orderNumber,
+        customerName: customer_name,
+        customerPhone: customer_phone,
+        customerAddress: customer_address,
+        total,
+        items: items.map((item: any) => ({
+          product_name: item.product_name,
+          quantity: item.quantity,
+        })),
+      });
+    }
+
     return jsonResponse({
       success: rpcSuccess,
+      order_number: orderNumber,
       quotation_id: quotationId,
       order_id: orderRecord?.id || null,
       message: rpcSuccess

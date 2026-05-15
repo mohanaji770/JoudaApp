@@ -50,9 +50,9 @@ export const JoudaPage: React.FC = () => {
       
       {/* 1. Header */}
       <div className="text-center py-8 md:py-12">
-         <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-3xl mx-auto shadow-xl shadow-brand-100/50 dark:shadow-none p-4 mb-5 border border-gray-50 dark:border-gray-800">
-            <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-contain" />
-         </div>
+         <div className="w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-5 overflow-hidden shadow-lg ring-2 ring-gray-100 dark:ring-gray-700">
+             <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-cover" />
+          </div>
          <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">{STORE_CONFIG.NAME}</h1>
          <p className="text-base text-gray-500 dark:text-gray-400 font-medium max-w-lg mx-auto leading-relaxed">
            نجمع بين الصحة والمذاق الرائع لنمنحك تجربة حياة طبيعية وآمنة.
@@ -156,8 +156,8 @@ export const JoudaPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Footer */}
-        <div className="pt-6 text-center pb-4">
+         {/* Footer */}
+         <div className="pt-6 text-center pb-4">
             <div className="flex items-center justify-center gap-3 mb-4">
                <a href="https://www.facebook.com/joudafood" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center transition-colors"><Facebook className="w-5 h-5" /></a>
                <a href="https://www.instagram.com/joudafood/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 flex items-center justify-center transition-colors"><Instagram className="w-5 h-5" /></a>

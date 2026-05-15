@@ -4,6 +4,7 @@ import { X, ShoppingBag, Heart, ChefHat, Clock, Share2, Check, ArrowRight } from
 import { Product, Recipe } from '../services/supabaseService';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useScrollLock } from '../hooks';
 
 interface ProductDetailsModalProps {
   product: Product;
@@ -20,7 +21,10 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 }) => {
   const { addToCart, getItemQuantity, decreaseQuantityByName } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
-  
+
+  // Lock body scroll when modal is open
+  useScrollLock(true);
+   
   const quantity = getItemQuantity(product.name);
   const liked = isFavorite(product.id);
 

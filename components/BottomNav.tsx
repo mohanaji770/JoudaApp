@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, ShoppingBag, ChefHat, Info } from 'lucide-react';
+import { Home, ShoppingBag, ChefHat, ClipboardList, Info } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -9,6 +9,7 @@ export const BottomNav: React.FC = () => {
     { id: 'home', path: '/', label: 'الرئيسية', icon: <Home className="w-5 h-5" /> },
     { id: 'products', path: '/products', label: 'المتجر', icon: <ShoppingBag className="w-5 h-5" /> },
     { id: 'recipes', path: '/recipes', label: 'مطبخ جودة', icon: <ChefHat className="w-5 h-5" /> },
+    { id: 'orders', path: '/orders', label: 'طلباتي', icon: <ClipboardList className="w-5 h-5" /> },
     { id: 'about', path: '/about', label: 'من نحن', icon: <Info className="w-5 h-5" /> },
   ];
 

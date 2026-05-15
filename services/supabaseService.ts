@@ -4,6 +4,17 @@ import {
   fetchArticlesFromSheet as fetchArticlesFromGoogleSheet,
   fetchFAQFromSheet as fetchFAQFromGoogleSheet,
 } from './googleSheetService';
+import {
+  cacheProducts,
+  getCachedProducts,
+  cacheRecipes,
+  getCachedRecipes,
+  cacheArticles,
+  getCachedArticles,
+  cacheFAQ,
+  getCachedFAQ,
+  getCacheAge,
+} from './db';
 
 export interface Product {
   id: string; // barcode for compatibility
@@ -63,8 +74,6 @@ export interface Article {
 // PRODUCTS (from Supabase)
 // ==========================
 
-const PRODUCTS_CACHE_KEY = 'jouda_products_cache_v2';
-
 export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
   try {
     const { data, error } = await supabase
@@ -91,14 +100,14 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
       source: 'store' as const,
     }));
 
-    // Cache locally for offline
-    try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(products)); } catch (e) {}
+    // Cache in IndexedDB for offline
+    try { await cacheProducts(products); } catch (e) { console.warn('Failed to cache products', e); }
     return products;
   } catch (error) {
-    console.warn('Supabase products failed, trying cache...', error);
+    console.warn('Supabase products failed, trying IndexedDB cache...', error);
     try {
-      const cached = localStorage.getItem(PRODUCTS_CACHE_KEY);
-      if (cached) return JSON.parse(cached);
+      const cached = await getCachedProducts();
+      if (cached.length > 0) return cached;
     } catch (e) {}
     return [];
   }
@@ -113,8 +122,6 @@ export const fetchBakeryProductsFromSupabase = async (): Promise<Product[]> => {
 // ==========================
 // RECIPES
 // ==========================
-
-const RECIPES_CACHE_KEY = 'jouda_recipes_cache_v2';
 
 export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
   try {
@@ -144,13 +151,13 @@ export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
       videoUrl: r.video_url,
     }));
 
-    try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(recipes)); } catch (e) {}
+    try { await cacheRecipes(recipes); } catch (e) { console.warn('Failed to cache recipes', e); }
     return recipes;
   } catch (error) {
-    console.warn('Supabase recipes failed, trying cache...', error);
+    console.warn('Supabase recipes failed, trying IndexedDB cache...', error);
     try {
-      const cached = localStorage.getItem(RECIPES_CACHE_KEY);
-      if (cached) return JSON.parse(cached);
+      const cached = await getCachedRecipes();
+      if (cached.length > 0) return cached;
     } catch (e) {}
     return [];
   }
@@ -159,8 +166,6 @@ export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
 // ==========================
 // ARTICLES
 // ==========================
-
-const ARTICLES_CACHE_KEY = 'jouda_articles_cache_v2';
 
 export const fetchArticlesFromSupabase = async (): Promise<Article[]> => {
   try {
@@ -182,13 +187,13 @@ export const fetchArticlesFromSupabase = async (): Promise<Article[]> => {
       author: a.author || 'جودة',
     }));
 
-    try { localStorage.setItem(ARTICLES_CACHE_KEY, JSON.stringify(articles)); } catch (e) {}
+    try { await cacheArticles(articles); } catch (e) { console.warn('Failed to cache articles', e); }
     return articles;
   } catch (error) {
-    console.warn('Supabase articles failed, trying cache...', error);
+    console.warn('Supabase articles failed, trying IndexedDB cache...', error);
     try {
-      const cached = localStorage.getItem(ARTICLES_CACHE_KEY);
-      if (cached) return JSON.parse(cached);
+      const cached = await getCachedArticles();
+      if (cached.length > 0) return cached;
     } catch (e) {}
     return [];
   }
@@ -197,8 +202,6 @@ export const fetchArticlesFromSupabase = async (): Promise<Article[]> => {
 // ==========================
 // FAQ
 // ==========================
-
-const FAQ_CACHE_KEY = 'jouda_faq_cache_v2';
 
 export const fetchFAQFromSupabase = async (): Promise<FAQItem[]> => {
   try {
@@ -215,13 +218,13 @@ export const fetchFAQFromSupabase = async (): Promise<FAQItem[]> => {
       answer: f.answer,
     }));
 
-    try { localStorage.setItem(FAQ_CACHE_KEY, JSON.stringify(faq)); } catch (e) {}
+    try { await cacheFAQ(faq); } catch (e) { console.warn('Failed to cache FAQ', e); }
     return faq;
   } catch (error) {
-    console.warn('Supabase FAQ failed, trying cache...', error);
+    console.warn('Supabase FAQ failed, trying IndexedDB cache...', error);
     try {
-      const cached = localStorage.getItem(FAQ_CACHE_KEY);
-      if (cached) return JSON.parse(cached);
+      const cached = await getCachedFAQ();
+      if (cached.length > 0) return cached;
     } catch (e) {}
     return [];
   }
@@ -251,6 +254,7 @@ export interface SubmitOrderPayload {
 
 export interface SubmitOrderResult {
   success: boolean;
+  order_number?: string;
   quotation_id?: string;
   order_id?: string;
   message: string;

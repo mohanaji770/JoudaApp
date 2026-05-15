@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ScanBarcode, Store, HeartHandshake, ArrowLeft, Check, X } from 'lucide-react';
+import { useScrollLock } from '../hooks';
 
 interface OnboardingProps {
   onClose: () => void;
@@ -8,6 +9,9 @@ interface OnboardingProps {
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
   const [step, setStep] = useState(0);
+
+  // Lock body scroll when onboarding is open
+  useScrollLock(true);
 
   const steps = [
     {

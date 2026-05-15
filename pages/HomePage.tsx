@@ -148,11 +148,12 @@ export const HomePage: React.FC = () => {
     <>
       {!showScanner && !result ? (
         // DASHBOARD VIEW
-        <div className="animate-fade-in flex flex-col gap-8">
-          
-          <div className="relative">
-             <div className="mb-6">
-                <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+        <div className="animate-fade-in flex flex-col">
+
+          {/* HERO SECTION — generous breathing room */}
+          <div className="pt-2 pb-10">
+             <div className="mb-8">
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-3">
                   {getGreeting()} <span className="text-brand-600">.</span>
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 font-bold text-sm md:text-base">
@@ -161,7 +162,7 @@ export const HomePage: React.FC = () => {
              </div>
 
              {/* Search Bar */}
-             <button 
+             <button
                 onClick={() => setShowScanner(true)}
                 className="w-full bg-warm-white dark:bg-gray-800 rounded-2xl p-3 shadow-xl shadow-gray-200 dark:shadow-none border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-transform active:scale-[0.98] group md:max-w-2xl"
              >
@@ -178,15 +179,15 @@ export const HomePage: React.FC = () => {
              </button>
           </div>
 
-          {/* Quick Access Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Bakery Card */}
-              <button 
+          {/* QUICK ACCESS — tight grouping inside, generous separation before */}
+          <div className="grid grid-cols-2 gap-3 mb-20">
+              {/* Bakery Card — asymmetric: larger */}
+              <button
                 onClick={() => navigate('/products', { state: { initialTab: 'bakery' } })}
-                className="group relative h-44 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-orange-100 dark:border-gray-700 text-right p-5 transition-all hover:shadow-lg hover:border-orange-200 dark:hover:border-gray-600 active:scale-95 shadow-sm"
+                className="group relative h-48 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-orange-100 dark:border-gray-700 text-right p-5 transition-all hover:shadow-lg hover:border-orange-200 dark:hover:border-gray-600 active:scale-95 shadow-sm"
               >
                   <div className="relative z-10 h-full flex flex-col justify-between">
-                     <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-2">
+                     <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
                         <Cake className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                      </div>
                      <div>
@@ -202,12 +203,12 @@ export const HomePage: React.FC = () => {
               </button>
 
               {/* Request Card */}
-              <button 
+              <button
                 onClick={() => setShowProductRequest(true)}
-                className="group relative h-44 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-right p-5 transition-all hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 active:scale-95 shadow-sm"
+                className="group relative h-48 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-right p-5 transition-all hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 active:scale-95 shadow-sm"
               >
                   <div className="relative z-10 h-full flex flex-col justify-between">
-                     <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-2">
+                     <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <PackageSearch className="w-6 h-6 text-brand-600 dark:text-brand-400" />
                      </div>
                      <div>
@@ -223,8 +224,17 @@ export const HomePage: React.FC = () => {
               </button>
           </div>
 
-          {/* Daily Recipe & Knowledge Hub */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Section divider */}
+          <div className="py-10">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">اكتشف</span>
+              <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
+            </div>
+          </div>
+
+          {/* RECIPE & KNOWLEDGE — generous separation */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
               <RecipeOfTheDay />
               <KnowledgeHub />
           </div>

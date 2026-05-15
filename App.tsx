@@ -1,26 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { HomePage } from './pages/HomePage';
 import { ProductsPageRoute } from './pages/ProductsPageRoute';
 import { RecipesPageRoute } from './pages/RecipesPageRoute';
 import { AboutPageRoute } from './pages/AboutPageRoute';
+import { OrdersPage } from './pages/OrdersPage';
 import { Onboarding } from './components/Onboarding';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { useScrollToTop, useLocalStorage, useOnlineStatus } from './hooks';
+import { SyncProvider } from './contexts/SyncContext';
 
 const ONBOARDING_KEY = 'jouda_onboarding_seen_v1';
 
 const AppContent: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useLocalStorage('darkMode', false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode');
-    if (savedMode === 'true' || (!savedMode && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
+  // Scroll to top on route change
+  useScrollToTop();
 
+  // Apply dark mode class on mount and when changed
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Show onboarding on first visit
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
     if (!hasSeenOnboarding) {
@@ -30,15 +40,7 @@ const AppContent: React.FC = () => {
   }, []);
 
   const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('darkMode', 'false');
-    }
+    setIsDarkMode(prev => !prev);
   };
 
   const handleCloseOnboarding = () => {
@@ -48,6 +50,8 @@ const AppContent: React.FC = () => {
 
   return (
     <>
+      <OfflineIndicator />
+
       <Layout 
         isDarkMode={isDarkMode} 
         toggleDarkMode={toggleDarkMode}
@@ -57,6 +61,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPageRoute />} />
           <Route path="/recipes" element={<RecipesPageRoute />} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPageRoute />} />
         </Routes>
       </Layout>
@@ -68,9 +73,13 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <SyncProvider>
+          <AppContent />
+        </SyncProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

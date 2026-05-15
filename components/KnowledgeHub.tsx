@@ -56,9 +56,9 @@ export const KnowledgeHub: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full mt-8 animate-fade-in">
+    <div className="w-full animate-fade-in">
       {/* Header & Tabs */}
-      <div className="flex items-center justify-between mb-5 px-1">
+      <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2">
            <div className="bg-teal-100 dark:bg-teal-900/30 p-1.5 rounded-lg">
              <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />

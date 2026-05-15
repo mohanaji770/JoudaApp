@@ -109,10 +109,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
       const matchCategory = selectedCategory === 'الكل' || product.category === selectedCategory;
       const searchLower = debouncedSearchQuery.toLowerCase().trim();
       const matchSearch = !searchLower || 
-                          product.name.toLowerCase().includes(searchLower) || 
-                          (product.description || '').toLowerCase().includes(searchLower) ||
-                          (product.category || '').toLowerCase().includes(searchLower) ||
-                          (product.barcode || '').toLowerCase().includes(searchLower);
+                          product.name.toLowerCase().includes(searchLower);
       const matchStock = !filters.inStockOnly || product.inStock !== false;
       const matchFav = !filters.favoritesOnly || isFavorite(product.id);
       const matchMinPrice = filters.minPrice === null || (product.price || 0) >= filters.minPrice;
@@ -124,17 +121,32 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
     result.sort((a, b) => {
       switch (filters.sort) {
         case 'price-asc':
+          // Available first, then by price
+          if (a.inStock !== false && b.inStock === false) return -1;
+          if (a.inStock === false && b.inStock !== false) return 1;
           return (a.price || 0) - (b.price || 0);
         case 'price-desc':
+          // Available first, then by price
+          if (a.inStock !== false && b.inStock === false) return -1;
+          if (a.inStock === false && b.inStock !== false) return 1;
           return (b.price || 0) - (a.price || 0);
         case 'name-asc':
+          // Available first, then by name
+          if (a.inStock !== false && b.inStock === false) return -1;
+          if (a.inStock === false && b.inStock !== false) return 1;
           return a.name.localeCompare(b.name, 'ar');
         case 'popular':
+          // Available first, then popular
+          if (a.inStock !== false && b.inStock === false) return -1;
+          if (a.inStock === false && b.inStock !== false) return 1;
           if (a.popular && !b.popular) return -1;
           if (!a.popular && b.popular) return 1;
           return 0;
         case 'default':
         default:
+          // Available first, then favorites, then popular
+          if (a.inStock !== false && b.inStock === false) return -1;
+          if (a.inStock === false && b.inStock !== false) return 1;
           const aFav = isFavorite(a.id) ? 1 : 0;
           const bFav = isFavorite(b.id) ? 1 : 0;
           if (aFav !== bFav) return bFav - aFav;
@@ -229,7 +241,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
-            placeholder="ابحث باسم المنتج، الفئة، أو الباركود..."
+            placeholder="ابحث باسم المنتج..."
             className="w-full h-12 pl-4 pr-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900 dark:text-white placeholder-gray-400"
           />
           <Search className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -305,10 +317,10 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
         </button>
       </div>
 
-      {/* Category Pills */}
+      {/* Category Filters */}
       {!loading && !error && categories.length > 1 && (
-        <div className="sticky top-[55px] z-30 bg-warm-50 dark:bg-gray-900 backdrop-blur-md py-2 -mx-4 sm:-mx-6 lg:-mx-8 mb-4 shadow-sm border-b border-gray-100 dark:border-gray-800">
-          <div className="flex overflow-x-auto gap-2 hide-scrollbar px-4 sm:px-6 lg:px-8">
+        <div className="py-3 mb-4 -mx-4 px-4">
+          <div className="flex overflow-x-auto gap-2 pb-1 hide-scrollbar">
             {categories.map(cat => (
               <button
                 key={cat}
@@ -316,9 +328,9 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                    setSelectedCategory(cat);
                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
                   selectedCategory === cat 
-                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-md transform -translate-y-0.5' 
+                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm' 
                     : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
