@@ -10,6 +10,7 @@ export const RecipesPage: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [productNames, setProductNames] = useState<Record<string, string>>({});
 
   const loadRecipes = async () => {
     setLoading(true);
@@ -32,11 +33,43 @@ export const RecipesPage: React.FC = () => {
     loadRecipes();
   }, []);
 
+  useEffect(() => {
+    const resolveProductNames = async () => {
+      const barcodes = new Set<string>();
+      recipes.forEach(r => {
+        if (r.mainProduct && /^\d{5,}$/.test(r.mainProduct)) barcodes.add(r.mainProduct);
+        r.bundleItems?.forEach(item => {
+          if (/^\d{5,}$/.test(item)) barcodes.add(item);
+        });
+      });
+
+      if (barcodes.size > 0) {
+        try {
+          const { getCachedProductByBarcode } = await import('../services/db');
+          const newNames: Record<string, string> = {};
+          for (const barcode of Array.from(barcodes)) {
+            const product = await getCachedProductByBarcode(barcode);
+            if (product) {
+              newNames[barcode] = product.name;
+            }
+          }
+          setProductNames(prev => ({ ...prev, ...newNames }));
+        } catch (e) {
+          console.warn("Failed to resolve names", e);
+        }
+      }
+    };
+
+    if (recipes.length > 0) {
+      resolveProductNames();
+    }
+  }, [recipes]);
+
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleBuyBundle = (recipe: Recipe) => {
+  const handleBuyBundle = async (recipe: Recipe) => {
     const itemsToBuy = [];
     if (recipe.mainProduct) itemsToBuy.push(recipe.mainProduct);
     if (recipe.bundleItems && recipe.bundleItems.length > 0) {
@@ -44,8 +77,33 @@ export const RecipesPage: React.FC = () => {
     }
     
     if (itemsToBuy.length > 0) {
-        addMultipleToCart(itemsToBuy);
+        for (const item of itemsToBuy) {
+            await handleAddSingleItem(item);
+        }
     }
+  };
+
+  const handleAddSingleItem = async (itemOrBarcode: string) => {
+      // Check if it looks like a barcode (mostly digits)
+      if (/^\d{5,}$/.test(itemOrBarcode)) {
+          try {
+              const { getCachedProductByBarcode } = await import('../services/db');
+              const product = await getCachedProductByBarcode(itemOrBarcode);
+              if (product) {
+                  addToCartWithBarcode({
+                      name: product.name,
+                      barcode: product.barcode,
+                      price: product.price?.toString(),
+                      source: 'store'
+                  });
+                  return;
+              }
+          } catch (e) {
+              console.warn("Failed to resolve barcode", e);
+          }
+      }
+      // Fallback: just add it as a name
+      addToCart(itemOrBarcode);
   };
 
   return (
@@ -182,10 +240,10 @@ export const RecipesPage: React.FC = () => {
                         <div className="bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900/30 rounded-lg p-3 mb-4 flex items-center justify-between">
                             <div>
                             <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold block mb-0.5">المنتج الرئيسي</span>
-                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{recipe.mainProduct}</span>
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{productNames[recipe.mainProduct] || recipe.mainProduct}</span>
                             </div>
                             <button 
-                            onClick={() => addToCart(recipe.mainProduct)}
+                            onClick={() => handleAddSingleItem(recipe.mainProduct)}
                             className="bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 p-2 rounded-lg shadow-sm hover:scale-105 transition-transform flex items-center gap-1 text-xs font-bold border border-brand-200 dark:border-brand-900"
                             >
                             <Plus className="w-3 h-3" />
@@ -227,11 +285,11 @@ export const RecipesPage: React.FC = () => {
                                 {recipe.bundleItems && recipe.bundleItems.length > 0 && (
                                     <div className="flex flex-wrap gap-2 mb-3">
                                         <span className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                                            {recipe.mainProduct}
+                                            {productNames[recipe.mainProduct] || recipe.mainProduct}
                                         </span>
                                         {recipe.bundleItems.map((item, idx) => (
                                              <span key={idx} className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                                                {item}
+                                                {productNames[item] || item}
                                             </span>
                                         ))}
                                     </div>
