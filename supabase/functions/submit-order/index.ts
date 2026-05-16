@@ -32,9 +32,9 @@ async function sendTelegramNotification(orderData: {
   items: Array<{ product_name: string; quantity: number }>;
 }) {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
-  const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
+  const chatIdsStr = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
 
-  if (!botToken || !chatId) {
+  if (!botToken || !chatIdsStr) {
     console.warn('Telegram notification skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_ADMIN_CHAT_ID');
     return;
   }
@@ -65,34 +65,38 @@ async function sendTelegramNotification(orderData: {
 ${itemsList}
 
 📅 ${dateStr}
-  `.trim();
+`.trim();
 
-  // Inline buttons for quick actions
-  const inline_keyboard = [[
-    { text: '✅ تأكيد', callback_data: `order_confirmed_${orderId}` },
-    { text: '❌ إلغاء', callback_data: `order_cancelled_${orderId}` },
-  ]];
+  // Admin Approval Buttons (Only for Admins)
+  const inline_keyboard = [
+    [{ text: '✅ اعتماد الطلب (إرسال للجروب)', callback_data: `wf_approve_${orderId}` }],
+    [{ text: '❌ رفض وإلغاء الطلب', callback_data: `wf_reject_${orderId}` }]
+  ];
 
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard },
-      }),
-    });
+  const chatIds = chatIdsStr.split(',').map(id => id.trim()).filter(id => id);
+  // Filter for private admin chats only (IDs without a minus sign)
+  const adminIds = chatIds.filter(id => !id.startsWith('-'));
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Telegram notification failed:', error);
-    } else {
-      console.log('Telegram notification sent successfully');
+  for (const chatId of adminIds) {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+          reply_markup: { inline_keyboard },
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error(`Telegram notification failed for ${chatId}:`, error);
+      }
+    } catch (e) {
+      console.error(`Telegram notification error for ${chatId}:`, e);
     }
-  } catch (e) {
-    console.error('Telegram notification error:', e);
   }
 }
 
