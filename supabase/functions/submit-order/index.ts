@@ -21,8 +21,9 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
-// Telegram Notification Helper
+// Telegram Notification Helper — with Inline Buttons
 async function sendTelegramNotification(orderData: {
+  orderId: string;
   orderNumber: string;
   customerName: string;
   customerPhone: string;
@@ -38,7 +39,7 @@ async function sendTelegramNotification(orderData: {
     return;
   }
 
-  const { orderNumber, customerName, customerPhone, customerAddress, total, items } = orderData;
+  const { orderId, orderNumber, customerName, customerPhone, customerAddress, total, items } = orderData;
 
   const itemsList = items
     .map((item) => `• ${item.product_name} × ${item.quantity}`)
@@ -58,13 +59,19 @@ async function sendTelegramNotification(orderData: {
 👤 <b>العميل:</b> ${customerName}
 📱 <b>الهاتف:</b> ${customerPhone}
 📍 <b>العنوان:</b> ${customerAddress || 'غير محدد'}
-💰 <b>المجموع:</b> ${total.toLocaleString('ar-SA')} ر.س
+💰 <b>المجموع:</b> ${total.toLocaleString()} ر.ي
 
 📦 <b>الأصناف:</b>
 ${itemsList}
 
 📅 ${dateStr}
   `.trim();
+
+  // Inline buttons for quick actions
+  const inline_keyboard = [[
+    { text: '✅ تأكيد', callback_data: `order_confirmed_${orderId}` },
+    { text: '❌ إلغاء', callback_data: `order_cancelled_${orderId}` },
+  ]];
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -74,6 +81,7 @@ ${itemsList}
         chat_id: chatId,
         text: message,
         parse_mode: 'HTML',
+        reply_markup: { inline_keyboard },
       }),
     });
 
@@ -127,8 +135,6 @@ Deno.serve(async (req: Request) => {
 
     const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
     const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
-    const joudaUrl = Deno.env.get('SUPABASE_URL');
-    const joudaAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const onlineWarehouseId = Deno.env.get('ONLINE_WAREHOUSE_ID');
     const systemUserUuid = Deno.env.get('SYSTEM_USER_UUID');
 
@@ -263,6 +269,7 @@ Deno.serve(async (req: Request) => {
     // Send Telegram notification on success
     if (rpcSuccess) {
       await sendTelegramNotification({
+        orderId: orderRecord?.id || '',
         orderNumber,
         customerName: customer_name,
         customerPhone: customer_phone,

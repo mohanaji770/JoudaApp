@@ -6,6 +6,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { fetchProductsFromSupabase, Product } from '../services/supabaseService';
 import { getCachedProducts } from '../services/db';
 import { ProductDetailsModal } from './ProductDetailsModal';
+import { ProductRequestModal } from './ProductRequestModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 
@@ -39,6 +40,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [selectedProductDetails, setSelectedProductDetails] = useState<Product | null>(null);
+  const [requestProduct, setRequestProduct] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = useRecentSearches();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -61,12 +63,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
     setVisibleCount(INITIAL_ITEMS);
   }, [viewMode, selectedCategory, debouncedSearchQuery, filters.sort, filters.inStockOnly, filters.favoritesOnly, filters.minPrice, filters.maxPrice]);
 
-  // Add to recent searches when user submits/searchs
-  useEffect(() => {
-    if (debouncedSearchQuery.trim().length >= 2) {
-      addRecentSearch(debouncedSearchQuery);
-    }
-  }, [debouncedSearchQuery]);
+  // Add to recent searches when user clicks a suggestion or loses focus instead of on every debounce
+
 
   useEffect(() => {
     setViewMode(initialViewMode);
@@ -138,8 +136,11 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                           product.name.toLowerCase().includes(searchLower);
       const matchStock = !filters.inStockOnly || product.inStock !== false;
       const matchFav = !filters.favoritesOnly || isFavorite(product.id);
-      const matchMinPrice = filters.minPrice === null || (product.price || 0) >= filters.minPrice;
-      const matchMaxPrice = filters.maxPrice === null || (product.price || 0) <= filters.maxPrice;
+      const pPrice = product.price || 0;
+      const hasPrice = pPrice > 0;
+      // If a price filter is applied, only show products that HAVE a price and match the condition
+      const matchMinPrice = filters.minPrice === null || (hasPrice && pPrice >= filters.minPrice);
+      const matchMaxPrice = filters.maxPrice === null || (hasPrice && pPrice <= filters.maxPrice);
       return matchCategory && matchSearch && matchStock && matchFav && matchMinPrice && matchMaxPrice;
     });
 
@@ -150,7 +151,9 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
           // Available first, then by price
           if (a.inStock !== false && b.inStock === false) return -1;
           if (a.inStock === false && b.inStock !== false) return 1;
-          return (a.price || 0) - (b.price || 0);
+          const priceA = a.price || Infinity;
+          const priceB = b.price || Infinity;
+          return priceA - priceB;
         case 'price-desc':
           // Available first, then by price
           if (a.inStock !== false && b.inStock === false) return -1;
@@ -183,7 +186,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
     });
 
     return result;
-  }, [currentProducts, selectedCategory, searchQuery, filters, isFavorite]);
+  }, [currentProducts, selectedCategory, debouncedSearchQuery, filters, isFavorite]);
 
   const activeFiltersCount = [
     filters.sort !== 'default',
@@ -266,7 +269,12 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
+            onBlur={() => {
+              setTimeout(() => setIsSearchFocused(false), 150);
+              if (searchQuery.trim().length >= 2) {
+                addRecentSearch(searchQuery.trim());
+              }
+            }}
             placeholder="ابحث باسم المنتج..."
             className="w-full h-12 pl-4 pr-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900 dark:text-white placeholder-gray-400"
           />
@@ -418,7 +426,10 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                   .map(p => (
                     <button
                       key={p.id}
-                      onClick={() => setSearchQuery(p.name)}
+                      onClick={() => {
+                        setSearchQuery(p.name);
+                        addRecentSearch(p.name);
+                      }}
                       className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 transition-colors"
                     >
                       {p.name}
@@ -457,33 +468,46 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                   <div 
                       key={product.id}
                       onClick={() => setSelectedProductDetails(product)}
-                      className={`bg-warm-white dark:bg-gray-800 rounded-3xl overflow-hidden border transition-all relative flex flex-col h-full cursor-pointer hover:shadow-lg hover:-translate-y-1
-                          ${!product.inStock ? 'opacity-70 grayscale' : 'border-gray-100 dark:border-gray-700 shadow-sm'}
+                      className={`bg-white dark:bg-gray-800 rounded-3xl overflow-hidden border transition-all relative flex flex-col h-full cursor-pointer hover:shadow-xl hover:-translate-y-1 group
+                          ${!product.inStock ? 'opacity-80' : 'border-gray-100 dark:border-gray-700 shadow-sm'}
                       `}
                   >
-                      <div className="w-full aspect-[4/3] bg-gray-50 dark:bg-gray-700 relative overflow-hidden shrink-0">
+                      <div className="w-full aspect-[4/3] bg-white relative overflow-hidden shrink-0">
                           {product.image ? (
-                              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
+                              <>
+                                <div className="absolute inset-0 bg-gray-100 animate-pulse" />
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name} 
+                                  loading="lazy" 
+                                  className="w-full h-full object-contain relative z-10 opacity-0 transition-all duration-700 group-hover:scale-105" 
+                                  onLoad={(e) => {
+                                    e.currentTarget.style.opacity = '1';
+                                    const prev = e.currentTarget.previousElementSibling as HTMLElement;
+                                    if (prev) prev.style.display = 'none';
+                                  }}
+                                />
+                              </>
                           ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                  {viewMode === 'bakery' ? <Cake className="text-pink-300 w-10 h-10" /> : <ShoppingBag className="text-gray-300 w-10 h-10" />}
+                                  {viewMode === 'bakery' ? <Cake className="text-pink-300 w-12 h-12" /> : <ShoppingBag className="text-gray-300 w-12 h-12" />}
                               </div>
                           )}
                           
                           {!product.inStock && (
-                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                                  <span className="text-white text-xs font-bold border-2 border-white px-3 py-1 rounded-lg transform -rotate-12">نفد الكمية</span>
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 backdrop-blur-[1px]">
+                                  <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg transform -rotate-6">نفدت الكمية</span>
                               </div>
                           )}
 
                           <div className="absolute top-2 left-2 z-10">
                               <button 
                                   onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id); }}
-                                  className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all active:scale-90 ${
-                                      liked ? 'bg-red-500 text-white' : 'bg-white/80 dark:bg-black/40 text-gray-500 dark:text-gray-300 hover:text-red-500'
+                                  className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm border border-gray-100/50 dark:border-gray-700/50 transition-all active:scale-90 ${
+                                      liked ? 'bg-red-50 dark:bg-red-500/20 text-red-500' : 'bg-white/90 dark:bg-gray-800/90 text-gray-400 dark:text-gray-400 hover:text-red-400'
                                   }`}
                               >
-                                  <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+                                  <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
                               </button>
                           </div>
                       </div>
@@ -492,36 +516,44 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                           <h3 className="font-bold text-gray-900 dark:text-gray-100 text-xs leading-tight mb-1 line-clamp-2 h-[2.5em] overflow-hidden">
                             <HighlightedText text={product.name} highlight={debouncedSearchQuery} />
                           </h3>
-                          <div className="mt-auto pt-2 flex items-end justify-between">
-                              <div>
-                                  <p className="text-[11px] text-gray-400 mb-0.5">{product.category}</p>
-                                  <p className="text-brand-600 dark:text-brand-400 text-xs font-black">{product.price || '---'}</p>
+                          <div className="mt-auto pt-2 flex items-end justify-between gap-2">
+                              <div className="min-w-0">
+                                  <p className="text-[11px] text-gray-400 mb-0.5 truncate">{product.category}</p>
+                                  <p className="text-brand-600 dark:text-brand-400 text-base font-black truncate">
+                                    {product.price ? `${product.price} ر.ي` : '---'}
+                                  </p>
                               </div>
                               
                               {quantity > 0 ? (
-                                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5" role="group" aria-label="التحكم بالكمية">
-                                      <button onClick={(e) => { e.stopPropagation(); decreaseQuantityByName(product.name); }} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-600 rounded shadow-sm text-gray-600 dark:text-white">
-                                          <X className="w-3 h-3" />
+                                  <div className="flex items-center bg-gray-100 dark:bg-gray-800/80 rounded-full shrink-0 shadow-inner border border-gray-200/50 dark:border-gray-700/50" role="group" aria-label="التحكم بالكمية">
+                                       <button onClick={(e) => { e.stopPropagation(); handleAddToCart(product, viewMode); }} className="w-8 h-8 flex items-center justify-center text-brand-600 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-r-full transition-colors">
+                                          <Plus className="w-4 h-4" />
                                       </button>
-                                      <span className="text-xs font-bold w-4 text-center" aria-live="polite">{quantity}</span>
-                                       <button onClick={(e) => { e.stopPropagation(); handleAddToCart(product, viewMode); }} className="w-8 h-8 flex items-center justify-center bg-brand-600 text-white rounded shadow-sm">
-                                          <Plus className="w-3 h-3" />
+                                      <span className="text-sm font-black w-6 text-center text-gray-800 dark:text-white" aria-live="polite">{quantity}</span>
+                                      <button onClick={(e) => { e.stopPropagation(); decreaseQuantityByName(product.name); }} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-l-full transition-colors">
+                                          <X className="w-3.5 h-3.5" />
                                       </button>
                                   </div>
                               ) : (
-                                  <button 
-                                       onClick={(e) => { e.stopPropagation(); handleAddToCart(product, viewMode); }}
-                                      disabled={!product.inStock}
-                                      className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition-all duration-300 ${
-                                          isAdded 
-                                          ? 'bg-green-500 text-white scale-110' 
-                                          : !product.inStock 
-                                              ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                                              : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-105'
-                                      }`}
-                                  >
-                                      {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                  </button>
+                                  !product.inStock ? (
+                                    <button 
+                                         onClick={(e) => { e.stopPropagation(); setRequestProduct(product.name); }}
+                                        className="h-9 px-3 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 text-[11px] font-bold shrink-0"
+                                    >
+                                        اطلبه
+                                    </button>
+                                  ) : (
+                                    <button 
+                                         onClick={(e) => { e.stopPropagation(); handleAddToCart(product, viewMode); }}
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 shrink-0 border ${
+                                            isAdded 
+                                            ? 'bg-green-500 text-white border-green-500 scale-110' 
+                                            : 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 border-gray-200 dark:border-gray-700 hover:scale-105 hover:border-brand-600 dark:hover:border-brand-400'
+                                        }`}
+                                    >
+                                        {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    </button>
+                                  )
                               )}
                           </div>
                       </div>
@@ -767,6 +799,13 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
             </div>
           </div>
         </div>
+      )}
+
+      {requestProduct && (
+        <ProductRequestModal
+           initialProductName={requestProduct}
+           onClose={() => setRequestProduct(null)}
+        />
       )}
 
       {selectedProductDetails && (

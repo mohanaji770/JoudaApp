@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getFavorites, saveFavorite, removeFavorite } from '../services/db';
 
 interface FavoritesContextType {
@@ -42,7 +42,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     loadFavorites();
   }, []);
 
-  const toggleFavorite = async (productId: string) => {
+  const toggleFavorite = useCallback(async (productId: string) => {
     const isCurrentlyFav = favorites.includes(productId);
 
     if (isCurrentlyFav) {
@@ -60,9 +60,9 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         console.warn('Failed to save favorite', e);
       }
     }
-  };
+  }, [favorites]);
 
-  const isFavorite = (productId: string) => favorites.includes(productId);
+  const isFavorite = useCallback((productId: string) => favorites.includes(productId), [favorites]);
 
   return (
     <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite, isLoading }}>

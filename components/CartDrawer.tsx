@@ -21,10 +21,10 @@ export const CartDrawer: React.FC = () => {
   } = useCart();
 
   // Checkout State
-  const [customerName, setCustomerName] = useState('');
+  const [customerName, setCustomerName] = useState(() => localStorage.getItem('jouda_customer_name') || '');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(() => localStorage.getItem('jouda_customer_phone') || '');
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -102,6 +102,10 @@ export const CartDrawer: React.FC = () => {
       });
 
       if (result.success) {
+        // Save phone for live order tracking
+        localStorage.setItem('jouda_customer_phone', phone.trim());
+        localStorage.setItem('jouda_customer_name', customerName.trim());
+
         setLastOrderDetails({
           orderNumber: result.order_number || result.quotation_id || '',
           quotationId: result.quotation_id || '',

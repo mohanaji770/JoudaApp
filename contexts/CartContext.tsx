@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { STORE_CONFIG } from '../constants';
 import { submitOrderToSupabase } from '../services/supabaseService';
-import { saveCartToDB, loadCartFromDB, addPendingOrder, getPendingOrdersCount, saveCompletedOrder } from '../services/db';
+import { saveCartToDB, loadCartFromDB, addPendingOrder, getPendingOrdersCount, saveCompletedOrder, getCachedProducts } from '../services/db';
 
 export interface CartItem {
   id: string;
@@ -258,8 +258,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, message: 'السلة فارغة' };
     }
 
+    // Check if we need to resolve missing barcodes/prices (e.g. added from recipes)
+    let resolvedItems = items;
+    try {
+      const cachedProducts = await getCachedProducts();
+      resolvedItems = items.map(item => {
+        if (item.barcode) return item;
+        const matchedProduct = cachedProducts.find(p => p.name === item.name);
+        return {
+          ...item,
+          barcode: matchedProduct?.barcode || '',
+          price: item.price || matchedProduct?.price?.toString() || '0'
+        };
+      });
+    } catch (e) {
+      console.warn('Failed to lookup missing barcodes', e);
+    }
+
     // Filter out items without barcode (fallback items)
-    const validItems = items
+    const validItems = resolvedItems
       .filter((item) => item.barcode)
       .map((item) => ({
         product_barcode: item.barcode!,
