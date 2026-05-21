@@ -14,7 +14,17 @@ interface ResultCardProps {
 export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    if (isAddingToCart || !result.matchedStoreItem) return;
+    setIsAddingToCart(true);
+    addToCart(result.matchedStoreItem, 'store');
+    setTimeout(() => {
+      setIsAddingToCart(false);
+    }, 2000);
+  };
 
   const getTheme = (verdict: VerdictType) => {
     switch (verdict) {
@@ -75,6 +85,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
   };
 
   const handleTextShare = async () => {
+    if (isCopied) return;
     let shareText = `🧐 *تقرير فحص "جودة"*:\n\n${result.verdictTitle}\n\n🔍 *التحليل:* ${result.analysis}\n\n💡 *توصية جودة:* ${result.guidance}\n\n`;
     if (result.matchedStoreItem) {
       shareText += `🛍️ متوفر في متجر جودة: ${result.matchedStoreItem}\n`;
@@ -126,11 +137,25 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
                           المنتج <strong>"{result.matchedStoreItem}"</strong> متاح لدينا للطلب الفوري.
                       </p>
                       <button 
-                        onClick={() => addToCart(result.matchedStoreItem!, 'store')}
-                        className="inline-flex items-center gap-2 bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-md shadow-green-200 dark:shadow-none"
+                        onClick={handleAddToCart}
+                        disabled={isAddingToCart}
+                        className={`inline-flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-lg transition-all shadow-md dark:shadow-none ${
+                          isAddingToCart 
+                            ? 'bg-emerald-700 text-white shadow-none scale-95 cursor-default' 
+                            : 'bg-green-600 text-white hover:bg-green-700 shadow-green-200 active:scale-95'
+                        }`}
                       >
-                         <Plus className="w-4 h-4" />
-                         <span>إضافة لسلتك</span>
+                         {isAddingToCart ? (
+                           <>
+                             <Check className="w-4 h-4 animate-bounce" />
+                             <span>تمت الإضافة ✅</span>
+                           </>
+                         ) : (
+                           <>
+                             <Plus className="w-4 h-4" />
+                             <span>إضافة لسلتك</span>
+                           </>
+                         )}
                       </button>
                   </div>
               </div>
@@ -177,10 +202,11 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
           {/* 1. Share Text (Copy) */}
           <button
             onClick={handleTextShare}
+            disabled={isCopied}
             className={`flex-1 py-3.5 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm text-sm ${
               isCopied 
-                ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300' 
-                : 'bg-warm-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700'
+                ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300 cursor-default' 
+                : 'bg-warm-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700 active:scale-95'
             }`}
           >
             {isCopied ? (

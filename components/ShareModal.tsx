@@ -12,39 +12,39 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
   const captureRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Dynamic Theme based on Verdict
+  // Dynamic Theme (100% html-to-image safe without problematic blur filters)
   const getTheme = (verdict: VerdictType) => {
     switch (verdict) {
       case VerdictType.SAFE:
         return {
           gradient: 'from-emerald-500 to-green-700',
-          icon: <CheckCircle className="w-full h-full text-emerald-600" />,
-          stamp: 'border-emerald-200 text-emerald-100 bg-emerald-800/30',
-          footerText: 'text-emerald-800',
-          label: 'آمن ✅'
+          cardBg: 'bg-black/20 border-white/15 text-white',
+          badgeBg: 'bg-white text-emerald-700 border-emerald-200',
+          icon: <CheckCircle className="w-16 h-16 text-white filter drop-shadow-lg" />,
+          label: 'آمن تماماً ✅'
         };
       case VerdictType.RISKY:
         return {
-          gradient: 'from-amber-400 to-orange-600',
-          icon: <AlertTriangle className="w-full h-full text-amber-600" />,
-          stamp: 'border-amber-200 text-amber-100 bg-amber-800/30',
-          footerText: 'text-orange-800',
-          label: 'مشكوك ⚠️'
+          gradient: 'from-amber-500 to-orange-600',
+          cardBg: 'bg-black/20 border-white/15 text-white',
+          badgeBg: 'bg-white text-amber-700 border-amber-200',
+          icon: <AlertTriangle className="w-16 h-16 text-white filter drop-shadow-lg" />,
+          label: 'مشكوك فيه ⚠️'
         };
       case VerdictType.UNSAFE:
         return {
           gradient: 'from-red-500 to-rose-700',
-          icon: <XCircle className="w-full h-full text-red-600" />,
-          stamp: 'border-red-200 text-red-100 bg-red-800/30',
-          footerText: 'text-red-800',
-          label: 'خطر 🚫'
+          cardBg: 'bg-black/20 border-white/15 text-white',
+          badgeBg: 'bg-white text-red-700 border-red-200',
+          icon: <XCircle className="w-16 h-16 text-white filter drop-shadow-lg" />,
+          label: 'خطر غير آمن 🚫'
         };
       default:
         return {
-          gradient: 'from-gray-500 to-gray-700',
-          icon: <ScanLine className="w-full h-full text-gray-600" />,
-          stamp: 'border-gray-200 text-gray-100 bg-gray-800/30',
-          footerText: 'text-gray-800',
+          gradient: 'from-gray-600 to-slate-800',
+          cardBg: 'bg-black/20 border-white/15 text-white',
+          badgeBg: 'bg-white text-gray-700 border-gray-200',
+          icon: <ScanLine className="w-16 h-16 text-white filter drop-shadow-lg" />,
           label: 'غير محدد'
         };
     }
@@ -61,7 +61,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
 
     try {
       // Small delay to ensure images are loaded
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       // Generate High-Res Blob
       const blob = await toBlob(captureRef.current, { 
@@ -90,9 +90,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
         link.href = URL.createObjectURL(blob);
         link.click();
       }
-      
-      // Optional: Close after share
-      // onClose(); 
     } catch (err) {
       console.error('Error sharing image:', err);
       alert('عذراً، حدث خطأ أثناء إنشاء الصورة.');
@@ -107,106 +104,110 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
         
         {/* Header Actions */}
         <div className="flex justify-between items-center text-white px-2">
-          <h3 className="font-bold text-lg">معاينة الصورة</h3>
+          <h3 className="font-bold text-lg">معاينة بطاقة الفحص</h3>
           <button 
             onClick={onClose}
-            className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors"
+            className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors active:scale-95"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* CAPTURE AREA (9:16 Aspect Ratio for Stories) */}
-        <div className="relative w-full aspect-[9/16] shadow-2xl rounded-none overflow-hidden mx-auto bg-gray-900" ref={captureRef}>
+        <div className="relative w-full aspect-[9/16] shadow-2xl rounded-none overflow-hidden mx-auto bg-gray-900 flex flex-col justify-between border border-white/20" ref={captureRef}>
             
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient}`}></div>
+            {/* Clean Background Gradient (100% html-to-image safe) */}
+            <div className={`absolute inset-0 bg-gradient-to-b ${theme.gradient} pointer-events-none`}></div>
             
             {/* Subtle Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/food.png')]"></div>
+            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/food.png')] pointer-events-none"></div>
 
             {/* Content Container */}
-            <div className="relative z-10 h-full flex flex-col px-6 pt-8 pb-6 text-white justify-between">
+            <div className="relative z-10 h-full flex flex-col p-6 text-white justify-between">
                 
                 {/* App Header */}
-                <div className="flex items-center justify-center gap-2 opacity-90 mb-2">
-                    <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-md">
-                        <Leaf className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between border-b border-white/20 pb-4 mb-2">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-white p-2 rounded-xl shadow-md text-emerald-600 flex items-center justify-center">
+                            <Leaf className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="font-black text-lg tracking-tight text-white leading-none mb-1">جودة | Jouda</h2>
+                            <span className="text-[9px] font-bold text-white/80 tracking-wider uppercase block">Gluten-Free Scanner</span>
+                        </div>
                     </div>
-                    <span className="font-black text-xl tracking-tight">جودة | Jouda</span>
+                    <div className="bg-black/20 px-3 py-1 rounded-full border border-white/10 text-xs font-bold text-white shadow-inner">
+                        {new Date(result.timestamp).toLocaleDateString('ar-SA')}
+                    </div>
                 </div>
 
-                {/* Main Result Area */}
-                <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 -mt-6">
+                {/* Main Showcase Area */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 my-auto py-2">
                     
-                    {/* Product Image with Ring */}
-                    <div className="relative">
-                        <div className="w-44 h-44 rounded-full border-[3px] border-white/40 shadow-2xl bg-white flex items-center justify-center overflow-hidden p-1">
-                             {result.imageUrl ? (
-                                <img 
-                                    src={`data:image/jpeg;base64,${result.imageUrl}`} 
-                                    alt="Product" 
-                                    loading="lazy"
-                                    className="w-full h-full object-cover rounded-full"
-                                    crossOrigin="anonymous"
-                                />
-                             ) : (
-                                <div className="p-10 opacity-50">
-                                   {theme.icon}
-                                </div>
-                             )}
-                        </div>
-                        
-                        {/* Stamp Effect */}
-                        <div className={`absolute -bottom-3 -right-3 px-4 py-1.5 border-[3px] ${theme.stamp} rounded-xl transform -rotate-6 shadow-lg backdrop-blur-md bg-black/20`}>
-                            <span className="text-xl font-black uppercase tracking-widest text-white drop-shadow-sm">{theme.label}</span>
-                        </div>
+                    {/* Product Showcase Card */}
+                    <div className="w-48 h-48 rounded-3xl bg-white p-1.5 shadow-2xl border-4 border-white/40 flex items-center justify-center overflow-hidden relative mx-auto">
+                         {result.imageUrl ? (
+                            <img 
+                                src={`data:image/jpeg;base64,${result.imageUrl}`} 
+                                alt="Product" 
+                                loading="lazy"
+                                className="w-full h-full object-cover rounded-2xl"
+                                crossOrigin="anonymous"
+                            />
+                         ) : (
+                            <div className="p-8 opacity-90">
+                               {theme.icon}
+                            </div>
+                         )}
+                    </div>
+                    
+                    {/* Status Badge (Cleanly overlapping product card bottom) */}
+                    <div className={`-mt-6 relative z-10 mx-auto px-6 py-2 rounded-full shadow-xl ${theme.badgeBg} border-2 flex items-center gap-2 font-black text-lg w-fit`}>
+                        <span>{theme.label}</span>
                     </div>
 
                     {/* Verdict Title */}
-                    <div className="space-y-1 mt-4">
-                        <h1 className="text-2xl font-black leading-tight drop-shadow-md max-w-[250px] mx-auto">
-                            {result.verdictTitle.replace(/✅|🚫|⚠️/g, '').trim()}
-                        </h1>
-                        <p className="text-xs font-bold text-white/80 bg-black/10 px-3 py-1 rounded-full inline-block backdrop-blur-sm border border-white/10 mt-2">
-                            {new Date(result.timestamp).toLocaleDateString('ar-SA')}
+                    <h1 className="text-2xl md:text-3xl font-black leading-tight drop-shadow-lg text-white mt-2 px-2">
+                        {result.verdictTitle.replace(/✅|🚫|⚠️/g, '').trim()}
+                    </h1>
+                    
+                    {/* Clean Advice Box (No backdrop-blur to prevent html-to-image bugs) */}
+                    <div className={`w-full ${theme.cardBg} p-4 rounded-2xl border shadow-xl text-right relative overflow-hidden mt-1`}>
+                        <div className="absolute top-0 right-0 w-1.5 h-full bg-white/40"></div>
+                        <p className="text-xs md:text-sm font-semibold leading-relaxed text-white/95 line-clamp-4">
+                            {result.guidance}
                         </p>
                     </div>
-                    
-                    {/* Mini Advice - Shorter and clearer */}
-                    <p className="text-xs text-white/95 font-medium leading-relaxed line-clamp-3 max-w-[90%] bg-black/10 p-3 rounded-xl border border-white/10">
-                        {result.guidance}
-                    </p>
                 </div>
 
-                {/* Bottom White Card (Footer) - Compact Version */}
-                <div className="mt-auto bg-white rounded-2xl p-3 shadow-xl text-gray-900 flex items-center justify-between gap-3 mx-1 mb-1">
-                    <div className="flex-1 min-w-0 text-right">
-                        <div className="flex items-center gap-1.5 mb-1">
-                           <div className="bg-gray-900 text-white p-1 rounded">
-                              <ScanLine className="w-3 h-3" />
+                {/* Bottom VIP Ticket (Footer) */}
+                <div className="bg-white rounded-2xl p-3.5 shadow-2xl text-gray-900 flex items-center justify-between gap-3 mt-auto border border-gray-100 relative overflow-hidden">
+                    <div className="flex-1 min-w-0 text-right space-y-1">
+                        <div className="flex items-center gap-1.5">
+                           <div className="bg-emerald-600 text-white p-1 rounded shadow-sm flex items-center justify-center">
+                              <ScanLine className="w-3.5 h-3.5" />
                            </div>
-                           <p className="font-black text-sm">حمل تطبيق جودة</p>
+                           <h4 className="font-black text-sm text-gray-900">حمل تطبيق جودة</h4>
                         </div>
-                        <p className={`text-[10px] font-bold leading-tight text-gray-500`}>
-                             افحص طعامك وتأكد من سلامته في ثوانٍ.
+                        <p className="text-[10px] font-bold text-gray-500 leading-tight">
+                             افحص طعامك وتأكد من خلوه من الجلوتين في ثوانٍ.
                         </p>
                         
                         {result.matchedStoreItem && (
-                            <div className="mt-1.5 flex items-center gap-1 text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold w-fit border border-green-100">
-                                <BadgeCheck className="w-3 h-3" />
-                                متوفر في المتجر
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-extrabold w-fit border border-emerald-100 shadow-sm">
+                                <BadgeCheck className="w-3 h-3 text-emerald-600" />
+                                متوفر في متجر جودة
                             </div>
                         )}
                     </div>
                     
-                    {/* QR Code - Smaller */}
-                    <div className="shrink-0 bg-white p-0.5 rounded-lg border border-gray-100">
+                    {/* QR Code Container */}
+                    <div className="shrink-0 bg-gray-50 p-1.5 rounded-xl border border-gray-100 shadow-inner flex flex-col items-center justify-center">
                         <img 
                             src={qrCodeUrl} 
                             alt="QR Code" 
                             loading="lazy"
-                            className="w-16 h-16 mix-blend-multiply"
+                            className="w-14 h-14 mix-blend-multiply"
                             crossOrigin="anonymous"
                         />
                     </div>
@@ -219,17 +220,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
         <button
           onClick={handleShare}
           disabled={isGenerating}
-          className="w-full bg-white text-gray-900 hover:bg-gray-100 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all active:scale-[0.98] text-lg"
+          className="w-full bg-white text-gray-900 hover:bg-gray-100 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all active:scale-[0.98] text-lg mt-2 border border-gray-100"
         >
           {isGenerating ? (
             <div className="flex items-center gap-2">
                 <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
-                <span>جاري تحضير الصورة...</span>
+                <span>جاري تحضير الصورة عالية الدقة...</span>
             </div>
           ) : (
             <>
               <Share2 className="w-6 h-6" />
-              <span>مشاركة النتيجة</span>
+              <span>مشاركة بطاقة الفحص</span>
             </>
           )}
         </button>

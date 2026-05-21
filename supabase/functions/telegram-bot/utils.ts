@@ -37,10 +37,10 @@ async function answerCallback(token: string, callbackId: string, text?: string, 
 async function sendMainMenu(token: string, chatId: string, text: string) {
   const keyboard = {
     keyboard: [
-      [{ text: '📦 الطلبات' }, { text: '💰 مبيعات اليوم' }],
-      [{ text: '🔍 بحث منتج' }, { text: '📈 الأرباح' }],
-      [{ text: '🧾 المحصّل' }, { text: '⏰ الصلاحية' }],
-      [{ text: '📉 مخزون منخفض' }, { text: '⚙️ حالة النظام' }],
+      [{ text: 'الطلبات' }, { text: 'مبيعات اليوم' }],
+      [{ text: 'بحث منتج' }, { text: 'الارباح' }],
+      [{ text: 'المحصل' }, { text: 'الصلاحية' }],
+      [{ text: 'مخزون منخفض' }, { text: 'حالة النظام' }],
     ],
     resize_keyboard: true,
     input_field_placeholder: 'اختر من القائمة أو اكتب أمراً...',
@@ -70,8 +70,8 @@ function getClients() {
 // ─── Status Maps ───────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  submitted: '📨 جديد', confirmed: '✅ مؤكد', preparing: '👨‍🍳 قيد التحضير',
-  delivered: '🎉 تم التسليم', cancelled: '❌ ملغي', failed: '⚠️ فشل',
+  submitted: 'جديد', confirmed: 'مؤكد', preparing: 'قيد التحضير',
+  delivered: 'تم التسليم', cancelled: 'ملغي', failed: 'فشل',
 };
 
 const VALID_TRANSITIONS: Record<string, string[]> = {

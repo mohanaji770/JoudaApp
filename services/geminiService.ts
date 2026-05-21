@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT } from "../constants";
 import { AnalysisResult, VerdictType } from "../types";
 
 // Initialize API client
-// Note: process.env.API_KEY is injected by Vite at build time
+// Note: process.env.API_KEY is injected by Vite at build time from API_KEY or VITE_GEMINI_API_KEY
 const apiKey = process.env.API_KEY;
 
 if (!apiKey) {

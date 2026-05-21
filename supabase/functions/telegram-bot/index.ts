@@ -1,5 +1,6 @@
 import { answerCallback, sendMessage } from './utils.ts';
 import { handleCallback } from './callbacks.ts';
+import { handleNewInvoice, handleReversedInvoice } from './incoming.ts';
 import {
   handleHelp,
   handleOrders,
@@ -44,11 +45,26 @@ Deno.serve(async (req: Request) => {
     // ── Handle Cron/Automated Triggers ──
     if (update.cron_action === 'morning_briefing') {
       const adminChatIds = (Deno.env.get('TELEGRAM_ADMIN_CHAT_ID') || '').split(',').map(id => id.trim());
-      // إرسال التقرير لكل المدراء المضافين
       for (const chatId of adminChatIds) {
         if (chatId) await handleMorningBriefing(botToken, chatId);
       }
       return new Response('Cron executed OK');
+    }
+
+    // ── Handle Inventory DB Webhook (POS invoices) ──
+    if (update.type && update.table === 'invoices' && update.record) {
+      const record = update.record;
+      const oldRecord = update.old_record;
+      const eventType = update.type;
+      if (eventType === 'INSERT' && record.status === 'POSTED') {
+        await handleNewInvoice(record);
+        return new Response('OK');
+      }
+      if (eventType === 'UPDATE' && record.is_voided && !oldRecord?.is_voided) {
+        await handleReversedInvoice(record);
+        return new Response('OK');
+      }
+      return new Response('Ignored');
     }
 
     // ── Handle Callback (Inline Button Press) ──
@@ -58,7 +74,7 @@ Deno.serve(async (req: Request) => {
       const adminChatIds = (Deno.env.get('TELEGRAM_ADMIN_CHAT_ID') || '').split(',').map(id => id.trim());
 
       if (!adminChatIds.includes(cbChatId)) {
-        await answerCallback(botToken, cb.id, '⛔ غير مصرح');
+        await answerCallback(botToken, cb.id, 'غير مصرح');
         return new Response('OK');
       }
 
@@ -76,7 +92,7 @@ Deno.serve(async (req: Request) => {
     // 1. Group Chat Handling (Only allow /chatid)
     if (chatId.startsWith('-')) {
        if (text === '/chatid' || text.startsWith('/chatid@')) {
-         await sendMessage(botToken, chatId, `ℹ️ معرف هذه المجموعة (Chat ID) هو:\n<code>${chatId}</code>`);
+         await sendMessage(botToken, chatId, `معرف هذه المجموعة (Chat ID) هو:\n<code>${chatId}</code>`);
        }
        // Ignore all other commands/messages in groups
        return new Response('OK');
@@ -87,9 +103,9 @@ Deno.serve(async (req: Request) => {
     
     if (!adminChatIds.includes(chatId)) {
       if (text === '/chatid') {
-         await sendMessage(botToken, chatId, `ℹ️ معرف المحادثة (Chat ID) هو:\n<code>${chatId}</code>\nأضف هذا الرقم للإعدادات.`);
+         await sendMessage(botToken, chatId, `معرف المحادثة (Chat ID) هو:\n<code>${chatId}</code>\nأضف هذا الرقم للإعدادات.`);
       } else {
-         await sendMessage(botToken, chatId, '⛔ هذا البوت خاص بإدارة جودة فقط');
+         await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة جودة فقط');
       }
       return new Response('OK');
     }
@@ -99,14 +115,14 @@ Deno.serve(async (req: Request) => {
 
     // Map reply keyboard button text → slash commands
     const BUTTON_MAP: Record<string, string> = {
-      '📦 الطلبات': '/orders',
-      '💰 مبيعات اليوم': '/today',
-      '🔍 بحث منتج': '/search',
-      '📈 الأرباح': '/profit',
-      '🧾 المحصّل': '/wallet',
-      '⏰ الصلاحية': '/expiry',
-      '📉 مخزون منخفض': '/lowstock',
-      '⚙️ حالة النظام': '/status',
+      'الطلبات': '/orders',
+      'مبيعات اليوم': '/today',
+      'بحث منتج': '/search',
+      'الارباح': '/profit',
+      'المحصل': '/wallet',
+      'الصلاحية': '/expiry',
+      'مخزون منخفض': '/lowstock',
+      'حالة النظام': '/status',
     };
 
     const command = BUTTON_MAP[text] || rawCommand.toLowerCase().replace(/@\w+$/, '');
@@ -157,7 +173,7 @@ Deno.serve(async (req: Request) => {
         break;
 
       case '/expense':
-        if (!arg) { await sendMessage(botToken, chatId, '💸 الصيغة: /expense [مبلغ] [وصف]\nمثال: /expense 5000 بنزين'); break; }
+        if (!arg) { await sendMessage(botToken, chatId, 'الصيغة: /expense [مبلغ] [وصف]\nمثال: /expense 5000 بنزين'); break; }
         await handleExpense(botToken, chatId, arg);
         break;
 
@@ -174,7 +190,7 @@ Deno.serve(async (req: Request) => {
         break;
 
       default:
-        await sendMessage(botToken, chatId, '❓ أمر غير معروف. أرسل /help لعرض الأوامر المتاحة.');
+        await sendMessage(botToken, chatId, 'أمر غير معروف. أرسل /help لعرض الأوامر المتاحة.');
     }
   } catch (err: any) {
     console.error('Telegram bot error:', err);

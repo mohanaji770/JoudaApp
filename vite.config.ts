@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       // Pass the API Key securely to the client side
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.VITE_GEMINI_API_KEY)
     },
     server: {
       host: true,

@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { ChefHat, Clock, Flame, ChevronDown, ChevronUp, ShoppingBag, Plus, AlertCircle, RefreshCw, PackageCheck, PlayCircle, ExternalLink, Youtube } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { fetchRecipesWithFallback, Recipe, getYouTubeEmbedId } from '../services/supabaseService';
+import { fetchRecipesWithFallback, Recipe, Product, getYouTubeEmbedId } from '../services/supabaseService';
 
 export const RecipesPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { addToCart, addMultipleToCart } = useCart();
+  const { addToCart, addToCartWithBarcode, addMultipleToCart } = useCart();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [productNames, setProductNames] = useState<Record<string, string>>({});
+  const [cachedProducts, setCachedProducts] = useState<Product[]>([]);
 
   const loadRecipes = async () => {
     setLoading(true);
@@ -34,35 +35,25 @@ export const RecipesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const resolveProductNames = async () => {
-      const barcodes = new Set<string>();
-      recipes.forEach(r => {
-        if (r.mainProduct && /^\d{5,}$/.test(r.mainProduct)) barcodes.add(r.mainProduct);
-        r.bundleItems?.forEach(item => {
-          if (/^\d{5,}$/.test(item)) barcodes.add(item);
-        });
-      });
+    const loadProductsAndResolveNames = async () => {
+      try {
+        const { getCachedProducts } = await import('../services/db');
+        const products = await getCachedProducts();
+        setCachedProducts(products);
 
-      if (barcodes.size > 0) {
-        try {
-          const { getCachedProductByBarcode } = await import('../services/db');
-          const newNames: Record<string, string> = {};
-          for (const barcode of Array.from(barcodes)) {
-            const product = await getCachedProductByBarcode(barcode);
-            if (product) {
-              newNames[barcode] = product.name;
-            }
+        const newNames: Record<string, string> = {};
+        products.forEach(p => {
+          if (p.barcode) {
+            newNames[p.barcode] = p.name;
           }
-          setProductNames(prev => ({ ...prev, ...newNames }));
-        } catch (e) {
-          console.warn("Failed to resolve names", e);
-        }
+        });
+        setProductNames(newNames);
+      } catch (e) {
+        console.warn("Failed to resolve product names", e);
       }
     };
 
-    if (recipes.length > 0) {
-      resolveProductNames();
-    }
+    loadProductsAndResolveNames();
   }, [recipes]);
 
   const toggleExpand = (id: string) => {
@@ -70,40 +61,130 @@ export const RecipesPage: React.FC = () => {
   };
 
   const handleBuyBundle = async (recipe: Recipe) => {
-    const itemsToBuy = [];
-    if (recipe.mainProduct) itemsToBuy.push(recipe.mainProduct);
+    const rawItems = [];
+    if (recipe.mainProduct) rawItems.push(recipe.mainProduct);
     if (recipe.bundleItems && recipe.bundleItems.length > 0) {
-        itemsToBuy.push(...recipe.bundleItems);
+      rawItems.push(...recipe.bundleItems);
     }
     
-    if (itemsToBuy.length > 0) {
-        for (const item of itemsToBuy) {
-            await handleAddSingleItem(item);
+    if (rawItems.length === 0) return;
+
+    const uniqueProducts = new Map<string, { name: string; barcode: string; price?: string; source?: 'store' | 'bakery' }>();
+
+    let latestProducts = cachedProducts;
+    if (latestProducts.length === 0) {
+      try {
+        const { getCachedProducts } = await import('../services/db');
+        latestProducts = await getCachedProducts();
+      } catch (e) {
+        console.warn("Failed to fetch latest products", e);
+      }
+    }
+
+    for (const itemOrBarcode of rawItems) {
+      if (!itemOrBarcode) continue;
+      const trimmed = itemOrBarcode.trim();
+      
+      let matched = latestProducts.find(p => p.barcode === trimmed || p.id === trimmed);
+      if (!matched) {
+        matched = latestProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+      }
+
+      if (!matched) {
+        try {
+          const { getCachedProductByBarcode } = await import('../services/db');
+          const dbProduct = await getCachedProductByBarcode(trimmed);
+          if (dbProduct) {
+            matched = dbProduct;
+          }
+        } catch (e) {
+          console.warn("Fallback DB lookup failed", e);
         }
+      }
+
+      if (matched) {
+        uniqueProducts.set(matched.barcode || matched.name, {
+          name: matched.name,
+          barcode: matched.barcode,
+          price: matched.price?.toString(),
+          source: matched.source || 'store'
+        });
+      } else {
+        const isBarcodeFormat = /^[A-Za-z]?\d{3,}$/.test(trimmed);
+        if (!isBarcodeFormat) {
+          uniqueProducts.set(trimmed, {
+            name: trimmed,
+            barcode: '',
+            price: '0',
+            source: 'store'
+          });
+        }
+      }
+    }
+
+    for (const product of Array.from(uniqueProducts.values())) {
+      if (product.barcode) {
+        addToCartWithBarcode(product);
+      } else {
+        addToCart(product.name, product.source);
+      }
     }
   };
 
   const handleAddSingleItem = async (itemOrBarcode: string) => {
-      // Check if it looks like a barcode (mostly digits)
-      if (/^\d{5,}$/.test(itemOrBarcode)) {
-          try {
-              const { getCachedProductByBarcode } = await import('../services/db');
-              const product = await getCachedProductByBarcode(itemOrBarcode);
-              if (product) {
-                  addToCartWithBarcode({
-                      name: product.name,
-                      barcode: product.barcode,
-                      price: product.price?.toString(),
-                      source: 'store'
-                  });
-                  return;
-              }
-          } catch (e) {
-              console.warn("Failed to resolve barcode", e);
-          }
+    if (!itemOrBarcode) return;
+    const trimmed = itemOrBarcode.trim();
+
+    let matched = cachedProducts.find(p => p.barcode === trimmed || p.id === trimmed);
+    if (!matched) {
+      matched = cachedProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+    }
+
+    if (!matched) {
+      try {
+        const { getCachedProductByBarcode, getCachedProducts } = await import('../services/db');
+        const dbProduct = await getCachedProductByBarcode(trimmed);
+        if (dbProduct) {
+          matched = dbProduct;
+        } else {
+          const allDbProducts = await getCachedProducts();
+          matched = allDbProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+        }
+      } catch (e) {
+        console.warn("Fallback DB lookup failed", e);
       }
-      // Fallback: just add it as a name
-      addToCart(itemOrBarcode);
+    }
+
+    if (matched) {
+      addToCartWithBarcode({
+        name: matched.name,
+        barcode: matched.barcode,
+        price: matched.price?.toString(),
+        source: matched.source || 'store'
+      });
+      return;
+    }
+
+    const isBarcodeFormat = /^[A-Za-z]?\d{3,}$/.test(trimmed);
+    if (!isBarcodeFormat) {
+      addToCart(trimmed);
+    }
+  };
+
+  const getBundleDisplayNames = (recipe: Recipe) => {
+    const names = new Set<string>();
+    if (recipe.mainProduct) {
+      const resolved = productNames[recipe.mainProduct] || recipe.mainProduct;
+      if (resolved) names.add(resolved);
+    }
+    if (recipe.bundleItems && recipe.bundleItems.length > 0) {
+      recipe.bundleItems.forEach(item => {
+        if (!item) return;
+        const resolved = productNames[item] || item;
+        names.add(resolved);
+      });
+    }
+    return Array.from(names);
   };
 
   return (
@@ -282,14 +363,11 @@ export const RecipesPage: React.FC = () => {
                                     أضف جميع المكونات المتوفرة في المتجر لهذه الوصفة بضغطة واحدة
                                 </p>
                                 
-                                {recipe.bundleItems && recipe.bundleItems.length > 0 && (
+                                {getBundleDisplayNames(recipe).length > 0 && (
                                     <div className="flex flex-wrap gap-2 mb-3">
-                                        <span className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                                            {productNames[recipe.mainProduct] || recipe.mainProduct}
-                                        </span>
-                                        {recipe.bundleItems.map((item, idx) => (
-                                             <span key={idx} className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                                                {productNames[item] || item}
+                                        {getBundleDisplayNames(recipe).map((name, idx) => (
+                                            <span key={idx} className="text-[10px] bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                                                {name}
                                             </span>
                                         ))}
                                     </div>

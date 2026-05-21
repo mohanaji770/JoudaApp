@@ -13,13 +13,14 @@ interface Banner {
 export const PromoBanner: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchBanners = async () => {
+      setIsLoading(true);
       try {
         const { data, error } = await supabase
           .from('banners')
@@ -29,10 +30,11 @@ export const PromoBanner: React.FC = () => {
 
         if (!error && data && data.length > 0) {
           setBanners(data);
-          setIsLoaded(true);
         }
       } catch (err) {
         console.warn('PromoBanner: Failed to fetch banners', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -77,12 +79,30 @@ export const PromoBanner: React.FC = () => {
     setTimeout(() => setIsPaused(false), 3000);
   };
 
-  if (!isLoaded || banners.length === 0) return null;
+  if (isLoading) {
+    return (
+      <div style={{ marginBottom: 24, width: '100%' }}>
+        <div 
+          className="animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800"
+          style={{
+            width: '100%',
+            aspectRatio: '16 / 9',
+            minHeight: 185,
+            maxHeight: 280,
+            borderRadius: 24,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (banners.length === 0) return null;
 
   const banner = banners[currentIndex];
 
   const handleClick = () => {
-    if (banner.link_url) {
+    if (banner?.link_url) {
       window.open(banner.link_url, '_blank', 'noopener');
     }
   };
@@ -92,95 +112,148 @@ export const PromoBanner: React.FC = () => {
       ref={containerRef}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      style={{ marginBottom: 20, position: 'relative' }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      style={{ 
+        marginBottom: 24, 
+        position: 'relative',
+        width: '100%',
+      }}
+      className="group animate-fade-in"
     >
       {/* Banner Container */}
       <div
         onClick={handleClick}
-        role={banner.link_url ? 'link' : undefined}
+        role={banner?.link_url ? 'link' : undefined}
         style={{
           position: 'relative',
           width: '100%',
-          borderRadius: 16,
+          aspectRatio: '16 / 9',
+          minHeight: 185,
+          maxHeight: 280,
+          borderRadius: 24,
           overflow: 'hidden',
-          cursor: banner.link_url ? 'pointer' : 'default',
-          aspectRatio: '2.4 / 1',
-          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+          cursor: banner?.link_url ? 'pointer' : 'default',
+          boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.15)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          background: '#1e293b', // Dark fallback background
         }}
       >
-        {/* Image with fade transition */}
-        {banners.map((b, i) => (
-          <img
-            key={b.id}
-            src={b.image_url}
-            alt={b.title || 'إعلان'}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: i === currentIndex ? 1 : 0,
-              transition: 'opacity 0.5s ease-in-out',
-              pointerEvents: 'none',
-            }}
-            loading={i === 0 ? 'eager' : 'lazy'}
-          />
-        ))}
+        {/* Images with cinematic zoom & fade transition */}
+        {banners.map((b, i) => {
+          const isActive = i === currentIndex;
+          return (
+            <img
+              key={b.id}
+              src={b.image_url}
+              alt={b.title || 'إعلان'}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: isActive ? 1 : 0,
+                transform: isActive ? 'scale(1)' : 'scale(1.08)',
+                transition: 'opacity 1s ease-in-out, transform 6s cubic-bezier(0.25, 1, 0.5, 1)',
+                pointerEvents: 'none',
+                zIndex: isActive ? 2 : 1,
+              }}
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          );
+        })}
 
-        {/* Title overlay — subtle gradient at bottom */}
-        {banner.title && (
+        {/* Title overlay — rich dark gradient at bottom */}
+        {banner?.title && (
           <div style={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            padding: '24px 16px 12px',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)',
+            padding: '40px 20px 20px',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 16,
+            zIndex: 5,
           }}>
-            <p style={{
-              margin: 0,
-              color: '#fff',
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-              lineHeight: 1.4,
-            }}>
-              {banner.title}
-            </p>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                margin: 0,
+                color: '#ffffff',
+                fontSize: '1.05rem',
+                fontWeight: 800,
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                lineHeight: 1.4,
+              }}>
+                {banner.title}
+              </p>
+              {banner.link_url && (
+                <span style={{
+                  display: 'inline-block',
+                  marginTop: 6,
+                  color: '#fb923c',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  backdropFilter: 'blur(4px)',
+                }}>
+                  اضغط للتفاصيل 👈
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Glass Capsule Pagination Indicators */}
+        {banners.length > 1 && (
+          <div style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 10px',
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 20,
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            zIndex: 10,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+          }}>
+            {banners.map((_, i) => {
+              const isActive = i === currentIndex;
+              return (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goTo(i);
+                  }}
+                  aria-label={`الإعلان ${i + 1}`}
+                  style={{
+                    width: isActive ? 18 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    border: 'none',
+                    background: isActive ? '#ea580c' : 'rgba(255, 255, 255, 0.6)',
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                />
+              );
+            })}
           </div>
         )}
       </div>
-
-      {/* Dots — below the banner */}
-      {banners.length > 1 && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 5,
-          marginTop: 8,
-        }}>
-          {banners.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`الإعلان ${i + 1}`}
-              style={{
-                width: i === currentIndex ? 18 : 6,
-                height: 6,
-                borderRadius: 3,
-                border: 'none',
-                background: i === currentIndex
-                  ? 'var(--brand-color, #dc2626)'
-                  : '#d1d5db',
-                cursor: 'pointer',
-                padding: 0,
-                transition: 'all 0.3s ease',
-              }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
+

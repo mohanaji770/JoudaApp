@@ -11,12 +11,11 @@ interface ProductRequestModalProps {
 export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClose, initialProductName = '' }) => {
   const [productName, setProductName] = useState(initialProductName);
   const [notes, setNotes] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const handleSendRequest = () => {
-    if (!productName.trim()) {
-      alert('يرجى كتابة اسم المنتج المطلوب');
-      return;
-    }
+    if (!productName.trim() || isSending) return;
+    setIsSending(true);
 
     let message = `*طلب توفير منتج جديد* 📦\n`;
     message += `------------------\n`;
@@ -33,8 +32,10 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
     const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
     
-    window.open(url, '_blank');
-    onClose();
+    setTimeout(() => {
+      window.open(url, '_blank');
+      onClose();
+    }, 600);
   };
 
   return (
@@ -68,6 +69,11 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
                 type="text" 
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && productName.trim() && !isSending) {
+                    handleSendRequest();
+                  }
+                }}
                 className="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white placeholder-gray-400"
                 placeholder="مثال: دقيق لوز، بسكويت شار..."
                 autoFocus
@@ -92,11 +98,11 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
 
           <button
             onClick={handleSendRequest}
-            disabled={!productName.trim()}
+            disabled={!productName.trim() || isSending}
             className="w-full bg-whatsapp hover:bg-whatsapp-hover disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-100 dark:shadow-none transition-all active:scale-[0.98] mt-2"
           >
             <MessageCircle className="w-5 h-5" />
-            <span>إرسال الطلب عبر واتساب</span>
+            <span>{isSending ? 'جاري تحضير الطلب...' : 'إرسال الطلب عبر واتساب'}</span>
           </button>
         </div>
 
