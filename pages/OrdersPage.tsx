@@ -20,8 +20,11 @@ interface DisplayOrder extends LiveOrder {
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: string }> = {
   submitted: { label: 'تم الإرسال', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', icon: '📨' },
   confirmed: { label: 'مؤكد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: '✅' },
+  reserved: { label: 'محجوز', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', icon: '📦' },
   preparing: { label: 'قيد التحضير', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: '👨‍🍳' },
-  delivered: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: '🎉' },
+  delivered: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: '🚚' },
+  paid: { label: 'تم الدفع', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', icon: '💰' },
+  deposited: { label: 'تم الايداع', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', icon: '🏦' },
   cancelled: { label: 'ملغي', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: '❌' },
   failed: { label: 'فشل', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: '⚠️' },
 };
@@ -311,7 +314,11 @@ export const OrdersPage: React.FC = () => {
             const items = orderItems[order.id] || [];
 
             return (
-              <div key={order.id} className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+              <div key={order.id} className={`bg-white dark:bg-gray-800 rounded-3xl border overflow-hidden shadow-sm ${
+                ['submitted', 'confirmed', 'preparing'].includes(order.status)
+                  ? 'border-brand-300 dark:border-brand-700 shadow-brand-500/5 animate-pulse'
+                  : 'border-gray-100 dark:border-gray-700'
+              }`}>
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div>

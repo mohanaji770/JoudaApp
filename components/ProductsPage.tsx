@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { Plus, ShoppingBag, AlertCircle, Search, X, Cake, Check, Heart, SlidersHorizontal, ArrowUpDown, Filter, ChevronDown, Clock, Trash2, Sparkles } from 'lucide-react';
+import { Plus, Minus, ShoppingBag, AlertCircle, Search, X, Cake, Check, Heart, SlidersHorizontal, ArrowUpDown, Filter, ChevronDown, Clock, Trash2, Sparkles } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { fetchProductsFromSupabase, Product } from '../services/supabaseService';
@@ -529,9 +529,9 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                                        <button onClick={(e) => { e.stopPropagation(); handleAddToCart(product, viewMode); }} className="w-8 h-8 flex items-center justify-center text-brand-600 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-r-full transition-colors">
                                           <Plus className="w-4 h-4" />
                                       </button>
-                                      <span className="text-sm font-black w-6 text-center text-gray-800 dark:text-white" aria-live="polite">{quantity}</span>
+                                      <span className="text-xs font-black min-w-[32px] text-center text-gray-800 dark:text-white" aria-live="polite">{quantity} عدد</span>
                                       <button onClick={(e) => { e.stopPropagation(); decreaseQuantityByName(product.name); }} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-l-full transition-colors">
-                                          <X className="w-3.5 h-3.5" />
+                                          <Minus className="w-3.5 h-3.5" />
                                       </button>
                                   </div>
                               ) : (

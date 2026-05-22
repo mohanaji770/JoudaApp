@@ -84,8 +84,8 @@ function fmtDate(d?: Date | string) {
 // ─── Status Maps ───────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  submitted: 'جديد', confirmed: 'مؤكد', preparing: 'قيد التحضير',
-  delivered: 'تم التسليم', cancelled: 'ملغي', failed: 'فشل',
+  submitted: '🆕 جديد', confirmed: '✅ مؤكد', preparing: '👨‍🍳 قيد التحضير',
+  delivered: '🎉 تم التسليم', cancelled: '❌ ملغي', failed: '⚠️ فشل',
 };
 
 const VALID_TRANSITIONS: Record<string, string[]> = {

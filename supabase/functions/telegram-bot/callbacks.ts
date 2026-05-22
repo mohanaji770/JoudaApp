@@ -55,24 +55,30 @@ async function handleCallback(token: string, chatId: string, callback: any) {
          await answerCallback(token, callback.id, 'عذرا، تم اتخاذ إجراء على هذا الطلب مسبقاً', true);
          return;
       }
-      statusLabel = 'تم الاعتماد';
+      statusLabel = '✅ تم الاعتماد';
        dbStatus = 'confirmed';
        await jouda.from('customer_orders').update({ status: dbStatus }).eq('id', orderId);
 
+        // Fetch full order for WhatsApp notification
+        const { data: fullOrder } = await jouda.from('customer_orders')
+          .select('order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, notes')
+          .eq('id', orderId).single();
+
         const originalText = callback.message?.text || '';
         const forwardedText = originalText.includes('طلب من تطبيق جودة') ? originalText : 'طلب من تطبيق جودة\n\n' + originalText;
-        const newText = originalText + `\n\n<b>تم الاعتماد والارسال للمجموعة</b> بواسطة: <i>${userName}</i>`;
+        const newText = originalText + `\n\n<b>✅ تم الاعتماد والارسال للمجموعة</b> بواسطة: <i>${userName}</i>`;
        await editMessage(token, chatId, messageId, newText, { reply_markup: undefined });
 
         const teamKeyboard = [
-          [{ text: 'حجز الطلب', callback_data: `wf_reserve_${orderId}` }],
-          [{ text: 'تجهيز الطلب', callback_data: `wf_prepare_${orderId}` }],
-          [{ text: 'تم التوصيل', callback_data: `wf_deliver_${orderId}` }],
-          [{ text: 'تم استلام المبلغ', callback_data: `wf_paid_${orderId}` }],
-          [{ text: 'تم الايداع (للمدير)', callback_data: `wf_deposit_${orderId}` }],
-          [{ text: 'الغاء الطلب', callback_data: `wf_cancel_${orderId}` }]
+          [{ text: '📦 حجز الطلب', callback_data: `wf_reserve_${orderId}` }],
+          [{ text: '👨‍🍳 تجهيز الطلب', callback_data: `wf_prepare_${orderId}` }],
+          [{ text: '🚚 تم التوصيل', callback_data: `wf_deliver_${orderId}` }],
+          [{ text: '💰 تم استلام المبلغ', callback_data: `wf_paid_${orderId}` }],
+          [{ text: '🏦 تم الايداع (للمدير)', callback_data: `wf_deposit_${orderId}` }],
+          [{ text: '❌ الغاء الطلب', callback_data: `wf_cancel_${orderId}` }]
         ];
 
+       // Send to group
        for (const gId of groupIds) {
           await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
@@ -86,7 +92,42 @@ async function handleCallback(token: string, chatId: string, callback: any) {
           });
        }
 
-        await answerCallback(token, callback.id, `تم الارسال للمجموعة`, false);
+       // Generate WhatsApp notification for the customer
+       if (fullOrder?.customer_phone) {
+         let phone = fullOrder.customer_phone.replace(/\D/g, '');
+         if (phone.startsWith('0')) phone = '967' + phone.slice(1);
+         else if (!phone.startsWith('967')) phone = '967' + phone;
+
+         const disc = fullOrder.discount || 0;
+         const delivery = fullOrder.delivery_fee || 0;
+         const sub = fullOrder.subtotal || 0;
+         const tot = fullOrder.total || sub + delivery - disc;
+
+         let waMsg = `*جودة — تم تأكيد طلبك* 🛒\n\n*رقم الطلب:* ${fullOrder.order_number}\n*الاسم:* ${fullOrder.customer_name}\n\n`;
+         waMsg += `💰 *المبلغ:* ${sub.toLocaleString()} ر.ي`;
+         if (disc > 0) waMsg += `\n🏷️ *الخصم:* ${disc.toLocaleString()} ر.ي`;
+         waMsg += `\n🚚 *التوصيل:* ${delivery.toLocaleString()} ر.ي`;
+         waMsg += `\n💵 *الاجمالي:* ${tot.toLocaleString()} ر.ي`;
+         if (fullOrder.notes) waMsg += `\n📝 *ملاحظات:* ${fullOrder.notes}`;
+         waMsg += `\n\nسنقوم بتجهيز طلبك قريباً. شكراً لاختيارك جودة`;
+
+         const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(waMsg)}`;
+
+         for (const gId of groupIds) {
+           await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               chat_id: gId,
+               text: `<a href="${waUrl}">📱 ارسال اشعار للعميل عبر واتساب</a>`,
+               parse_mode: 'HTML',
+               disable_web_page_preview: true,
+             }),
+           });
+         }
+       }
+
+        await answerCallback(token, callback.id, `✅ تم الاعتماد والارسال للمجموعة`, false);
        return;
     }
     
@@ -99,15 +140,15 @@ async function handleCallback(token: string, chatId: string, callback: any) {
          await answerCallback(token, callback.id, 'عذرا، الطلب لم يعد قيد الانتظار', true);
          return;
       }
-      statusLabel = 'تم الالغاء والرفض';
+      statusLabel = '❌ تم الالغاء والرفض';
        dbStatus = 'cancelled';
        await jouda.from('customer_orders').update({ status: dbStatus }).eq('id', orderId);
 
-       const originalText = callback.message?.text || '';
-       const newText = originalText + `\n\n<b>تم رفض الطلب والغاؤه</b> بواسطة: <i>${userName}</i>`;
-       await editMessage(token, chatId, messageId, newText, { reply_markup: undefined });
+        const originalText = callback.message?.text || '';
+        const newText = originalText + `\n\n<b>❌ تم رفض الطلب والغاؤه</b> بواسطة: <i>${userName}</i>`;
+        await editMessage(token, chatId, messageId, newText, { reply_markup: undefined });
 
-      await answerCallback(token, callback.id, `تم رفض الطلب`);
+      await answerCallback(token, callback.id, `❌ تم رفض الطلب`);
       return;
     }
 
@@ -121,7 +162,7 @@ async function handleCallback(token: string, chatId: string, callback: any) {
          await answerCallback(token, callback.id, 'يجب استلام المبلغ من العميل اولا قبل الايداع', true);
          return;
       }
-      statusLabel = 'تم الايداع';
+      statusLabel = '🏦 تم الايداع';
        dbStatus = 'deposited';
     }
 
@@ -131,35 +172,35 @@ async function handleCallback(token: string, chatId: string, callback: any) {
           await answerCallback(token, callback.id, 'لقد سبقك زميلك بحجز الطلب او لم يتم اعتماده بعد', true);
           return;
        }
-       statusLabel = 'حجز الطلب'; dbStatus = 'reserved'; 
+       statusLabel = '📦 حجز الطلب'; dbStatus = 'reserved'; 
     }
     else if (action === 'prepare') { 
        if (currentStatus !== 'reserved') {
           await answerCallback(token, callback.id, 'يجب حجز الطلب اولا قبل تجهيزه', true);
           return;
        }
-       statusLabel = 'تم التجهيز والتصوير'; dbStatus = 'preparing'; 
+       statusLabel = '👨‍🍳 تم التجهيز والتصوير'; dbStatus = 'preparing'; 
     }
     else if (action === 'deliver') { 
        if (currentStatus !== 'preparing') {
           await answerCallback(token, callback.id, 'يجب الانتهاء من التجهيز قبل التوصيل', true);
           return;
        }
-       statusLabel = 'تم التوصيل'; dbStatus = 'delivered'; 
+       statusLabel = '🚚 تم التوصيل'; dbStatus = 'delivered'; 
     }
     else if (action === 'paid') { 
        if (currentStatus !== 'delivered') {
           await answerCallback(token, callback.id, 'لا يمكن تسجيل الاستلام قبل تأكيد التوصيل', true);
           return;
        }
-       statusLabel = 'تم استلام المبلغ'; dbStatus = 'paid'; 
+       statusLabel = '💰 تم استلام المبلغ'; dbStatus = 'paid'; 
     }
     else if (action === 'cancel') { 
        if (['delivered', 'paid', 'deposited', 'cancelled'].includes(currentStatus)) {
           await answerCallback(token, callback.id, 'لا يمكن الغاء الطلب في هذه المرحلة', true);
           return;
        }
-       statusLabel = 'تم الالغاء'; dbStatus = 'cancelled'; 
+       statusLabel = '❌ تم الالغاء'; dbStatus = 'cancelled'; 
     }
 
     // Update order status in DB
@@ -168,6 +209,37 @@ async function handleCallback(token: string, chatId: string, callback: any) {
     }
 
     await answerCallback(token, callback.id, `تم تسجيل: ${statusLabel}`);
+
+    // WhatsApp notification for key status changes
+    if (['preparing', 'delivered'].includes(dbStatus)) {
+      const { data: notifOrder } = await jouda.from('customer_orders')
+        .select('order_number, customer_phone, total')
+        .eq('id', orderId).single();
+
+      if (notifOrder?.customer_phone) {
+        let phone = notifOrder.customer_phone.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '967' + phone.slice(1);
+        else if (!phone.startsWith('967')) phone = '967' + phone;
+
+        const msgs: Record<string, string> = {
+          preparing: 'طلبك قيد التحضير الآن 👨‍🍳',
+          delivered: 'تم تسليم طلبك. شكراً لتسوقك من جودة 🎉',
+        };
+        const waMsg = encodeURIComponent(`*جودة — تحديث طلبك*\n\n*رقم الطلب:* ${notifOrder.order_number}\n${msgs[dbStatus]}\n\n*المبلغ:* ${(notifOrder.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جودة`);
+        const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${waMsg}`;
+
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `<a href="${waUrl}">📱 إرسال إشعار للعميل عبر واتساب</a>`,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+          }),
+        });
+      }
+    }
 
     if (messageId) {
        const originalText = callback.message?.text || '';
@@ -217,8 +289,8 @@ async function handleCallback(token: string, chatId: string, callback: any) {
       deliver: ['paid', 'reverse'], paid: ['deposit', 'reverse'], deposit: ['reverse'], cancelled: [],
     };
     const actionLabels: Record<string, string> = {
-      reserve: 'تم الحجز', prepare: 'تم التجهيز', deliver: 'تم التوصيل',
-      paid: 'تم استلام', deposit: 'تم الايداع', reverse: 'تم عكس',
+      reserve: '📦 تم الحجز', prepare: '👨‍🍳 تم التجهيز', deliver: '🚚 تم التوصيل',
+      paid: '💰 تم استلام', deposit: '🏦 تم الايداع', reverse: '🔄 تم عكس',
     };
     const joudaMap: Record<string, string> = {
       reserve: 'confirmed', prepare: 'preparing', deliver: 'delivered',
@@ -242,7 +314,7 @@ async function handleCallback(token: string, chatId: string, callback: any) {
       const ts = fmtDate();
       const orig = callback.message?.text || '';
       let txt: string;
-      if (action === 'reverse') txt = 'تم عكس الفاتورة: <code>' + invoiceId + '</code>\n' + orig + '\n\n' + 'تم العكس' + ' -- ' + userName + ' (' + ts + ')';
+      if (action === 'reverse') txt = '🔄 تم عكس الفاتورة: <code>' + invoiceId + '</code>\n' + orig + '\n\n' + 'تم العكس' + ' -- ' + userName + ' (' + ts + ')';
       else txt = orig + '\n\n' + actionLabels[action] + ' -- ' + userName + ' (' + ts + ')';
       const oldKb = callback.message?.reply_markup?.inline_keyboard || [];
       const newKb = action === 'reverse' ? [] : oldKb.filter((row: any[]) => {

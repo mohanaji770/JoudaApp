@@ -30,6 +30,7 @@ async function sendTelegramNotification(orderData: {
   customerAddress?: string;
   total: number;
   items: Array<{ product_name: string; quantity: number }>;
+  notes?: string;
 }) {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
   const chatIdsStr = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
@@ -45,14 +46,17 @@ async function sendTelegramNotification(orderData: {
     .map((item) => `• ${item.product_name} × ${item.quantity}`)
     .join('\n');
 
-  const dateStr = new Date().toLocaleString('ar-SA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const now = new Date();
+  const y = now.getFullYear();
+  const mo = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  let h = now.getHours();
+  const period = h >= 12 ? 'م' : 'ص';
+  h = h % 12; if (h === 0) h = 12;
+  const mi = String(now.getMinutes()).padStart(2, '0');
+  const dateStr = `${y}-${mo}-${d} ${h}:${mi} ${period}`;
 
+  const notesLine = orderData.notes ? '\n📝 <b>ملاحظات:</b> ' + orderData.notes + '\n' : '';
   const message = `
 🛒 <b>طلب جديد: ${orderNumber}</b>
 
@@ -63,8 +67,7 @@ async function sendTelegramNotification(orderData: {
 
 📦 <b>الأصناف:</b>
 ${itemsList}
-
-📅 ${dateStr}
+${notesLine}📅 ${dateStr}
 `.trim();
 
   // Admin Approval Buttons (Only for Admins)
@@ -279,6 +282,7 @@ Deno.serve(async (req: Request) => {
         customerPhone: customer_phone,
         customerAddress: customer_address,
         total,
+        notes: notes || undefined,
         items: items.map((item: any) => ({
           product_name: item.product_name,
           quantity: item.quantity,

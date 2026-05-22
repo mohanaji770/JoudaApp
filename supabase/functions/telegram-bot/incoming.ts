@@ -95,29 +95,29 @@ export async function handleNewInvoice(record: any) {
   const ts = fmtDate();
 
   const message = `
-<b>فاتورة جديدة - POS</b>
+🛒 <b>فاتورة جديدة - POS</b>
 <code>${record.id}</code>
-العميل: ${record.customer_name_snapshot}
+👤 العميل: ${record.customer_name_snapshot}
 
-المبلغ: ${companyAmount.toLocaleString()} ر.ي
-توصيل: ${deliveryFee.toLocaleString()} ر.ي
-الدفع: ${paymentMethod}
-${record.collector_id ? `المحصل: ${collectorName}` : ''}
+💰 المبلغ: ${companyAmount.toLocaleString()} ر.ي
+🚚 توصيل: ${deliveryFee.toLocaleString()} ر.ي
+💳 الدفع: ${paymentMethod}
+${record.collector_id ? `👤 المحصل: ${collectorName}` : ''}
 
-الاصناف (${itemCount}):
+📦 الاصناف (${itemCount}):
 ${itemsList}${extraItems}
 
-${ts}
+📅 ${ts}
   `.trim();
 
   const keyboard = {
     inline_keyboard: [
-      [{ text: 'حجز', callback_data: `inv_reserve_${record.id}` }],
-      [{ text: 'تجهيز', callback_data: `inv_prepare_${record.id}` }],
-      [{ text: 'توصيل', callback_data: `inv_deliver_${record.id}` }],
-      [{ text: 'استلام', callback_data: `inv_paid_${record.id}` }],
-      [{ text: 'ايداع (مدير)', callback_data: `inv_deposit_${record.id}` }],
-      [{ text: 'عكس (مدير)', callback_data: `inv_reverse_${record.id}` }],
+      [{ text: '📦 حجز', callback_data: `inv_reserve_${record.id}` }],
+      [{ text: '👨‍🍳 تجهيز', callback_data: `inv_prepare_${record.id}` }],
+      [{ text: '🚚 توصيل', callback_data: `inv_deliver_${record.id}` }],
+      [{ text: '💰 استلام', callback_data: `inv_paid_${record.id}` }],
+      [{ text: '🏦 ايداع (مدير)', callback_data: `inv_deposit_${record.id}` }],
+      [{ text: '🔄 عكس (مدير)', callback_data: `inv_reverse_${record.id}` }],
     ],
   };
 
@@ -144,7 +144,7 @@ export async function handleReversedInvoice(record: any) {
 
   const ts = fmtDate();
   const message = `
-<b>تم عكس فاتورة</b>
+🔄 <b>تم عكس فاتورة</b>
 <code>${record.id}</code>
 ${record.customer_name_snapshot || '-'}
 ${(record.total_amount || 0).toLocaleString()} ر.ي

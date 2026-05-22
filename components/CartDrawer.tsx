@@ -207,7 +207,7 @@ export const CartDrawer: React.FC = () => {
                                 >
                                 <Minus className="w-3 h-3" />
                                 </button>
-                                <span className="text-sm font-bold w-5 text-center text-gray-800 dark:text-white">{item.quantity}</span>
+                                <span className="text-xs font-bold min-w-[28px] text-center text-gray-800 dark:text-white">{item.quantity} عدد</span>
                                 <button 
                                 onClick={() => addToCart(item.name)}
                                 className="w-7 h-7 flex items-center justify-center bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"

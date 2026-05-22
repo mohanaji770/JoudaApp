@@ -114,6 +114,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return [...prev, { id: Date.now().toString() + Math.random(), name, barcode, price, quantity: 1, source }];
     });
     triggerNotification(name);
+    try { navigator.vibrate?.(15); } catch {}
   };
 
   const addToCartWithBarcode = (item: { name: string; barcode: string; price?: string; source?: 'store' | 'bakery' }) => {
@@ -134,6 +135,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }];
     });
     triggerNotification(item.name);
+    try { navigator.vibrate?.(15); } catch {}
   };
 
   const addMultipleToCart = (names: string[], source: 'store' | 'bakery' = 'store') => {

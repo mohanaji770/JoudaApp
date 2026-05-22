@@ -1,17 +1,17 @@
 import { sendMessage, sendMainMenu, getClients, fmtDate, STATUS_LABEL, buildOrderButtons } from './utils.ts';
 
 async function handleHelp(token: string, chatId: string) {
-  const text = `<b>اهلا بك في بوت جودة</b>
+  const text = `<b>🛒 اهلا بك في بوت جودة</b>
 
 استخدم الازرار السفلية للوصول السريع.
 
-<b>اوامر:</b>
+<b>📋 اوامر:</b>
 /order [رقم] - تفاصيل طلب
 /stock [باركود] - مخزون منتج
 /search [اسم] - بحث عن منتج
 /expense [مبلغ] [وصف] - تسجيل مصروف
 
-<b>اوامر النظام:</b>
+<b>⚙️ اوامر النظام:</b>
 /maintenance - تفعيل/الغاء الصيانة`.trim();
   await sendMainMenu(token, chatId, text);
 }
@@ -25,9 +25,10 @@ async function handleOrders(token: string, chatId: string) {
     .order('created_at', { ascending: false })
     .limit(10);
   if (error || !data?.length) { await sendMessage(token, chatId, 'لا توجد طلبات معلقة حاليا'); return; }
-  let text = `<b>الطلبات المعلقة (${data.length})</b>\n\n`;
+  let text = `<b>📋 الطلبات المعلقة (${data.length})</b>\n\n`;
   for (const o of data) {
-    text += `${STATUS_LABEL[o.status] || o.status} <b>${o.order_number}</b>\n`;
+    const emoji = o.status === 'submitted' ? '🆕' : o.status === 'confirmed' ? '✅' : '👨‍🍳';
+    text += `${emoji} ${STATUS_LABEL[o.status] || o.status} <b>${o.order_number}</b>\n`;
     text += `${o.customer_name} - ${(o.total || 0).toLocaleString()} ر.ي\n\n`;
   }
   text += `للتفاصيل: /order [رقم الطلب]`;
@@ -40,18 +41,19 @@ async function handleOrderDetail(token: string, chatId: string, orderNum: string
   if (!order) { await sendMessage(token, chatId, `لم يتم العثور على طلب: ${orderNum}`); return; }
   const { data: items } = await jouda.from('order_items').select('product_name, quantity, unit_price, total_price').eq('order_id', order.id);
   const itemsList = (items || []).map((i: any) => `• ${i.product_name} x ${i.quantity} = ${(i.total_price || 0).toLocaleString()}`).join('\n');
-  const text = `<b>طلب من تطبيق جودة</b>\n\nتفاصيل الطلب: ${order.order_number}\n\n${STATUS_LABEL[order.status] || order.status}
-العميل: ${order.customer_name}
-الهاتف: ${order.customer_phone}
-العنوان: ${order.customer_address || '-'}
-التاريخ: ${fmtDate(order.created_at)}
+  const notesLine = order.notes ? '\n📝 ملاحظات: ' + order.notes + '\n' : '';
+  const text = `<b>📦 طلب من تطبيق جودة</b>\n\nتفاصيل الطلب: ${order.order_number}\n\n${STATUS_LABEL[order.status] || order.status}
+👤 العميل: ${order.customer_name}
+📱 الهاتف: ${order.customer_phone}
+📍 العنوان: ${order.customer_address || '-'}
+📅 التاريخ: ${fmtDate(order.created_at)}
 
-الاصناف:
+📦 الاصناف:
 ${itemsList || 'لا توجد اصناف'}
 
-المجموع: ${(order.subtotal || 0).toLocaleString()} ر.ي
-التوصيل: ${(order.delivery_fee || 0).toLocaleString()} ر.ي
-الاجمالي: ${(order.total || 0).toLocaleString()} ر.ي`.trim();
+💰 المجموع: ${(order.subtotal || 0).toLocaleString()} ر.ي
+🚚 التوصيل: ${(order.delivery_fee || 0).toLocaleString()} ر.ي
+💵 الاجمالي: ${(order.total || 0).toLocaleString()} ر.ي${notesLine}`.trim();
   const keyboard = buildOrderButtons(order.id, order.status);
   await sendMessage(token, chatId, text, keyboard ? { reply_markup: keyboard } : {});
 }
@@ -61,7 +63,7 @@ async function handleStock(token: string, chatId: string, barcode: string) {
   const { data: product } = await inventory.from('products').select('name, price, cost_price, unit').eq('barcode', barcode).single();
   if (!product) { await sendMessage(token, chatId, `لا يوجد منتج: ${barcode}`); return; }
   const { data: stock } = await inventory.from('product_stock_summary').select('warehouse_name, current_stock').eq('product_barcode', barcode);
-  let text = `<b>${product.name}</b> <code>${barcode}</code>\nسعر البيع: ${(product.price || 0).toLocaleString()} ر.ي\nسعر التكلفة: ${(product.cost_price || 0).toLocaleString()} ر.ي\n\nالمخزون:\n`;
+  let text = `<b>📊 ${product.name}</b> <code>${barcode}</code>\n💰 سعر البيع: ${(product.price || 0).toLocaleString()} ر.ي\n📦 سعر التكلفة: ${(product.cost_price || 0).toLocaleString()} ر.ي\n\n📦 المخزون:\n`;
   if (!stock?.length) { text += 'لا يوجد مخزون'; }
   else { let total = 0; for (const s of stock) { const qty = s.current_stock || 0; total += qty; const icon = qty <= 0 ? '-' : qty < 10 ? '!' : '>'; text += `${icon} ${s.warehouse_name}: <b>${qty}</b> ${product.unit || ''}\n`; } text += `\nالاجمالي: ${total} ${product.unit || ''}`; }
   await sendMessage(token, chatId, text);
@@ -76,7 +78,7 @@ async function handleLowStock(token: string, chatId: string) {
   (stockData || []).forEach((s: any) => { stockMap[s.product_barcode] = (stockMap[s.product_barcode] || 0) + (s.current_stock || 0); });
   const low = products.filter(p => (stockMap[p.barcode] || 0) < p.min_stock);
   if (low.length === 0) { await sendMessage(token, chatId, 'جميع المنتجات فوق الحد الادنى'); return; }
-  let text = `<b>منتجات منخفضة المخزون (${low.length})</b>\n\n`;
+  let text = `<b>⚠️ منتجات منخفضة المخزون (${low.length})</b>\n\n`;
   for (const p of low.slice(0, 20)) { text += `<b>${p.name}</b>\n   المتبقي: ${stockMap[p.barcode] || 0} / الحد: ${p.min_stock} ${p.unit || ''}\n\n`; }
   await sendMessage(token, chatId, text);
 }
@@ -102,9 +104,9 @@ async function handleMorningBriefing(token: string, chatId: string) {
   const { data: unsettledExpenses } = await inventory.from('wallet_ledger').select('user_id, amount').in('user_id', Object.keys(collectorDebts)).is('settlement_batch_id', null).in('status', ['APPROVED', 'POSTED']).eq('entry_type', 'EXPENSE').eq('direction', 'OUT');
   const collectorExpenses: Record<string, number> = {};
   (unsettledExpenses || []).forEach((e: any) => { collectorExpenses[e.user_id] = (collectorExpenses[e.user_id] || 0) + (e.amount || 0); });
-  let text = `<b>التقرير الصباحي</b> | ${fmtDate()}\n\n`;
-  text += `<b>مبيعات الامس:</b>\nالاجمالي: <b>${totalSales.toLocaleString()}</b> ر.ي\nعدد الفواتير: ${invoicesCount}\n\n`;
-  text += `<b>نواقص المخزون (${lowStock.length}):</b>\n`;
+  let text = `<b>🌅 التقرير الصباحي</b> | ${fmtDate()}\n\n`;
+  text += `<b>💵 مبيعات الامس:</b>\nالاجمالي: <b>${totalSales.toLocaleString()}</b> ر.ي\nعدد الفواتير: ${invoicesCount}\n\n`;
+  text += `<b>⚠️ نواقص المخزون (${lowStock.length}):</b>\n`;
   if (lowStock.length === 0) { text += 'لا يوجد نواقص\n\n'; }
   else { for (const p of lowStock.slice(0, 5)) { text += `${p.name} (باقي ${stockMap[p.barcode] || 0})\n`; } if (lowStock.length > 5) text += `+ ${lowStock.length - 5} منتجات اخرى...\n`; text += '\n'; }
   const unsettledCount = Object.keys(collectorDebts).length;
@@ -125,13 +127,13 @@ async function handleToday(token: string, chatId: string) {
   const orderCount = appOrders?.length || 0;
   const pending = (appOrders || []).filter((o: any) => ['submitted', 'confirmed', 'preparing'].includes(o.status)).length;
   const delivered = (appOrders || []).filter((o: any) => o.status === 'delivered').length;
-  const text = `<b>تقرير اليوم</b> | ${fmtDate()}
+  const text = `<b>📊 تقرير اليوم</b> | ${fmtDate()}
 
-المبيعات:
+💵 المبيعات:
 • فواتير: ${invoiceCount}
 • اجمالي المبيعات: ${totalSales.toLocaleString()} ر.ي
 
-طلبات التطبيق:
+📱 طلبات التطبيق:
 • اجمالي: ${orderCount}
 • معلقة: ${pending}
 • مسلمة: ${delivered}`.trim();
@@ -157,12 +159,12 @@ async function handleStatus(token: string, chatId: string) {
   const { count: productCount } = await inventory.from('products').select('barcode', { count: 'exact', head: true }).eq('is_active', true);
   const { count: pendingOrders } = await jouda.from('customer_orders').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'confirmed', 'preparing']);
   const maintenance = settings?.maintenance_mode ? 'صيانة' : 'يعمل';
-  const text = `<b>حالة النظام</b>
+  const text = `<b>📊 حالة النظام</b>
 
-التطبيق: ${maintenance}
-المنتجات النشطة: ${productCount || 0}
-طلبات معلقة: ${pendingOrders || 0}
-${fmtDate()}`.trim();
+🟢 التطبيق: ${maintenance}
+📦 المنتجات النشطة: ${productCount || 0}
+📋 طلبات معلقة: ${pendingOrders || 0}
+📅 ${fmtDate()}`.trim();
   await sendMessage(token, chatId, text);
 }
 
@@ -173,7 +175,7 @@ async function handleSearch(token: string, chatId: string, query: string) {
   const { data: stockData } = await inventory.from('product_stock_summary').select('product_barcode, current_stock');
   const stockMap: Record<string, number> = {};
   (stockData || []).forEach((s: any) => { stockMap[s.product_barcode] = (stockMap[s.product_barcode] || 0) + (s.current_stock || 0); });
-  let text = `<b>نتائج البحث: "${query}" (${products.length})</b>\n\n`;
+  let text = `<b>🔍 نتائج البحث: "${query}" (${products.length})</b>\n\n`;
   for (const p of products) { const qty = stockMap[p.barcode] || 0; const icon = qty <= 0 ? '-' : qty < 10 ? '!' : '>'; text += `${icon} <b>${p.name}</b>\n   <code>${p.barcode}</code> | ${(p.price || 0).toLocaleString()} ر.ي | ${qty} ${p.unit || ''}\n\n`; }
   await sendMessage(token, chatId, text);
 }
@@ -185,9 +187,9 @@ async function handleExpense(token: string, chatId: string, arg: string) {
   if (amount <= 0) { await sendMessage(token, chatId, 'المبلغ يجب ان يكون اكبر من صفر'); return; }
   const { inventory } = getClients();
   const systemUserId = Deno.env.get('SYSTEM_USER_UUID') || 'admin';
-  const { error } = await inventory.from('wallet_ledger').insert({ user_id: systemUserId, entry_type: 'EXPENSE', direction: 'OUT', amount, expense_category: 'تليجرام', status: 'POSTED', note: note, created_by: systemUserId, idempotency_key: `tg_${Date.fmtDate()}_${Math.random().toString(36).slice(2, 8)}` });
+  const { error } = await inventory.from('wallet_ledger').insert({ user_id: systemUserId, entry_type: 'EXPENSE', direction: 'OUT', amount, expense_category: 'تليجرام', status: 'POSTED', note: note, created_by: systemUserId, idempotency_key: `tg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` });
   if (error) { await sendMessage(token, chatId, `فشل التسجيل: ${error.message}`); return; }
-  await sendMessage(token, chatId, `<b>تم تسجيل المصروف</b>\n\nالمبلغ: <b>${amount.toLocaleString()}</b> ر.ي\nالوصف: ${note}\n${fmtDate()}`);
+  await sendMessage(token, chatId, `<b>💸 تم تسجيل المصروف</b>\n\nالمبلغ: <b>${amount.toLocaleString()}</b> ر.ي\nالوصف: ${note}\n${fmtDate()}`);
 }
 
 async function handleExpiry(token: string, chatId: string, arg?: string) {
@@ -198,7 +200,7 @@ async function handleExpiry(token: string, chatId: string, arg?: string) {
   const { data: batches } = await inventory.from('active_expiry_batches').select('product_barcode, product_name_snapshot, expiry_date, warehouse_name, remaining_qty').lte('expiry_date', cutoffIso).gt('remaining_qty', 0).order('expiry_date', { ascending: true }).limit(25);
   if (!batches?.length) { await sendMessage(token, chatId, `لا توجد منتجات تنتهي صلاحيتها خلال ${daysAhead} يوم`); return; }
   const today = new Date();
-  let text = `<b>منتجات قريبة الصلاحية (خلال ${daysAhead} يوم)</b>\n\n`;
+  let text = `<b>📆 منتجات قريبة الصلاحية (خلال ${daysAhead} يوم)</b>\n\n`;
   for (const b of batches) {
     const expDate = new Date(b.expiry_date);
     const daysLeft = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -232,19 +234,19 @@ async function handleProfit(token: string, chatId: string, arg?: string) {
   const totalExpenses = (expenses || []).reduce((s: number, e: any) => s + (e.amount || 0), 0);
   const netProfit = grossProfit - totalExpenses;
   const icon = netProfit >= 0 ? '+' : '-';
-  const text = `<b>تقرير الارباح - ${periodLabel}</b>
+  const text = `<b>📈 تقرير الارباح - ${periodLabel}</b>
 
-الايرادات:
+💵 الايرادات:
 • المبيعات: ${totalRevenue.toLocaleString()} ر.ي
 • الخصومات: -${totalDiscount.toLocaleString()} ر.ي
 • فواتير: ${invoices.length}
 
-التكاليف:
+📦 التكاليف:
 • تكلفة البضاعة: ${totalCost.toLocaleString()} ر.ي
 
-الربح الاجمالي: ${grossProfit.toLocaleString()} ر.ي
+💰 الربح الاجمالي: ${grossProfit.toLocaleString()} ر.ي
 
-المصروفات: ${totalExpenses.toLocaleString()} ر.ي
+🧾 المصروفات: ${totalExpenses.toLocaleString()} ر.ي
 
 ${icon} <b>صافي الربح: ${netProfit.toLocaleString()}</b> ر.ي`.trim();
   await sendMessage(token, chatId, text);
@@ -255,7 +257,7 @@ async function handleWallet(token: string, chatId: string, arg?: string) {
   if (!arg) {
     const { data: users } = await inventory.from('users').select('id, name, role').eq('is_active', true).in('role', ['collector', 'cashier']);
     if (!users?.length) { await sendMessage(token, chatId, 'لا يوجد مستخدمين نشطين'); return; }
-    let text = `<b>المستخدمين المتاحين</b>\n\nاستخدم: /wallet [الاسم او ID]\n\n`;
+    let text = `<b>👥 المستخدمين المتاحين</b>\n\nاستخدم: /wallet [الاسم او ID]\n\n`;
     for (const u of users) { text += `<b>${u.name}</b> (<code>${u.id}</code>) - ${u.role}\n`; }
     await sendMessage(token, chatId, text); return;
   }
@@ -268,15 +270,15 @@ async function handleWallet(token: string, chatId: string, arg?: string) {
   const totalExpenses = (expenseEntries || []).filter((e: any) => e.entry_type === 'EXPENSE').reduce((s: number, e: any) => s + (e.amount || 0), 0);
   const totalDeductions = (expenseEntries || []).filter((e: any) => e.entry_type === 'DEDUCTION').reduce((s: number, e: any) => s + (e.amount || 0), 0);
   const net = totalCollected - totalExpenses - totalDeductions;
-  const text = `<b>رصيد المحصل: ${user.name}</b>
+  const text = `<b>💰 رصيد المحصل: ${user.name}</b>
 
-المحصل (غير مسوى): ${totalCollected.toLocaleString()} ر.ي
+📊 المحصل (غير مسوى): ${totalCollected.toLocaleString()} ر.ي
    فواتير: ${unsettledInvoices?.length || 0}
 
-المصروفات: ${totalExpenses.toLocaleString()} ر.ي
-الخصومات: ${totalDeductions.toLocaleString()} ر.ي
+💸 المصروفات: ${totalExpenses.toLocaleString()} ر.ي
+🏷️ الخصومات: ${totalDeductions.toLocaleString()} ر.ي
 
-<b>المطلوب تسليمه: ${net.toLocaleString()}</b> ر.ي`.trim();
+<b>💵 المطلوب تسليمه: ${net.toLocaleString()}</b> ر.ي`.trim();
   await sendMessage(token, chatId, text);
 }
 
