@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { BookOpen, ChevronLeft, Lightbulb, ShieldAlert, ScanLine, UtensilsCrossed, ChefHat } from 'lucide-react';
-import { fetchArticlesWithFallback, Article } from '../services/supabaseService';
+import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
 import { ArticleModal } from './ArticleModal';
 
 export const KnowledgeHub: React.FC = () => {
@@ -48,7 +48,7 @@ export const KnowledgeHub: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      const data = await fetchArticlesWithFallback();
+      const data = await fetchArticlesFromSupabase();
       setArticles(data.slice(0, 5));
       setLoading(false);
     };

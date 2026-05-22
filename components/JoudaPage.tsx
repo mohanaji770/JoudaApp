@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Phone, MessageCircle, ChevronDown, Quote, Star, ArrowUpRight, Instagram, Facebook, Globe } from 'lucide-react';
 import { STORE_CONFIG, APP_LOGO } from '../constants';
-import { fetchFAQWithFallback, FAQItem } from '../services/supabaseService';
+import { fetchFAQFromSupabase, FAQItem } from '../services/supabaseService';
 
 export const JoudaPage: React.FC = () => {
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
@@ -11,7 +11,7 @@ export const JoudaPage: React.FC = () => {
 
   useEffect(() => {
     const loadFaqs = async () => {
-      const data = await fetchFAQWithFallback();
+      const data = await fetchFAQFromSupabase();
       setFaqs(data);
     };
     loadFaqs();

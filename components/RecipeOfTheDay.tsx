@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Clock, Flame, ChefHat, Sparkles, Heart, Play, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { fetchRecipesWithFallback, Recipe } from '../services/supabaseService';
+import { fetchRecipesFromSupabase, Recipe } from '../services/supabaseService';
 
 const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
@@ -71,7 +71,7 @@ export const RecipeOfTheDay: React.FC = () => {
       }
 
       try {
-        const data = await fetchRecipesWithFallback();
+        const data = await fetchRecipesFromSupabase();
         if (data.length > 0) {
           const dayOfYear = Math.floor(
             (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /

@@ -20,8 +20,18 @@ interface StockSummary {
   current_stock: number | null;
 }
 
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
   try {
+    const secret = Deno.env.get('WEBHOOK_SECRET');
+    if (secret) {
+      const webhookProvided = req.headers.get('x-webhook-secret') || '';
+      const authProvided = req.headers.get('authorization') || '';
+      // Allow: webhook secret matches OR request has Authorization header (Dashboard test)
+      if (webhookProvided !== secret && !authProvided) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
     const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
     const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
     const joudaUrl = Deno.env.get('SUPABASE_URL');

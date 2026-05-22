@@ -1,10 +1,5 @@
 import { supabase } from './supabaseClient';
 import {
-  fetchRecipesFromSheet as fetchRecipesFromGoogleSheet,
-  fetchArticlesFromSheet as fetchArticlesFromGoogleSheet,
-  fetchFAQFromSheet as fetchFAQFromGoogleSheet,
-} from './googleSheetService';
-import {
   cacheProducts,
   getCachedProducts,
   cacheRecipes,
@@ -118,11 +113,6 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 };
 
 // Bakery products - for now, keep empty or fetch from a separate source
-export const fetchBakeryProductsFromSupabase = async (): Promise<Product[]> => {
-  // TODO: Add bakery products to Supabase or keep Google Sheet fallback
-  return [];
-};
-
 // ==========================
 // RECIPES
 // ==========================
@@ -299,37 +289,4 @@ export const getYouTubeEmbedId = (url: string): string | null => {
   return null;
 };
 
-export const processImageLink = (url: string): string => {
-  if (!url) return '';
-  if (url.includes('drive.google.com')) {
-    const idMatch = url.match(/\/d\/(.+?)(\/|$)/) || url.match(/id=([^&]+)/);
-    if (idMatch && idMatch[1]) {
-      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
-    }
-  }
-  return url;
-};
 
-// ==========================
-// Fallback Hybrids (Supabase → Google Sheets)
-// ==========================
-
-export const fetchRecipesWithFallback = async (): Promise<Recipe[]> => {
-  const supabaseRecipes = await fetchRecipesFromSupabase();
-  if (supabaseRecipes.length > 0) return supabaseRecipes;
-  const googleRecipes = await fetchRecipesFromGoogleSheet();
-  return googleRecipes as unknown as Recipe[];
-};
-
-export const fetchArticlesWithFallback = async (): Promise<Article[]> => {
-  const supabaseArticles = await fetchArticlesFromSupabase();
-  if (supabaseArticles.length > 0) return supabaseArticles;
-  const googleArticles = await fetchArticlesFromGoogleSheet();
-  return googleArticles as unknown as Article[];
-};
-
-export const fetchFAQWithFallback = async (): Promise<FAQItem[]> => {
-  const supabaseFAQ = await fetchFAQFromSupabase();
-  if (supabaseFAQ.length > 0) return supabaseFAQ;
-  return fetchFAQFromGoogleSheet();
-};

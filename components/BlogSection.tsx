@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { BookOpen, ChevronLeft, ArrowRight } from 'lucide-react';
-import { fetchArticlesWithFallback, Article } from '../services/supabaseService';
+import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
 import { ArticleModal } from './ArticleModal';
 
 export const BlogSection: React.FC = () => {
@@ -11,7 +11,7 @@ export const BlogSection: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      const data = await fetchArticlesWithFallback();
+      const data = await fetchArticlesFromSupabase();
       setArticles(data.slice(0, 4)); // Show max 4 latest
       setLoading(false);
     };

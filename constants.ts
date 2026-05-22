@@ -39,21 +39,6 @@ export const STORE_BRANCHES = [
   }
 ];
 
-// The Google Sheet CSV Link provided by the user (Products)
-export const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMWZlv007GhNfPUhSOARD6LDIRXy4nPxNyd5YJzhmu5-nZ16OgIC7Qg4nOygYWMaWh9XBa6ncoXaao/pub?output=csv";
-
-// The Google Sheet CSV Link for Bakery (Updated with specific GID)
-export const GOOGLE_SHEET_BAKERY_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMWZlv007GhNfPUhSOARD6LDIRXy4nPxNyd5YJzhmu5-nZ16OgIC7Qg4nOygYWMaWh9XBa6ncoXaao/pub?gid=40357627&single=true&output=csv"; 
-
-// The Google Sheet CSV Link for Recipes
-export const GOOGLE_SHEET_RECIPES_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMWZlv007GhNfPUhSOARD6LDIRXy4nPxNyd5YJzhmu5-nZ16OgIC7Qg4nOygYWMaWh9XBa6ncoXaao/pub?gid=260286862&single=true&output=csv";
-
-// The Google Sheet CSV Link for Articles/Blog
-export const GOOGLE_SHEET_ARTICLES_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMWZlv007GhNfPUhSOARD6LDIRXy4nPxNyd5YJzhmu5-nZ16OgIC7Qg4nOygYWMaWh9XBa6ncoXaao/pub?gid=592427450&single=true&output=csv";
-
-// The Google Sheet CSV Link for FAQ (Placeholder - Add your link here)
-export const GOOGLE_SHEET_FAQ_URL = "";
-
 export const JOUDA_PRODUCTS = [
   "دقيق شار (Schar Flour)",
   "دقيق كريستال للخبز العربي",

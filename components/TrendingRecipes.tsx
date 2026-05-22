@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Flame, ChefHat, ArrowLeft, ArrowRight, BarChart3, ArrowUpLeft, Layers } from 'lucide-react';
-import { fetchRecipesWithFallback, Recipe } from '../services/supabaseService';
+import { fetchRecipesFromSupabase, Recipe } from '../services/supabaseService';
 
 const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
@@ -22,7 +22,7 @@ export const TrendingRecipes: React.FC = () => {
         if (cachedList) {
           list = JSON.parse(cachedList);
         } else {
-          list = await fetchRecipesWithFallback();
+          list = await fetchRecipesFromSupabase();
           if (list.length > 0) {
             localStorage.setItem(RECIPE_LIST_KEY, JSON.stringify(list));
           }

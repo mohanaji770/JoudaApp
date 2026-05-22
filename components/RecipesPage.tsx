@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChefHat, Clock, Flame, ChevronDown, ChevronUp, ShoppingBag, Plus, AlertCircle, RefreshCw, PackageCheck, PlayCircle, ExternalLink, Youtube } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { fetchRecipesWithFallback, Recipe, Product, getYouTubeEmbedId } from '../services/supabaseService';
+import { fetchRecipesFromSupabase, Recipe, Product, getYouTubeEmbedId } from '../services/supabaseService';
 
 export const RecipesPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export const RecipesPage: React.FC = () => {
     setLoading(true);
     setError(false);
     try {
-      const data = await fetchRecipesWithFallback();
+      const data = await fetchRecipesFromSupabase();
       if (data.length > 0) {
         setRecipes(data);
       } else {

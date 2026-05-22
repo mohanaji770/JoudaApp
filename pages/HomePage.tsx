@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Scanner } from '../components/Scanner';
 import { ResultCard } from '../components/ResultCard';
 import { HistoryList } from '../components/HistoryList';
-import { Onboarding } from '../components/Onboarding';
 import { ProductRequestModal } from '../components/ProductRequestModal';
 import { TrendingRecipes } from '../components/TrendingRecipes';
 import { PromoBanner } from '../components/PromoBanner';
@@ -15,7 +14,6 @@ import { Search, ShieldAlert, X, Cake, PackageSearch, ChefHat, ShoppingBag, Scan
 
 const HISTORY_KEY = 'yaqeen_scan_history_v1';
 const MAX_HISTORY_ITEMS = 10;
-const ONBOARDING_KEY = 'jouda_onboarding_seen_v1';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +23,7 @@ export const HomePage: React.FC = () => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const [showProductRequest, setShowProductRequest] = useState(false);
 
   useEffect(() => {
@@ -38,18 +36,6 @@ export const HomePage: React.FC = () => {
       console.error("Failed to load history", e);
     }
   }, []);
-
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
-    if (!hasSeenOnboarding) {
-      setTimeout(() => setShowOnboarding(true), 500);
-    }
-  }, []);
-
-  const handleCloseOnboarding = () => {
-    setShowOnboarding(false);
-    localStorage.setItem(ONBOARDING_KEY, 'true');
-  };
 
   const saveToHistory = (newResult: AnalysisResult) => {
     const updatedHistory = [newResult, ...history].slice(0, MAX_HISTORY_ITEMS);
@@ -239,7 +225,6 @@ export const HomePage: React.FC = () => {
             <ProductRequestModal onClose={() => setShowProductRequest(false)} />
           )}
 
-          {showOnboarding && <Onboarding onClose={handleCloseOnboarding} />}
         </div>
       ) : (
         // SCANNER VIEW
