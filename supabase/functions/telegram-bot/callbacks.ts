@@ -3,6 +3,7 @@ import {
   editMessage, 
   answerCallback, 
   getClients, 
+  fmtDate,
   STATUS_LABEL, 
   VALID_TRANSITIONS, 
   buildOrderButtons 
@@ -170,7 +171,7 @@ async function handleCallback(token: string, chatId: string, callback: any) {
 
     if (messageId) {
        const originalText = callback.message?.text || '';
-       const ts = new Date().toISOString().replace('T', ' ').slice(0, 19);
+       const ts = fmtDate();
        
        // Append the action with the employee name
        const newText = originalText + `\n\n<b>${statusLabel}</b> — <i>${userName}</i> (${ts})`;
@@ -212,8 +213,8 @@ async function handleCallback(token: string, chatId: string, callback: any) {
     }
 
     const validNext: Record<string, string[]> = {
-      pending: ['reserve'], reserved: ['prepare', 'reverse'], preparing: ['deliver', 'reverse'],
-      delivered: ['paid', 'reverse'], paid: ['deposit', 'reverse'], deposited: ['reverse'], cancelled: [],
+      pending: ['reserve'], reserve: ['prepare', 'reverse'], prepare: ['deliver', 'reverse'],
+      deliver: ['paid', 'reverse'], paid: ['deposit', 'reverse'], deposit: ['reverse'], cancelled: [],
     };
     const actionLabels: Record<string, string> = {
       reserve: 'تم الحجز', prepare: 'تم التجهيز', deliver: 'تم التوصيل',
@@ -238,13 +239,15 @@ async function handleCallback(token: string, chatId: string, callback: any) {
     await answerCallback(token, callback.id, actionLabels[action] + ' | ' + userName);
 
     if (messageId) {
-      const ts = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      const ts = fmtDate();
       const orig = callback.message?.text || '';
       let txt: string;
       if (action === 'reverse') txt = 'تم عكس الفاتورة: <code>' + invoiceId + '</code>\n' + orig + '\n\n' + 'تم العكس' + ' -- ' + userName + ' (' + ts + ')';
       else txt = orig + '\n\n' + actionLabels[action] + ' -- ' + userName + ' (' + ts + ')';
       const oldKb = callback.message?.reply_markup?.inline_keyboard || [];
-      const newKb = action === 'reverse' ? [] : oldKb.filter((row: any[]) => row[0]?.callback_data !== data);
+      const newKb = action === 'reverse' ? [] : oldKb.filter((row: any[]) => {
+        return !row.some((btn: any) => btn?.callback_data === data);
+      });
       await editMessage(token, chatId, messageId, txt, { reply_markup: action === 'reverse' ? undefined : { inline_keyboard: newKb.length > 0 ? newKb : undefined } });
     }
     return;

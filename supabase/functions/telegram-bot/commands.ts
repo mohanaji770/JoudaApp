@@ -1,7 +1,4 @@
-import { sendMessage, sendMainMenu, getClients, STATUS_LABEL, buildOrderButtons } from './utils.ts';
-
-function now() { return new Date().toISOString().replace('T', ' ').slice(0, 19); }
-function dt(iso: string) { return iso ? new Date(iso).toISOString().replace('T', ' ').slice(0, 19) : ''; }
+import { sendMessage, sendMainMenu, getClients, fmtDate, STATUS_LABEL, buildOrderButtons } from './utils.ts';
 
 async function handleHelp(token: string, chatId: string) {
   const text = `<b>اهلا بك في بوت جودة</b>
@@ -47,7 +44,7 @@ async function handleOrderDetail(token: string, chatId: string, orderNum: string
 العميل: ${order.customer_name}
 الهاتف: ${order.customer_phone}
 العنوان: ${order.customer_address || '-'}
-التاريخ: ${dt(order.created_at)}
+التاريخ: ${fmtDate(order.created_at)}
 
 الاصناف:
 ${itemsList || 'لا توجد اصناف'}
@@ -105,7 +102,7 @@ async function handleMorningBriefing(token: string, chatId: string) {
   const { data: unsettledExpenses } = await inventory.from('wallet_ledger').select('user_id, amount').in('user_id', Object.keys(collectorDebts)).is('settlement_batch_id', null).in('status', ['APPROVED', 'POSTED']).eq('entry_type', 'EXPENSE').eq('direction', 'OUT');
   const collectorExpenses: Record<string, number> = {};
   (unsettledExpenses || []).forEach((e: any) => { collectorExpenses[e.user_id] = (collectorExpenses[e.user_id] || 0) + (e.amount || 0); });
-  let text = `<b>التقرير الصباحي</b> | ${now()}\n\n`;
+  let text = `<b>التقرير الصباحي</b> | ${fmtDate()}\n\n`;
   text += `<b>مبيعات الامس:</b>\nالاجمالي: <b>${totalSales.toLocaleString()}</b> ر.ي\nعدد الفواتير: ${invoicesCount}\n\n`;
   text += `<b>نواقص المخزون (${lowStock.length}):</b>\n`;
   if (lowStock.length === 0) { text += 'لا يوجد نواقص\n\n'; }
@@ -128,7 +125,7 @@ async function handleToday(token: string, chatId: string) {
   const orderCount = appOrders?.length || 0;
   const pending = (appOrders || []).filter((o: any) => ['submitted', 'confirmed', 'preparing'].includes(o.status)).length;
   const delivered = (appOrders || []).filter((o: any) => o.status === 'delivered').length;
-  const text = `<b>تقرير اليوم</b> | ${now()}
+  const text = `<b>تقرير اليوم</b> | ${fmtDate()}
 
 المبيعات:
 • فواتير: ${invoiceCount}
@@ -165,7 +162,7 @@ async function handleStatus(token: string, chatId: string) {
 التطبيق: ${maintenance}
 المنتجات النشطة: ${productCount || 0}
 طلبات معلقة: ${pendingOrders || 0}
-${now()}`.trim();
+${fmtDate()}`.trim();
   await sendMessage(token, chatId, text);
 }
 
@@ -188,9 +185,9 @@ async function handleExpense(token: string, chatId: string, arg: string) {
   if (amount <= 0) { await sendMessage(token, chatId, 'المبلغ يجب ان يكون اكبر من صفر'); return; }
   const { inventory } = getClients();
   const systemUserId = Deno.env.get('SYSTEM_USER_UUID') || 'admin';
-  const { error } = await inventory.from('wallet_ledger').insert({ user_id: systemUserId, entry_type: 'EXPENSE', direction: 'OUT', amount, expense_category: 'تليجرام', status: 'POSTED', note: note, created_by: systemUserId, idempotency_key: `tg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` });
+  const { error } = await inventory.from('wallet_ledger').insert({ user_id: systemUserId, entry_type: 'EXPENSE', direction: 'OUT', amount, expense_category: 'تليجرام', status: 'POSTED', note: note, created_by: systemUserId, idempotency_key: `tg_${Date.fmtDate()}_${Math.random().toString(36).slice(2, 8)}` });
   if (error) { await sendMessage(token, chatId, `فشل التسجيل: ${error.message}`); return; }
-  await sendMessage(token, chatId, `<b>تم تسجيل المصروف</b>\n\nالمبلغ: <b>${amount.toLocaleString()}</b> ر.ي\nالوصف: ${note}\n${now()}`);
+  await sendMessage(token, chatId, `<b>تم تسجيل المصروف</b>\n\nالمبلغ: <b>${amount.toLocaleString()}</b> ر.ي\nالوصف: ${note}\n${fmtDate()}`);
 }
 
 async function handleExpiry(token: string, chatId: string, arg?: string) {
