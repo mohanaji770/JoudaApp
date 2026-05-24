@@ -117,17 +117,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Check maintenance mode first
+    // Check maintenance mode first (use anon key for public reads)
     const joudaUrl = Deno.env.get('SUPABASE_URL');
     const joudaAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const joudaServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (joudaUrl && joudaAnonKey) {
-      const joudaClient = createClient(joudaUrl, joudaAnonKey, {
+      const anonClient = createClient(joudaUrl, joudaAnonKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
       
-      const { data: settings } = await joudaClient
-        .from('app_settings')
+      const { data: settings } = await anonClient
+        .from('app_settings_public')
         .select('maintenance_mode, maintenance_message')
         .eq('id', 1)
         .single();
@@ -140,19 +141,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
-    const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
-    const onlineWarehouseId = Deno.env.get('ONLINE_WAREHOUSE_ID');
-    const systemUserUuid = Deno.env.get('SYSTEM_USER_UUID');
+    if (!joudaUrl || !joudaServiceKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    }
 
-    if (!inventoryUrl || !inventoryKey) {
-      throw new Error('Missing INVENTORY_SUPABASE_URL or INVENTORY_SERVICE_ROLE_KEY');
-    }
-    if (!joudaUrl || !joudaAnonKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
-    }
-    if (!onlineWarehouseId || !systemUserUuid) {
-      throw new Error('Missing ONLINE_WAREHOUSE_ID or SYSTEM_USER_UUID');
+    const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL')!;
+    const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY')!;
+    const systemUserUuid = Deno.env.get('SYSTEM_USER_UUID')!;
+    const onlineWarehouseId = Deno.env.get('ONLINE_WAREHOUSE_ID')!;
+
+    if (!inventoryUrl || !inventoryKey || !systemUserUuid || !onlineWarehouseId) {
+      return jsonResponse({ success: false, message: 'Missing server configuration' }, 500);
     }
 
     const body = await req.json();
@@ -213,64 +212,87 @@ Deno.serve(async (req: Request) => {
     const quotationId = quotationResult?.invoice_id || invoiceId;
     const rpcSuccess = quotationResult?.success !== false;
 
-    // Store in JoudaApp
-    const joudaClient = createClient(joudaUrl, joudaAnonKey, {
+    // Store in JoudaApp (use service_role for write access)
+    const joudaClient = createClient(joudaUrl, joudaServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Generate order number using database function
-    const { data: orderNumberResult, error: seqError } = await joudaClient
-      .rpc('generate_order_number');
-    
-    if (seqError) {
-      console.error('Sequence Error:', seqError);
-    }
-    
-    const orderNumber = orderNumberResult || 'J-0000';
+    let orderRecord: any = null;
+    let orderNumber = 'J-0000';
 
-    const { data: orderRecord, error: insertError } = await joudaClient
-      .from('customer_orders')
-      .insert({
-        quotation_id: quotationId,
-        order_number: orderNumber,
-        customer_name,
-        customer_phone,
-        customer_address: customer_address || null,
-        order_type,
-        branch_id: branch_id || null,
-        subtotal,
-        discount: 0,
-        delivery_fee: delivery_fee || 0,
-        total,
-        payment_method: payment_method || 'CASH',
-        notes: notes || null,
-        status: rpcSuccess ? 'submitted' : 'failed',
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Insert order error:', insertError);
-    }
-
-    // Store order items
-    if (orderRecord?.id) {
-      const orderItemsToInsert = items.map((item: any) => ({
-        order_id: orderRecord.id,
-        product_barcode: item.product_barcode,
-        product_name: item.product_name || item.product_barcode,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.quantity * item.unit_price,
-      }));
-
-      const { error: itemsError } = await joudaClient
-        .from('order_items')
-        .insert(orderItemsToInsert);
-
-      if (itemsError) {
-        console.error('Insert order items error:', itemsError);
+    try {
+      // Generate order number using database function
+      const { data: orderNumberResult, error: seqError } = await joudaClient
+        .rpc('generate_order_number');
+      
+      if (seqError) {
+        console.error('Sequence Error:', seqError);
       }
+      
+      orderNumber = orderNumberResult || 'J-0000';
+
+      const { data: insertedOrder, error: insertError } = await joudaClient
+        .from('customer_orders')
+        .insert({
+          quotation_id: quotationId,
+          order_number: orderNumber,
+          customer_name,
+          customer_phone,
+          customer_address: customer_address || null,
+          order_type,
+          branch_id: branch_id || null,
+          subtotal,
+          discount: 0,
+          delivery_fee: delivery_fee || 0,
+          total,
+          payment_method: payment_method || 'CASH',
+          notes: notes || null,
+          status: rpcSuccess ? 'submitted' : 'failed',
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error(`Failed to insert order: ${insertError.message}`);
+      }
+      orderRecord = insertedOrder;
+
+      // Store order items
+      if (orderRecord?.id) {
+        const orderItemsToInsert = items.map((item: any) => ({
+          order_id: orderRecord.id,
+          product_barcode: item.product_barcode,
+          product_name: item.product_name || item.product_barcode,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.quantity * item.unit_price,
+        }));
+
+        const { error: itemsError } = await joudaClient
+          .from('order_items')
+          .insert(orderItemsToInsert);
+
+        if (itemsError) {
+          console.error('Insert order items error:', itemsError);
+          // Non-critical: order exists but items failed. Don't roll back.
+        }
+      }
+    } catch (localErr: any) {
+      // Compensation: Cancel the quotation in Inventory since local save failed
+      console.error('Local save failed, attempting compensation:', localErr);
+      try {
+        const suid = Deno.env.get('SYSTEM_USER_UUID') || 'system';
+        await inventoryClient.rpc('reverse_invoice', {
+          p_invoice_id: quotationId,
+          p_actor_user_id: suid,
+          p_reason: 'Compensation: JoudaApp insert failed',
+          p_idempotency_key: crypto.randomUUID(),
+        });
+        console.log('Compensation successful: quotation reversed');
+      } catch (compErr) {
+        console.error('Compensation failed:', compErr);
+      }
+      return jsonResponse({ success: false, message: 'فشل حفظ الطلب محلياً. تم إلغاء الحجز.' }, 500);
     }
 
     // Send Telegram notification on success

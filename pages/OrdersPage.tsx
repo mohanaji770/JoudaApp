@@ -129,7 +129,7 @@ export const OrdersPage: React.FC = () => {
     setExpandedOrder(orderId);
     if (!orderItems[orderId]) {
       try {
-        const items = await fetchLiveOrderItems(orderId);
+        const items = await fetchLiveOrderItems(orderId, savedPhone);
         setOrderItems(prev => ({ ...prev, [orderId]: items }));
       } catch { /* silent */ }
     }
@@ -138,7 +138,7 @@ export const OrdersPage: React.FC = () => {
   const handleRepeatOrder = async (order: DisplayOrder) => {
     setRepeatingOrder(order.id);
     try {
-      const items = orderItems[order.id] || await fetchLiveOrderItems(order.id);
+      const items = orderItems[order.id] || await fetchLiveOrderItems(order.id, savedPhone);
       const cachedProducts = await getCachedProducts();
 
       for (const item of items) {
@@ -177,7 +177,13 @@ export const OrdersPage: React.FC = () => {
   };
 
   const formatDate = (iso: string) => {
-    try { return new Date(iso).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    try { 
+      return new Date(iso).toLocaleDateString('ar-EG', { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit',
+        calendar: 'gregory'
+      }); 
+    }
     catch { return iso; }
   };
 
@@ -362,20 +368,30 @@ export const OrdersPage: React.FC = () => {
                     )}
                   </div>
 
-                  {order.status !== 'cancelled' && order.status !== 'failed' && (
+                  {order.status !== 'cancelled' && order.status !== 'failed' && (() => {
+                    // Map all workflow statuses to one of the 4 visual progress steps
+                    const mapStatusToStep = (status: string): string => {
+                      if (['submitted'].includes(status)) return 'submitted';
+                      if (['confirmed', 'reserved'].includes(status)) return 'confirmed';
+                      if (['preparing'].includes(status)) return 'preparing';
+                      if (['delivered', 'paid', 'deposited'].includes(status)) return 'delivered';
+                      return status;
+                    };
+                    const mappedStatus = mapStatusToStep(order.status);
+                    return (
                     <div className="relative mb-8 pt-2 px-4">
                       <div className="absolute top-6 left-8 right-8 h-1 bg-gray-100 dark:bg-gray-700 z-0 rounded-full" />
                       <div className="absolute top-6 right-8 h-1 bg-emerald-500 z-0 transition-all duration-500 rounded-full"
                         style={{
-                          width: order.status === 'delivered' ? 'calc(100% - 4rem)' :
-                                 order.status === 'preparing' ? 'calc(66% - 2.6rem)' :
-                                 order.status === 'confirmed' ? 'calc(33% - 1.3rem)' : '0%'
+                          width: mappedStatus === 'delivered' ? 'calc(100% - 4rem)' :
+                                 mappedStatus === 'preparing' ? 'calc(66% - 2.6rem)' :
+                                 mappedStatus === 'confirmed' ? 'calc(33% - 1.3rem)' : '0%'
                         }}
                       />
                       <div className="flex items-center justify-between relative z-10">
                         {['submitted', 'confirmed', 'preparing', 'delivered'].map((step) => {
                           const stepOrder = ['submitted', 'confirmed', 'preparing', 'delivered'];
-                          const currentIdx = stepOrder.indexOf(order.status);
+                          const currentIdx = stepOrder.indexOf(mappedStatus);
                           const stepIdx = stepOrder.indexOf(step);
                           const isCompleted = stepIdx <= currentIdx;
                           const isCurrent = stepIdx === currentIdx;
@@ -404,7 +420,8 @@ export const OrdersPage: React.FC = () => {
                         })}
                       </div>
                     </div>
-                  )}
+                    );
+                  })()}
 
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-700/50">
                     <span className="text-sm font-bold text-gray-900 dark:text-white">

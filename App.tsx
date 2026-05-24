@@ -101,7 +101,7 @@ const AppContent: React.FC = () => {
     const checkMaintenance = async () => {
       try {
         const { data, error } = await supabase
-          .from('app_settings')
+          .from('app_settings_public')
           .select('maintenance_mode, maintenance_message')
           .eq('id', 1)
           .single();
@@ -120,6 +120,9 @@ const AppContent: React.FC = () => {
     checkMaintenance();
 
     // Subscribe to real-time changes
+    // NOTE: Realtime subscriptions don't work on views, so we listen on the
+    // underlying `app_settings` table. The payload only contains the columns
+    // we read here (maintenance_mode, maintenance_message) — no sensitive data.
     const subscription = supabase
       .channel('app_settings_changes')
       .on('postgres_changes', 

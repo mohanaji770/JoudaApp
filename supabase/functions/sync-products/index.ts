@@ -127,6 +127,26 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error: any) {
     console.error('sync-products error:', error);
+    
+    // Log failure to sync_logs
+    try {
+      const joudaUrl = Deno.env.get('SUPABASE_URL');
+      const joudaServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (joudaUrl && joudaServiceKey) {
+        const logClient = createClient(joudaUrl, joudaServiceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        await logClient.from('sync_logs').insert({
+          sync_type: 'products',
+          status: 'error',
+          items_count: 0,
+          error_message: error.message || 'Unknown error',
+        });
+      }
+    } catch (logErr) {
+      console.error('Failed to log sync error:', logErr);
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,

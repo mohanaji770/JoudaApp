@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { getSupabaseClient } from './supabaseClient';
 
 export interface LiveOrder {
   id: string;
@@ -33,8 +33,9 @@ export interface LiveOrderItem {
 export const fetchLiveOrders = async (phone: string): Promise<LiveOrder[]> => {
   // Normalize phone: remove spaces, dashes
   const cleanPhone = phone.replace(/[\s\-]/g, '');
+  const client = getSupabaseClient(cleanPhone);
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('customer_orders')
     .select('*')
     .eq('customer_phone', cleanPhone)
@@ -51,8 +52,10 @@ export const fetchLiveOrders = async (phone: string): Promise<LiveOrder[]> => {
 /**
  * Fetch items for a specific order.
  */
-export const fetchLiveOrderItems = async (orderId: string): Promise<LiveOrderItem[]> => {
-  const { data, error } = await supabase
+export const fetchLiveOrderItems = async (orderId: string, phone: string): Promise<LiveOrderItem[]> => {
+  const cleanPhone = phone.replace(/[\s\-]/g, '');
+  const client = getSupabaseClient(cleanPhone);
+  const { data, error } = await client
     .from('order_items')
     .select('*')
     .eq('order_id', orderId)

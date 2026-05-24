@@ -16,4 +16,27 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   },
 });
 
+const clientCache: Record<string, typeof supabase> = {};
+
+export const getSupabaseClient = (phone?: string) => {
+  if (!phone) return supabase;
+  const cleanPhone = phone.replace(/[\s\-]/g, '');
+  if (!cleanPhone) return supabase;
+
+  if (!clientCache[cleanPhone]) {
+    clientCache[cleanPhone] = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+      },
+      global: {
+        headers: {
+          'x-customer-phone': cleanPhone,
+        },
+      },
+    });
+  }
+  return clientCache[cleanPhone];
+};
+
 export type SupabaseClient = typeof supabase;

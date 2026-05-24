@@ -42,8 +42,19 @@ Deno.serve(async (req: Request) => {
   try {
     const update = await req.json();
 
-    // ── Auth: Telegram updates have update_id, else require WEBHOOK_SECRET ──
-    if (!update.update_id) {
+    // ── Auth: Check Telegram secret token header for Telegram updates ──
+    if (update.update_id !== undefined) {
+      // Telegram update — verify X-Telegram-Bot-Api-Secret-Token if configured
+      const telegramSecret = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
+      if (telegramSecret) {
+        const providedSecret = req.headers.get('X-Telegram-Bot-Api-Secret-Token') || '';
+        if (providedSecret !== telegramSecret) {
+          console.warn('Invalid Telegram webhook secret');
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+        }
+      }
+    } else {
+      // Non-Telegram request (Cron/DB webhook) — require WEBHOOK_SECRET
       const webhookSecret = Deno.env.get('WEBHOOK_SECRET');
       if (!webhookSecret) {
         console.error('WEBHOOK_SECRET not configured');

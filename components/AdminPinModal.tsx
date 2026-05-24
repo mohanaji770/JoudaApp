@@ -57,15 +57,12 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, o
     setError('');
 
     try {
-      const { data, error: dbError } = await supabase
-        .from('app_settings')
-        .select('admin_pin')
-        .eq('id', 1)
-        .single();
+      const { data, error: rpcError } = await supabase
+        .rpc('verify_admin_pin', { p_pin: pinString });
 
-      if (dbError) throw dbError;
+      if (rpcError) throw rpcError;
 
-      if (data?.admin_pin === pinString) {
+      if (data === true) {
         localStorage.setItem('admin_session', 'true');
         onSuccess();
       } else {

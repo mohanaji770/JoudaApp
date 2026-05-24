@@ -23,7 +23,7 @@ async function handleCallback(token: string, chatId: string, callback: any) {
     const userName = callback.from?.first_name || 'موظف';
     const userIdStr = String(callback.from?.id);
 
-    const { jouda } = getClients();
+    const { jouda, inventory } = getClients();
 
     const adminIds = (Deno.env.get('TELEGRAM_ADMIN_CHAT_ID') || '').split(',').map(id => id.trim()).filter(id => !id.startsWith('-'));
     const groupIds = (Deno.env.get('TELEGRAM_ADMIN_CHAT_ID') || '').split(',').map(id => id.trim()).filter(id => id.startsWith('-'));
@@ -57,6 +57,24 @@ async function handleCallback(token: string, chatId: string, callback: any) {
       }
       statusLabel = '✅ تم الاعتماد';
        dbStatus = 'confirmed';
+
+       // Convert quotation to invoice in Inventory (deduct stock)
+       const { data: orderForConvert } = await jouda.from('customer_orders')
+         .select('quotation_id')
+         .eq('id', orderId).single();
+       
+       if (orderForConvert?.quotation_id) {
+         const suid = Deno.env.get('SYSTEM_USER_UUID') || 'telegram-bot';
+         const { error: convertErr } = await inventory.rpc('convert_quotation_to_invoice', {
+           p_invoice_id: orderForConvert.quotation_id,
+           p_converted_by: suid,
+         });
+         if (convertErr) {
+           await answerCallback(token, callback.id, `فشل خصم المخزون: ${convertErr.message}`, true);
+           return;
+         }
+       }
+
        await jouda.from('customer_orders').update({ status: dbStatus }).eq('id', orderId);
 
         // Fetch full order for WhatsApp notification
@@ -200,6 +218,24 @@ async function handleCallback(token: string, chatId: string, callback: any) {
           await answerCallback(token, callback.id, 'لا يمكن الغاء الطلب في هذه المرحلة', true);
           return;
        }
+       // Reverse inventory if order was confirmed (stock was deducted)
+       if (['confirmed', 'reserved', 'preparing'].includes(currentStatus)) {
+         const { data: orderForReverse } = await jouda.from('customer_orders')
+           .select('quotation_id')
+           .eq('id', orderId).single();
+         if (orderForReverse?.quotation_id) {
+           const suid = Deno.env.get('SYSTEM_USER_UUID') || 'telegram-bot';
+           const { error: reverseErr } = await inventory.rpc('reverse_invoice', {
+             p_invoice_id: orderForReverse.quotation_id,
+             p_actor_user_id: suid,
+             p_reason: 'إلغاء طلب تطبيق من تليجرام',
+             p_idempotency_key: crypto.randomUUID(),
+           });
+           if (reverseErr) {
+             console.warn('Failed to reverse inventory on cancel:', reverseErr.message);
+           }
+         }
+       }
        statusLabel = '❌ تم الالغاء'; dbStatus = 'cancelled'; 
     }
 
@@ -248,12 +284,28 @@ async function handleCallback(token: string, chatId: string, callback: any) {
        // Append the action with the employee name
        const newText = originalText + `\n\n<b>${statusLabel}</b> — <i>${userName}</i> (${ts})`;
        
-       // Remove the clicked button from the keyboard
-       const oldKeyboard = callback.message?.reply_markup?.inline_keyboard || [];
-       const newKeyboard = oldKeyboard.filter((row: any[]) => row[0].callback_data !== data);
+       // Build smart keyboard based on new status
+       const statusButtonMap: Record<string, string[][]> = {
+         'reserved': [
+           ['👨‍🍳 تجهيز الطلب', `wf_prepare_${orderId}`],
+           ['❌ الغاء الطلب', `wf_cancel_${orderId}`],
+         ],
+         'preparing': [
+           ['🚚 تم التوصيل', `wf_deliver_${orderId}`],
+           ['❌ الغاء الطلب', `wf_cancel_${orderId}`],
+         ],
+         'delivered': [
+           ['💰 تم استلام المبلغ', `wf_paid_${orderId}`],
+         ],
+         'paid': [
+           ['🏦 تم الايداع (للمدير)', `wf_deposit_${orderId}`],
+         ],
+       };
+       const nextButtons = statusButtonMap[dbStatus] || [];
+       const newKeyboard = nextButtons.map(([text, data]) => [{ text, callback_data: data }]);
 
        await editMessage(token, chatId, messageId, newText, { 
-           reply_markup: { inline_keyboard: newKeyboard.length > 0 ? newKeyboard : undefined } 
+           reply_markup: newKeyboard.length > 0 ? { inline_keyboard: newKeyboard } : undefined
        });
     }
     return;
