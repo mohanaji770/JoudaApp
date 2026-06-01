@@ -1,0 +1,52 @@
+// ═══════════════════════════════════════════════════════
+// config.ts — Environment helpers & constants
+// ═══════════════════════════════════════════════════════
+
+// ─── Environment Helpers ────────────────────────────────
+
+export const env = {
+  botToken: () => Deno.env.get('TELEGRAM_BOT_TOKEN')!,
+
+  webhookSecret: () => Deno.env.get('WEBHOOK_SECRET'),
+
+  telegramSecret: () => Deno.env.get('TELEGRAM_WEBHOOK_SECRET'),
+
+  systemUserId: () => Deno.env.get('SYSTEM_USER_UUID') || 'telegram-bot',
+
+  /** All IDs from TELEGRAM_ADMIN_CHAT_ID (admins + groups mixed) */
+  allChatIds: () =>
+    (Deno.env.get('TELEGRAM_ADMIN_CHAT_ID') || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+
+  /** Private admin IDs only (positive numbers, no minus prefix) */
+  adminIds: () => env.allChatIds().filter((id) => !id.startsWith('-')),
+
+  /** Group IDs from TELEGRAM_GROUP_CHAT_ID */
+  groupIds: () =>
+    (Deno.env.get('TELEGRAM_GROUP_CHAT_ID') || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+};
+
+// ─── Status Labels (Arabic) ────────────────────────────
+
+export const STATUS_LABEL: Record<string, string> = {
+  submitted: '🆕 جديد',
+  confirmed: '✅ مؤكد',
+  reserved: '📦 محجوز',
+  preparing: '👨‍🍳 قيد التحضير',
+  delivered: '🚚 تم التوصيل',
+  paid: '💰 تم الاستلام',
+  deposited: '🏦 تم الإيداع',
+  cancelled: '❌ ملغي',
+};
+
+// ─── Helpers ────────────────────────────────────────────
+
+/** Check if a Telegram user ID belongs to an admin */
+export function isAdmin(userId: string | number): boolean {
+  return env.adminIds().includes(String(userId));
+}

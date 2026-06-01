@@ -93,6 +93,7 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         is_active: p.is_active,
         stock_status: p.stock_status,
         unit: p.unit,
+        tags: p.tags || [],
         // Bakery items are always available (made-to-order)
         inStock: isBakery ? true : p.stock_status === 'available',
         source: isBakery ? ('bakery' as const) : ('store' as const),

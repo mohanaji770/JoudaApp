@@ -1,0 +1,377 @@
+// ═══════════════════════════════════════════════════════
+// wf-callbacks.ts — App Order Workflow (wf_* buttons)
+// ═══════════════════════════════════════════════════════
+//
+// Handles: wf_approve, wf_reject, wf_reserve, wf_prepare,
+//          wf_deliver, wf_paid, wf_deposit, wf_cancel
+
+import { answerCallback, editMessage, sendMessage } from './telegram.ts';
+import { getClients } from './db.ts';
+import { env, isAdmin } from './config.ts';
+import { APP_ACTIONS, appOrderButtons } from './workflow.ts';
+import { fmtDate, whatsappButton } from './format.ts';
+
+// ─── Main Handler ───────────────────────────────────────
+
+export async function handleWfCallback(
+  token: string,
+  chatId: string,
+  callback: any,
+) {
+  const data = callback.data as string;
+  const parts = data.split('_');
+  const action = parts[1]; // approve, reject, reserve, ...
+  const orderId = parts.slice(2).join('_'); // UUID
+  const userName = callback.from?.first_name || 'موظف';
+  const userId = String(callback.from?.id);
+  const messageId = callback.message?.message_id;
+
+  const { jouda, inventory } = getClients();
+
+  // ── 1. Fetch current order ──
+  const { data: order, error: orderErr } = await jouda
+    .from('customer_orders')
+    .select(
+      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, notes',
+    )
+    .eq('id', orderId)
+    .single();
+
+  if (!order || orderErr) {
+    await answerCallback(token, callback.id, '⚠️ الطلب غير موجود', true);
+    return;
+  }
+
+  // ── 2. Validate action against state machine ──
+  const currentActions = APP_ACTIONS[order.status];
+  if (!currentActions || !currentActions[action]) {
+    await answerCallback(
+      token,
+      callback.id,
+      '⚠️ هذا الإجراء غير متاح في الحالة الحالية',
+      true,
+    );
+    return;
+  }
+
+  const actionDef = currentActions[action];
+
+  // ── 3. Admin guard ──
+  if (actionDef.adminOnly && !isAdmin(userId)) {
+    await answerCallback(
+      token,
+      callback.id,
+      '🔒 هذا الإجراء للمدير فقط',
+      true,
+    );
+    return;
+  }
+
+  // ── 4. Special actions: approve & reject ──
+  if (action === 'approve') {
+    await handleApprove(token, chatId, callback, order, userName);
+    return;
+  }
+
+  if (action === 'reject') {
+    await handleReject(token, chatId, callback, order, userName);
+    return;
+  }
+
+  // ── 5. Cancel → reverse inventory if stock was deducted ──
+  if (
+    action === 'cancel' &&
+    ['confirmed', 'reserved', 'preparing'].includes(order.status) &&
+    order.quotation_id
+  ) {
+    const suid = env.systemUserId();
+    const { error: reverseErr } = await inventory.rpc('reverse_invoice', {
+      p_invoice_id: order.quotation_id,
+      p_actor_user_id: suid,
+      p_reason: 'إلغاء طلب تطبيق من تليجرام',
+      p_idempotency_key: crypto.randomUUID(),
+    });
+    if (reverseErr) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل إلغاء المخزون: ${reverseErr.message}`,
+        true,
+      );
+      return;
+    }
+  }
+
+  // ── 5.5 Deposit → mark invoice as settled in POS ──
+  if (action === 'deposit' && order.quotation_id) {
+    const { error: settleErr } = await inventory
+      .from('invoices')
+      .update({
+        is_settled: true,
+        settled_at: new Date().toISOString(),
+        settled_by: env.systemUserId(),
+      })
+      .eq('id', order.quotation_id);
+    
+    if (settleErr) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل تسجيل التوريد في المخزون: ${settleErr.message}`,
+        true,
+      );
+      return;
+    }
+  }
+
+  // ── 6. Update status (optimistic lock) ──
+  const updatePayload: Record<string, unknown> = {
+    status: actionDef.nextStatus,
+  };
+  if (actionDef.nextStatus === 'delivered')
+    updatePayload.delivered_at = new Date().toISOString();
+  if (actionDef.nextStatus === 'cancelled')
+    updatePayload.cancelled_at = new Date().toISOString();
+
+  const { data: updated, error: updateErr } = await jouda
+    .from('customer_orders')
+    .update(updatePayload)
+    .eq('id', orderId)
+    .eq('status', order.status) // Optimistic lock
+    .select('id')
+    .single();
+
+  if (updateErr || !updated) {
+    await answerCallback(
+      token,
+      callback.id,
+      '⚠️ سبقك زميلك — الطلب تم تحديثه مسبقاً',
+      true,
+    );
+    return;
+  }
+
+  // ── 7. Acknowledge ──
+  await answerCallback(
+    token,
+    callback.id,
+    `${actionDef.emoji} ${actionDef.label}`,
+  );
+
+  // ── 8. Update message: action trail + smart keyboard ──
+  if (messageId) {
+    const originalText = callback.message?.text || '';
+    const trail = `\n\n<b>${actionDef.emoji} ${actionDef.label}</b> — <i>${userName}</i> (${fmtDate()})`;
+    const nextButtons = appOrderButtons(orderId, actionDef.nextStatus);
+
+    await editMessage(token, chatId, messageId, originalText + trail, {
+      reply_markup:
+        nextButtons.length > 0
+          ? { inline_keyboard: nextButtons }
+          : undefined,
+    });
+  }
+
+  // ── 9. WhatsApp notification for key statuses ──
+  if (
+    ['preparing', 'delivered'].includes(actionDef.nextStatus) &&
+    order.customer_phone
+  ) {
+    const msgs: Record<string, string> = {
+      preparing: 'طلبك قيد التحضير الآن 👨‍🍳',
+      delivered: 'تم تسليم طلبك. شكراً لتسوقك من جودة 🎉',
+    };
+    const waText = `*جودة — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جودة`;
+    const waHtml = whatsappButton(order.customer_phone, waText);
+    await sendMessage(token, chatId, waHtml, {
+      disable_web_page_preview: true,
+    });
+  }
+}
+
+// ─── Approve (Admin only) ───────────────────────────────
+// 1. Convert quotation → invoice in Inventory (deduct stock)
+// 2. Update status to confirmed
+// 3. Edit admin message (remove buttons)
+// 4. Send order to group with team workflow buttons
+// 5. Send WhatsApp link for customer notification
+
+async function handleApprove(
+  token: string,
+  chatId: string,
+  callback: any,
+  order: any,
+  userName: string,
+) {
+  const messageId = callback.message?.message_id;
+  const { jouda, inventory } = getClients();
+
+  // Convert quotation to invoice (deduct stock)
+  let newQuotationId = order.quotation_id;
+  if (order.quotation_id) {
+    const suid = env.systemUserId();
+    const { data: rpcResult, error: convertErr } = await inventory.rpc(
+      'convert_quotation_to_invoice',
+      {
+        p_invoice_id: order.quotation_id,
+        p_converted_by: suid,
+      },
+    );
+    if (convertErr) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل خصم المخزون: ${convertErr.message}`,
+        true,
+      );
+      return;
+    }
+    const result = rpcResult as any;
+    if (result && result.success === false) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل خصم المخزون: ${result.error || 'خطأ'}`,
+        true,
+      );
+      return;
+    }
+    
+    // Capture the new invoice ID if the POS generated one
+    if (typeof result === 'string' && result.startsWith('INV-')) {
+      newQuotationId = result;
+    } else if (result && typeof result === 'object' && result.invoice_id) {
+      newQuotationId = result.invoice_id;
+    } else if (result && typeof result === 'object' && result.id) {
+      newQuotationId = result.id;
+    }
+  }
+
+  // Update status (optimistic lock on 'submitted')
+  const { data: updated, error: updateErr } = await jouda
+    .from('customer_orders')
+    .update({
+      status: 'confirmed',
+      quotation_id: newQuotationId, // Update with the new invoice ID
+      confirmed_at: new Date().toISOString(),
+    })
+    .eq('id', order.id)
+    .eq('status', 'submitted')
+    .select('id')
+    .single();
+
+  if (updateErr || !updated) {
+    await answerCallback(
+      token,
+      callback.id,
+      '⚠️ تم اتخاذ إجراء على هذا الطلب مسبقاً',
+      true,
+    );
+    return;
+  }
+
+  // Edit admin message: show "approved" + remove buttons
+  if (messageId) {
+    const originalText = callback.message?.text || '';
+    const newText =
+      originalText +
+      `\n\n<b>✅ تم الاعتماد</b> بواسطة: <i>${userName}</i> (${fmtDate()})`;
+    await editMessage(token, chatId, messageId, newText, {
+      reply_markup: undefined,
+    });
+  }
+
+  // Build group message with team buttons
+  const teamButtons = appOrderButtons(order.id, 'confirmed');
+  const orderText = callback.message?.text || '';
+  const groupText = orderText.includes('طلب جديد')
+    ? orderText
+    : `🛒 <b>طلب من تطبيق جودة</b>\n\n${orderText}`;
+
+  // Send to all groups
+  for (const gId of env.groupIds()) {
+    await sendMessage(token, gId, groupText, {
+      reply_markup:
+        teamButtons.length > 0
+          ? { inline_keyboard: teamButtons }
+          : undefined,
+    });
+  }
+
+  // WhatsApp notification for customer
+  if (order.customer_phone) {
+    const disc = order.discount || 0;
+    const delivery = order.delivery_fee || 0;
+    const sub = order.subtotal || 0;
+    const tot = order.total || sub + delivery - disc;
+
+    let waMsg = `*جودة — تم تأكيد طلبك* 🛒\n\n`;
+    waMsg += `*رقم الطلب:* ${order.order_number}\n`;
+    waMsg += `*الاسم:* ${order.customer_name}\n\n`;
+    waMsg += `💰 *المبلغ:* ${sub.toLocaleString()} ر.ي`;
+    if (disc > 0) waMsg += `\n🏷️ *الخصم:* ${disc.toLocaleString()} ر.ي`;
+    waMsg += `\n🚚 *التوصيل:* ${delivery.toLocaleString()} ر.ي`;
+    waMsg += `\n💵 *الإجمالي:* ${tot.toLocaleString()} ر.ي`;
+    if (order.notes) waMsg += `\n📝 *ملاحظات:* ${order.notes}`;
+    waMsg += `\n\nسنقوم بتجهيز طلبك قريباً. شكراً لاختيارك جودة`;
+
+    const waHtml = whatsappButton(order.customer_phone, waMsg);
+    for (const gId of env.groupIds()) {
+      await sendMessage(token, gId, waHtml, {
+        disable_web_page_preview: true,
+      });
+    }
+  }
+
+  await answerCallback(
+    token,
+    callback.id,
+    '✅ تم الاعتماد وإرسال الطلب للمجموعة',
+  );
+}
+
+// ─── Reject (Admin only) ────────────────────────────────
+
+async function handleReject(
+  token: string,
+  chatId: string,
+  callback: any,
+  order: any,
+  userName: string,
+) {
+  const messageId = callback.message?.message_id;
+  const { jouda } = getClients();
+
+  const { data: updated, error } = await jouda
+    .from('customer_orders')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+    })
+    .eq('id', order.id)
+    .eq('status', 'submitted')
+    .select('id')
+    .single();
+
+  if (error || !updated) {
+    await answerCallback(
+      token,
+      callback.id,
+      '⚠️ الطلب لم يعد قيد الانتظار',
+      true,
+    );
+    return;
+  }
+
+  if (messageId) {
+    const originalText = callback.message?.text || '';
+    const newText =
+      originalText +
+      `\n\n<b>❌ تم رفض الطلب</b> بواسطة: <i>${userName}</i> (${fmtDate()})`;
+    await editMessage(token, chatId, messageId, newText, {
+      reply_markup: undefined,
+    });
+  }
+
+  await answerCallback(token, callback.id, '❌ تم رفض الطلب');
+}

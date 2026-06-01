@@ -1,9 +1,10 @@
 import React, { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
 import { CartDrawer } from './CartDrawer';
-import { CartFloatingButton } from './CartFloatingButton';
+
 import { InstallPrompt } from './InstallPrompt';
 import { useCart } from '../contexts/CartContext';
 
@@ -18,6 +19,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout }) => {
   const { lastAddedItem } = useCart();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-warm-50 dark:bg-gray-900 transition-colors duration-300 flex font-sans">
@@ -39,7 +41,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDark
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col mb-24 md:mb-0">
+        <main className={`flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col mb-24 md:mb-0 ${
+          location.pathname === '/' ? 'pt-0 pb-8 md:py-8' : 'py-8'
+        }`}>
           {children}
         </main>
         
@@ -53,10 +57,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDark
           </div>
         )}
 
-        {/* Floating Cart Button (Mobile only) */}
-        <div className="md:hidden">
-            <CartFloatingButton />
-        </div>
+
 
         <CartDrawer />
         

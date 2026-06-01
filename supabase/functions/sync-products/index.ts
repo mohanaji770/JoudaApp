@@ -110,6 +110,19 @@ Deno.serve(async (req: Request) => {
 
     if (upsertError) throw upsertError;
 
+    // Deactivate products that are no longer returned as active in the Inventory project
+    const activeBarcodes = productsToUpsert.map((p) => p.barcode);
+    if (activeBarcodes.length > 0) {
+      const { error: deactivateError } = await joudaClient
+        .from('products')
+        .update({ is_active: false })
+        .not('barcode', 'in', activeBarcodes)
+        .neq('category', 'عروض وبكجات');
+      if (deactivateError) {
+        console.warn('Failed to deactivate stale products:', deactivateError.message);
+      }
+    }
+
     // 7. Log sync
     await joudaClient.from('sync_logs').insert({
       sync_type: 'products',

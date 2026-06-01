@@ -153,6 +153,9 @@ ALTER TABLE customer_orders ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
 -- discount already exists in 001 but IF NOT EXISTS makes this safe
 ALTER TABLE customer_orders ADD COLUMN IF NOT EXISTS discount NUMERIC DEFAULT 0;
 
+-- Use a sequence for atomicity
+CREATE SEQUENCE IF NOT EXISTS order_number_seq;
+
 -- Function for generating sequential order numbers (J-YYYY-0001 format)
 CREATE OR REPLACE FUNCTION generate_order_number()
 RETURNS TEXT
@@ -163,8 +166,6 @@ DECLARE
   year_str TEXT;
 BEGIN
   year_str := to_char(NOW(), 'YYYY');
-  -- Use a sequence for atomicity
-  CREATE SEQUENCE IF NOT EXISTS order_number_seq;
   seq_val := nextval('order_number_seq');
   RETURN 'J-' || year_str || '-' || lpad(seq_val::TEXT, 4, '0');
 END;

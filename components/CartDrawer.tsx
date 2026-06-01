@@ -21,6 +21,7 @@ export const CartDrawer: React.FC = () => {
   } = useCart();
 
   // Checkout State
+  const [deliveryZone, setDeliveryZone] = useState('sanaa_near');
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('jouda_customer_name') || '');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
@@ -89,6 +90,15 @@ export const CartDrawer: React.FC = () => {
       return sum + (price * item.quantity);
     }, 0);
 
+    let deliveryFee = 0;
+    if (deliveryZone === 'sanaa_near') {
+      deliveryFee = subtotal >= 20000 ? 0 : 500;
+    } else if (deliveryZone === 'sanaa_far') {
+      deliveryFee = subtotal >= 20000 ? 0 : 1000;
+    } else if (deliveryZone === 'provinces') {
+      deliveryFee = subtotal >= 40000 ? 0 : 2000;
+    }
+
     try {
       const result = await submitOrderToSystem({
         customer_name: customerName.trim(),
@@ -98,7 +108,7 @@ export const CartDrawer: React.FC = () => {
         payment_method: 'CASH',
         notes: notes || undefined,
         subtotal,
-        delivery_fee: 0,
+        delivery_fee: deliveryFee,
       });
 
       if (result.success) {
@@ -110,7 +120,7 @@ export const CartDrawer: React.FC = () => {
           orderNumber: result.order_number || result.quotation_id || '',
           quotationId: result.quotation_id || '',
           orderId: result.order_id,
-          total: subtotal,
+          total: subtotal + deliveryFee,
         });
         setIsCartOpen(false);
         setTimeout(() => setShowSuccessModal(true), 300);
@@ -269,6 +279,23 @@ export const CartDrawer: React.FC = () => {
                       </div>
 
                       <div>
+                        <label htmlFor="cart-zone" className="block text-xs font-bold text-gray-500 mb-1.5 mr-1">منطقة التوصيل *</label>
+                        <div className="relative">
+                          <Truck className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                          <select 
+                            id="cart-zone"
+                            value={deliveryZone}
+                            onChange={(e) => setDeliveryZone(e.target.value)}
+                            className="w-full pr-10 pl-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white font-medium appearance-none"
+                          >
+                            <option value="sanaa_near">صنعاء - الجراف والستين وما جاورها</option>
+                            <option value="sanaa_far">صنعاء - مناطق أخرى</option>
+                            <option value="provinces">محافظات أخرى</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
                         <label htmlFor="cart-address" className="block text-xs font-bold text-gray-500 mb-1.5 mr-1">عنوان التوصيل *</label>
                         <div className="relative">
                           <MapPin className="w-5 h-5 text-gray-400 absolute right-3 top-3" />
@@ -298,6 +325,58 @@ export const CartDrawer: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                </section>
+
+                <div className="h-px bg-gray-200 dark:bg-gray-800 my-4"></div>
+
+                {/* Totals & Delivery Fee Display */}
+                <section className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-2">
+                   {(() => {
+                      const currentSubtotal = items.reduce((sum, item) => {
+                        const price = parseFloat(item.price || '0') || 0;
+                        return sum + (price * item.quantity);
+                      }, 0);
+                      
+                      let currentFee = 0;
+                      let isFree = false;
+                      if (deliveryZone === 'sanaa_near') {
+                        isFree = currentSubtotal >= 20000;
+                        currentFee = isFree ? 0 : 500;
+                      } else if (deliveryZone === 'sanaa_far') {
+                        isFree = currentSubtotal >= 20000;
+                        currentFee = isFree ? 0 : 1000;
+                      } else if (deliveryZone === 'provinces') {
+                        isFree = currentSubtotal >= 40000;
+                        currentFee = isFree ? 0 : 2000;
+                      }
+                      
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 font-bold">
+                            <span>المجموع الفرعي</span>
+                            <span>{currentSubtotal} ريال</span>
+                          </div>
+                          <div className="flex justify-between text-sm font-bold">
+                            <span className="text-gray-600 dark:text-gray-400">رسوم التوصيل</span>
+                            {isFree ? (
+                              <span className="text-green-600">مجاناً! 🎉</span>
+                            ) : (
+                              <span className="text-gray-800 dark:text-gray-200">{currentFee} ريال</span>
+                            )}
+                          </div>
+                          {isFree && (
+                             <div className="text-[10px] text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded-lg text-center mt-2">
+                               مبروك! لقد حصلت على توصيل مجاني.
+                             </div>
+                          )}
+                          <div className="h-px bg-gray-100 dark:bg-gray-700 my-2"></div>
+                          <div className="flex justify-between text-base font-black text-brand-600">
+                            <span>الإجمالي</span>
+                            <span>{currentSubtotal + currentFee} ريال</span>
+                          </div>
+                        </>
+                      );
+                   })()}
                 </section>
               </>
             )}

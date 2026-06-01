@@ -164,18 +164,105 @@ Deno.serve(async (req: Request) => {
     const invoiceId = crypto.randomUUID();
     const idempotencyKey = crypto.randomUUID();
 
-    const rpcItems = items.map((item: any, index: number) => ({
-      line_no: index + 1,
-      product_barcode: item.product_barcode,
-      warehouse_id: onlineWarehouseId,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      expiry_date: null,
-    }));
+    // 1. Initialize JoudaApp Client FIRST
+    const joudaClient = createClient(joudaUrl, joudaServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Handle Packages: decompose packages into their base products and calculate package discount
+    const itemBarcodes = items.map((i: any) => i.product_barcode);
+    const { data: packageMappings } = await joudaClient
+      .from('package_items')
+      .select('package_barcode, product_barcode, quantity')
+      .in('package_barcode', itemBarcodes);
+
+    let packageDiscount = 0;
+    const rpcItems: any[] = [];
+    let lineNo = 1;
+
+    let baseProducts: any[] = [];
+    if (packageMappings && packageMappings.length > 0) {
+      const baseBarcodes = packageMappings.map((m: any) => m.product_barcode);
+      const { data } = await joudaClient
+        .from('products')
+        .select('barcode, price')
+        .in('barcode', baseBarcodes);
+      if (data) baseProducts = data;
+    }
+
+      for (const item of items) {
+        const isPackage = String(item.product_barcode).startsWith('PKG-');
+        const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
+        
+        if (isPackage) {
+          if (pkgItems.length === 0) {
+            return jsonResponse({ 
+              success: false, 
+              message: `عذراً، العرض/البكج (${item.product_name || item.product_barcode}) غير مكتمل (لا يحتوي على منتجات محددة). يرجى إبلاغ الإدارة.`
+            }, 400);
+          }
+
+          let totalBasePrice = 0;
+          for (const pItem of pkgItems) {
+            const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
+            const basePrice = baseProd ? Number(baseProd.price) : 0;
+            totalBasePrice += (basePrice * pItem.quantity);
+            
+            rpcItems.push({
+              line_no: lineNo++,
+              product_barcode: pItem.product_barcode,
+              warehouse_id: onlineWarehouseId,
+              quantity: pItem.quantity * item.quantity,
+              unit_price: basePrice,
+              expiry_date: null,
+            });
+          }
+          
+          // Discount = (Sum of base prices) - (Package price), all multiplied by how many packages bought
+          const expectedBaseTotal = totalBasePrice * item.quantity;
+          const actualPackageTotal = Number(item.unit_price) * item.quantity;
+          packageDiscount += (expectedBaseTotal - actualPackageTotal);
+        } else {
+          // Normal product
+          rpcItems.push({
+            line_no: lineNo++,
+            product_barcode: item.product_barcode,
+            warehouse_id: onlineWarehouseId,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            expiry_date: null,
+          });
+        }
+      }
 
     const total = subtotal + delivery_fee;
 
-    // Connect to Inventory and call create_quotation
+    // JoudaApp Client already initialized above
+
+    let orderNumber = 'J-0000';
+    try {
+      const { data: orderNumberResult, error: seqError } = await joudaClient
+        .rpc('generate_order_number');
+      
+      if (seqError) {
+        console.error('Sequence Error:', seqError);
+      }
+      
+      orderNumber = orderNumberResult || 'J-0000';
+    } catch (e) {
+      console.error('generate_order_number failed:', e);
+    }
+
+    // Embed order_number and notes in the address so the POS cashier sees them
+    let combinedNotes = `رقم طلب التطبيق: ${orderNumber}`;
+    if (notes) {
+      combinedNotes += `\nملاحظات العميل: ${notes}`;
+    }
+    const finalAddress = customer_address 
+      ? `${customer_address}\n\n[ ${combinedNotes} ]`
+      : `[ ${combinedNotes} ]`;
+
+    // 2. Connect to Inventory and call create_quotation
     const inventoryClient = createClient(inventoryUrl, inventoryKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -186,12 +273,12 @@ Deno.serve(async (req: Request) => {
       p_customer_id: null,
       p_customer_name_snapshot: customer_name,
       p_customer_phone_snapshot: customer_phone || null,
-      p_customer_address_snapshot: customer_address || null,
+      p_customer_address_snapshot: finalAddress,
       p_issuing_warehouse_id: onlineWarehouseId,
       p_payment_method: payment_method || 'CASH',
       p_wallet_provider: null,
       p_subtotal: subtotal,
-      p_discount: 0,
+      p_discount: packageDiscount,
       p_delivery_fee: delivery_fee || 0,
       p_collector_id: null,
       p_created_by: systemUserUuid,
@@ -212,25 +299,10 @@ Deno.serve(async (req: Request) => {
     const quotationId = quotationResult?.invoice_id || invoiceId;
     const rpcSuccess = quotationResult?.success !== false;
 
-    // Store in JoudaApp (use service_role for write access)
-    const joudaClient = createClient(joudaUrl, joudaServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
+    // 3. Store in JoudaApp local database
     let orderRecord: any = null;
-    let orderNumber = 'J-0000';
 
     try {
-      // Generate order number using database function
-      const { data: orderNumberResult, error: seqError } = await joudaClient
-        .rpc('generate_order_number');
-      
-      if (seqError) {
-        console.error('Sequence Error:', seqError);
-      }
-      
-      orderNumber = orderNumberResult || 'J-0000';
-
       const { data: insertedOrder, error: insertError } = await joudaClient
         .from('customer_orders')
         .insert({

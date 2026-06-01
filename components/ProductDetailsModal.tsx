@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, ShoppingBag, Heart, ChefHat, Clock, Share2, Check, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, Heart, ChefHat, Clock, Share2, Check, ArrowRight, Sparkles, BadgeCheck, Gift } from 'lucide-react';
 import { Product, Recipe } from '../services/supabaseService';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -158,8 +158,27 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                           {product.price || '---'} <span className="text-lg md:text-xl font-bold text-gray-500 dark:text-gray-400">ر.ي</span>
                        </div>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white leading-tight">
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white leading-tight flex items-start gap-2 flex-wrap">
                        {product.name}
+                       
+                       {/* UI Badges inline with title */}
+                       <div className="flex gap-1.5 items-center pt-1.5 flex-wrap">
+                          {product.tags?.includes('discount') && (
+                            <span className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 border border-red-200 dark:border-red-800">
+                              <Sparkles className="w-3.5 h-3.5" /> خصم
+                            </span>
+                          )}
+                          {product.tags?.includes('best_seller') && (
+                            <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-200 dark:border-amber-800">
+                              <BadgeCheck className="w-3.5 h-3.5" /> الأكثر مبيعاً
+                            </span>
+                          )}
+                          {product.tags?.includes('gift') && (
+                            <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 border border-green-200 dark:border-green-800">
+                              <Gift className="w-3.5 h-3.5" /> هدية مجانية
+                            </span>
+                          )}
+                       </div>
                     </h2>
                  </div>
                  

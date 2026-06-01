@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { Plus, Minus, ShoppingBag, AlertCircle, Search, X, Cake, Check, Heart, SlidersHorizontal, ArrowUpDown, Filter, ChevronDown, Clock, Trash2, Sparkles } from 'lucide-react';
+import { Plus, Minus, ShoppingBag, AlertCircle, Search, X, Cake, Check, Heart, SlidersHorizontal, ArrowUpDown, Filter, ChevronDown, Clock, Trash2, Sparkles, Gift, BadgeCheck } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { fetchProductsFromSupabase, Product } from '../services/supabaseService';
@@ -473,6 +473,25 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                       `}
                   >
                       <div className="w-full aspect-[4/3] bg-white relative overflow-hidden shrink-0">
+                          {/* UI Badges */}
+                          <div className="absolute top-2 right-2 z-30 flex flex-col gap-1 items-end pointer-events-none">
+                            {product.tags?.includes('discount') && (
+                              <span className="bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" /> خصم
+                              </span>
+                            )}
+                            {product.tags?.includes('best_seller') && (
+                              <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                <BadgeCheck className="w-3 h-3" /> الأكثر مبيعاً
+                              </span>
+                            )}
+                            {product.tags?.includes('gift') && (
+                              <span className="bg-green-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                <Gift className="w-3 h-3" /> هدية مجانية
+                              </span>
+                            )}
+                          </div>
+                          
                           {product.image ? (
                               <>
                                 <div className="absolute inset-0 bg-gray-100 animate-pulse" />

@@ -10,7 +10,7 @@ import { KnowledgeHub } from '../components/KnowledgeHub';
 import { analyzeImageWithGemini, analyzeTextWithGemini } from '../services/geminiService';
 import { checkDailyQuota, incrementDailyQuota } from '../services/quotaService';
 import { AnalysisResult } from '../types';
-import { Search, ShieldAlert, X, Cake, PackageSearch, ChefHat, ShoppingBag, ScanLine, ChevronLeft } from 'lucide-react';
+import { Search, ShieldAlert, X, ChefHat, Store, ScanLine } from 'lucide-react';
 
 const HISTORY_KEY = 'yaqeen_scan_history_v1';
 const MAX_HISTORY_ITEMS = 10;
@@ -109,27 +109,7 @@ export const HomePage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const getGreeting = () => {
-    try {
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: 'Asia/Aden',
-        hour: 'numeric',
-        hour12: false
-      };
 
-      const formatter = new Intl.DateTimeFormat('en-US', options);
-      const hour = parseInt(formatter.format(new Date()), 10);
-
-      if (hour >= 5 && hour < 12) return "صباح الخير";
-      if (hour >= 12 && hour < 16) return "طاب يومك";
-      if (hour >= 16 && hour < 20) return "مساء الخير";
-      if (hour >= 20 || hour < 5) return "ليلة سعيدة";
-
-      return "أهلاً بك";
-    } catch (e) {
-      return "أهلاً بك 👋";
-    }
-  };
 
   return (
     <>
@@ -137,76 +117,90 @@ export const HomePage: React.FC = () => {
         // DASHBOARD VIEW
         <div className="animate-fade-in flex flex-col">
 
-          {/* HERO SECTION — generous breathing room */}
-          <div className="pt-2 pb-6">
-            <div className="mb-6">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-3">
-                {getGreeting()} <span className="text-brand-600">.</span>
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 font-bold text-sm md:text-base">
-                رفيقك للتحقق من سلامة طعامك
-              </p>
+            {/* Search Bar Container */}
+            <div className="mt-5 mb-5 relative">
+              <div className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-1.5 flex items-center justify-between transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800">
+                {/* Search Clickable Area: Redirects to /products */}
+                <button
+                  onClick={() => navigate('/products')}
+                  className="flex-1 flex items-center gap-3 p-1.5 text-right transition-all group/btn"
+                  aria-label="البحث في المتجر"
+                >
+                  <Search className="w-5 h-5 text-gray-400 dark:text-gray-500 mr-2 group-hover/btn:scale-105 transition-transform duration-200" />
+                  <div className="flex-1 text-right">
+                    <span className="text-sm font-bold text-gray-400 dark:text-gray-500 block transition-colors group-hover/btn:text-gray-600 dark:group-hover/btn:text-gray-300">ابحث عن منتج، وصفة، أو مكون...</span>
+                  </div>
+                </button>
+
+                {/* Scan Clickable Area: Opens Product Scanner */}
+                <div className="pl-2 border-r border-gray-200 dark:border-gray-700 mr-2 pr-2">
+                  <button
+                    onClick={() => setShowScanner(true)}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-brand-600 hover:bg-white dark:hover:bg-gray-700 transition-all active:scale-95 group/scan"
+                    aria-label="بدء الفحص بالكميرا"
+                    title="بدء الفحص بالكميرا"
+                  >
+                    <ScanLine className="w-5 h-5 group-hover/scan:scale-110 transition-transform duration-300 group-hover/scan:text-brand-600" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Search Bar */}
-            <button
-              onClick={() => setShowScanner(true)}
-              className="w-full bg-warm-white dark:bg-gray-800 rounded-2xl p-3 shadow-xl shadow-gray-200 dark:shadow-none border border-gray-100 dark:border-gray-700 flex items-center gap-4 transition-transform active:scale-[0.98] group md:max-w-2xl"
-            >
-              <div className="bg-brand-600 text-white w-14 h-14 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-red-200 dark:shadow-none group-hover:bg-brand-700 transition-colors">
-                <ScanLine className="w-7 h-7" />
-              </div>
-              <div className="flex-1 text-right">
-                <span className="text-base font-bold text-gray-800 dark:text-white block mb-0.5">فحص المنتجات</span>
-                <span className="text-[10px] text-gray-400 font-medium">صوّر المكونات أو اكتب اسمها</span>
-              </div>
-              <div className="pr-4 pl-4 border-r border-gray-100 dark:border-gray-700">
-                <Search className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors" />
-              </div>
-            </button>
-          </div>
-
-          {/* PROMO BANNERS */}
+            {/* PROMO BANNERS */}
           <PromoBanner />
 
-          {/* QUICK ACCESS — compact, elegant 2-column grid */}
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            {/* Bakery Card */}
+          {/* QUICK ACCESS — Stacked editorial layout */}
+          <div className="flex flex-col gap-4 mb-4">
+            {/* Kitchen Card */}
             <button
-              onClick={() => navigate('/products', { state: { initialTab: 'bakery' } })}
-              className="group relative h-28 rounded-2xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-orange-100 dark:border-gray-700 text-right p-4 transition-all hover:shadow-md hover:border-orange-200 dark:hover:border-gray-600 active:scale-95 shadow-sm flex flex-col justify-between"
+              onClick={() => navigate('/recipes')}
+              className="group relative w-full h-32 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 text-right p-6 transition-all duration-300 hover:bg-orange-50/5 dark:hover:bg-gray-700/50 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(234,88,12,0.04)] active:scale-[0.99] flex items-center justify-between"
             >
-              <div className="flex items-center justify-between w-full">
-                <Cake className="w-7 h-7 text-orange-600 dark:text-orange-400 shrink-0" />
-                <ChevronLeft className="w-4 h-4 text-orange-400 dark:text-orange-500 group-hover:-translate-x-1 transition-transform" />
+              {/* Soft Ambient Light Circle behind the card */}
+              <div className="absolute -top-12 -left-12 w-32 h-32 bg-orange-200/20 dark:bg-orange-500/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
+              
+              {/* Text Area */}
+              <div className="relative z-10 flex flex-col justify-center h-full max-w-[70%]">
+                <h3 className="font-black text-gray-950 dark:text-white text-lg leading-tight mb-1">مطبخ جودة</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                  اكتشف أشهى الوصفات والأكلات الصحية الخالية من الجلوتين، والمعدة خصيصاً لنمط حياتك الآمن.
+                </p>
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight mb-1">المخبز</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-snug line-clamp-1">خبز وكيك طازج عند الطلب</p>
+
+              {/* Icon Container in a flat circle */}
+              <div className="relative z-10 w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 border border-orange-100/50 dark:border-orange-900/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
+                <ChefHat className="w-8 h-8 text-orange-600 dark:text-orange-400" />
               </div>
             </button>
 
             {/* Store Card */}
             <button
               onClick={() => navigate('/products')}
-              className="group relative h-28 rounded-2xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-rose-100 dark:border-gray-700 text-right p-4 transition-all hover:shadow-md hover:border-rose-200 dark:hover:border-gray-600 active:scale-95 shadow-sm flex flex-col justify-between"
+              className="group relative w-full h-32 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 text-right p-6 transition-all duration-300 hover:bg-rose-50/5 dark:hover:bg-gray-700/50 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(211,47,47,0.04)] active:scale-[0.99] flex items-center justify-between"
             >
-              <div className="flex items-center justify-between w-full">
-                <ShoppingBag className="w-7 h-7 text-brand-600 dark:text-brand-400 shrink-0" />
-                <ChevronLeft className="w-4 h-4 text-brand-400 dark:text-brand-500 group-hover:-translate-x-1 transition-transform" />
+              {/* Soft Ambient Light Circle behind the card */}
+              <div className="absolute -top-12 -left-12 w-32 h-32 bg-rose-200/20 dark:bg-brand-500/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
+              
+              {/* Text Area */}
+              <div className="relative z-10 flex flex-col justify-center h-full max-w-[70%]">
+                <h3 className="font-black text-gray-950 dark:text-white text-lg leading-tight mb-1">المتجر</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                  تسوق بثقة تامة واحصل على كافة الأغذية والمقاضي المضمونة والخالية من الجلوتين 100%.
+                </p>
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight mb-1">المتجر</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-snug line-clamp-1">كافة المنتجات والمقاضي</p>
+
+              {/* Icon Container in a flat circle */}
+              <div className="relative z-10 w-16 h-16 rounded-full bg-rose-50 dark:bg-brand-900/20 flex items-center justify-center shrink-0 border border-rose-100/50 dark:border-brand-900/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <Store className="w-8 h-8 text-rose-600 dark:text-rose-450" />
               </div>
             </button>
           </div>
 
           {/* Section divider */}
-          <div className="py-3">
+          <div className="py-2.5">
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
-              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">اكتشف</span>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500">اكتشف</span>
               <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
             </div>
           </div>

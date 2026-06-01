@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { useCart } from '../contexts/CartContext';
+import { getCachedProducts } from '../services/db';
 
 interface Banner {
   id: string;
@@ -101,9 +103,27 @@ export const PromoBanner: React.FC = () => {
 
   const banner = banners[currentIndex];
 
-  const handleClick = () => {
+  const { addToCart, setIsCartOpen } = useCart();
+
+  const handleClick = async () => {
     if (banner?.link_url) {
-      window.open(banner.link_url, '_blank', 'noopener');
+      if (banner.link_url.startsWith('cart:')) {
+        const barcode = banner.link_url.replace('cart:', '').trim();
+        try {
+          const products = await getCachedProducts();
+          const prod = products.find(p => p.barcode === barcode);
+          if (prod) {
+            addToCart(prod.name, prod.source || 'store', prod.barcode, prod.price?.toString());
+            setIsCartOpen(true);
+          } else {
+            alert('المنتج غير متوفر حالياً');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        window.open(banner.link_url, '_blank', 'noopener');
+      }
     }
   };
 
@@ -115,7 +135,7 @@ export const PromoBanner: React.FC = () => {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       style={{ 
-        marginBottom: 24, 
+        marginBottom: 16, 
         position: 'relative',
         width: '100%',
       }}

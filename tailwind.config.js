@@ -4,6 +4,8 @@ export default {
   content: [
     "./index.html",
     "./components/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./hooks/**/*.{js,ts,jsx,tsx}",
     "./contexts/**/*.{js,ts,jsx,tsx}",
     "./services/**/*.{js,ts,jsx,tsx}",
     "./App.tsx",
@@ -18,6 +20,8 @@ export default {
         brand: {
           50: '#fef2f2',
           100: '#fee2e2',
+          300: '#fca5a5',
+          400: '#f87171',
           500: '#ef4444',
           600: '#D32F2F',
           900: '#7f1d1d',
