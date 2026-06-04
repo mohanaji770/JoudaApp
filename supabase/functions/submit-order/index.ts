@@ -29,7 +29,12 @@ async function sendTelegramNotification(orderData: {
   customerPhone: string;
   customerAddress?: string;
   total: number;
-  items: Array<{ product_name: string; quantity: number }>;
+  items: Array<{
+    product_name: string;
+    quantity: number;
+    is_package?: boolean;
+    sub_items?: Array<{ product_name: string; quantity: number }>;
+  }>;
   notes?: string;
 }) {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
@@ -43,7 +48,16 @@ async function sendTelegramNotification(orderData: {
   const { orderId, orderNumber, customerName, customerPhone, customerAddress, total, items } = orderData;
 
   const itemsList = items
-    .map((item) => `• ${item.product_name} × ${item.quantity}`)
+    .map((item) => {
+      if (item.is_package && item.sub_items && item.sub_items.length > 0) {
+        const subList = item.sub_items
+          .map((sub) => `      ▫️ 🛒 ${sub.product_name} × ${sub.quantity * item.quantity}`)
+          .join('\n');
+        return `• 📦 <b>${item.product_name}</b> × ${item.quantity}\n${subList}`;
+      } else {
+        return `• 🛒 ${item.product_name} × ${item.quantity}`;
+      }
+    })
     .join('\n');
 
   const now = new Date();
@@ -56,18 +70,21 @@ async function sendTelegramNotification(orderData: {
   const mi = String(now.getMinutes()).padStart(2, '0');
   const dateStr = `${y}-${mo}-${d} ${h}:${mi} ${period}`;
 
-  const notesLine = orderData.notes ? '\n📝 <b>ملاحظات:</b> ' + orderData.notes + '\n' : '';
+  const notesLine = orderData.notes ? `\n📝 <b>ملاحظات:</b> <code>${orderData.notes}</code>\n` : '';
   const message = `
-🛒 <b>طلب جديد: ${orderNumber}</b>
-
-👤 <b>العميل:</b> ${customerName}
-📱 <b>الهاتف:</b> ${customerPhone}
-📍 <b>العنوان:</b> ${customerAddress || 'غير محدد'}
-💰 <b>المجموع:</b> ${total.toLocaleString()} ر.ي
-
-📦 <b>الأصناف:</b>
+📥 <b>طلب جديد من التطبيق 📱</b>
+━━━━━━━━━━━━━━━━━━━
+🆔 <b>رقم الطلب:</b> <code>#${orderNumber}</code>
+👤 <b>العميل:</b> <b>${customerName}</b>
+📱 <b>الهاتف:</b> <code>${customerPhone}</code>
+📍 <b>العنوان:</b> <code>${customerAddress || 'غير محدد'}</code>
+━━━━━━━━━━━━━━━━━━━
+📦 <b>الأصناف المطلوبة:</b>
 ${itemsList}
-${notesLine}📅 ${dateStr}
+${notesLine}━━━━━━━━━━━━━━━━━━━
+💰 <b>إجمالي الطلب:</b> <b>${total.toLocaleString()}</b> ر.ي
+━━━━━━━━━━━━━━━━━━━
+⏱️ <b>التوقيت:</b> <code>${dateStr}</code>
 `.trim();
 
   // Admin Approval Buttons (Only for Admins)
@@ -169,6 +186,11 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // 2. Connect to Inventory
+    const inventoryClient = createClient(inventoryUrl, inventoryKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
     // Handle Packages: decompose packages into their base products and calculate package discount
     const itemBarcodes = items.map((i: any) => i.product_barcode);
     const { data: packageMappings } = await joudaClient
@@ -185,55 +207,135 @@ Deno.serve(async (req: Request) => {
       const baseBarcodes = packageMappings.map((m: any) => m.product_barcode);
       const { data } = await joudaClient
         .from('products')
-        .select('barcode, price')
+        .select('barcode, name, price')
         .in('barcode', baseBarcodes);
       if (data) baseProducts = data;
     }
 
-      for (const item of items) {
-        const isPackage = String(item.product_barcode).startsWith('PKG-');
-        const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
-        
-        if (isPackage) {
-          if (pkgItems.length === 0) {
-            return jsonResponse({ 
-              success: false, 
-              message: `عذراً، العرض/البكج (${item.product_name || item.product_barcode}) غير مكتمل (لا يحتوي على منتجات محددة). يرجى إبلاغ الإدارة.`
-            }, 400);
-          }
+    // 3. Resolve track_expiry setting from inventory database for all items
+    const allBarcodesToQuery = [
+      ...items.filter((i: any) => !String(i.product_barcode).startsWith('PKG-')).map((i: any) => i.product_barcode),
+      ...(packageMappings || []).map((m: any) => m.product_barcode)
+    ];
 
-          let totalBasePrice = 0;
-          for (const pItem of pkgItems) {
-            const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
-            const basePrice = baseProd ? Number(baseProd.price) : 0;
-            totalBasePrice += (basePrice * pItem.quantity);
-            
-            rpcItems.push({
-              line_no: lineNo++,
-              product_barcode: pItem.product_barcode,
-              warehouse_id: onlineWarehouseId,
-              quantity: pItem.quantity * item.quantity,
-              unit_price: basePrice,
-              expiry_date: null,
-            });
-          }
+    let invProducts: any[] = [];
+    if (allBarcodesToQuery.length > 0) {
+      const { data: fetchedInvProducts, error: invProdError } = await inventoryClient
+        .from('products')
+        .select('barcode, track_expiry')
+        .in('barcode', allBarcodesToQuery)
+        .eq('is_active', true);
+      if (invProdError) {
+        console.error('Error fetching track_expiry from inventory database:', invProdError);
+      }
+      if (fetchedInvProducts) invProducts = fetchedInvProducts;
+    }
+
+    // 4. Retrieve active expiry batches from the materialized view
+    const barcodesWithExpiry = invProducts
+      .filter((p: any) => p.track_expiry === true)
+      .map((p: any) => p.barcode);
+
+    let activeBatches: any[] = [];
+    if (barcodesWithExpiry.length > 0) {
+      const { data: fetchedBatches, error: batchErr } = await inventoryClient
+        .from('active_expiry_batches')
+        .select('product_barcode, expiry_date, remaining_qty')
+        .in('product_barcode', barcodesWithExpiry)
+        .eq('warehouse_id', onlineWarehouseId)
+        .gt('remaining_qty', 0)
+        .order('expiry_date', { ascending: true });
+      if (batchErr) {
+        console.error('Error fetching active expiry batches:', batchErr);
+      }
+      if (fetchedBatches) activeBatches = fetchedBatches;
+    }
+
+    // Helper function to resolve expiry_date
+    const resolveExpiryDate = async (barcode: string): Promise<string | null> => {
+      const isExpiryTracked = invProducts.find((p: any) => p.barcode === barcode)?.track_expiry === true;
+      if (!isExpiryTracked) return null;
+
+      // Try active batches in the online warehouse
+      const matchedBatches = activeBatches.filter(
+        (b: any) => b.product_barcode === barcode && Number(b.remaining_qty) > 0
+      );
+      if (matchedBatches.length > 0) {
+        return matchedBatches[0].expiry_date;
+      }
+
+      // Try historical incoming movements
+      try {
+        const { data: hist, error: histError } = await inventoryClient
+          .from('inventory_movements')
+          .select('expiry_date')
+          .eq('product_barcode', barcode)
+          .eq('action_type', 'IN')
+          .not('expiry_date', 'is', null)
+          .order('expiry_date', { ascending: false })
+          .limit(1);
+
+        if (!histError && hist && hist.length > 0) {
+          return hist[0].expiry_date;
+        }
+      } catch (e) {
+        console.error(`Historical expiry lookup failed for ${barcode}:`, e);
+      }
+
+      // Fallback: 6 months in the future
+      const fallback = new Date();
+      fallback.setMonth(fallback.getMonth() + 6);
+      return fallback.toISOString().split('T')[0];
+    };
+
+    for (const item of items) {
+      const isPackage = String(item.product_barcode).startsWith('PKG-');
+      const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
+      
+      if (isPackage) {
+        if (pkgItems.length === 0) {
+          return jsonResponse({ 
+            success: false, 
+            message: `عذراً، العرض/البكج (${item.product_name || item.product_barcode}) غير مكتمل (لا يحتوي على منتجات محددة). يرجى إبلاغ الإدارة.`
+          }, 400);
+        }
+
+        let totalBasePrice = 0;
+        for (const pItem of pkgItems) {
+          const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
+          const basePrice = baseProd ? Number(baseProd.price) : 0;
+          totalBasePrice += (basePrice * pItem.quantity);
           
-          // Discount = (Sum of base prices) - (Package price), all multiplied by how many packages bought
-          const expectedBaseTotal = totalBasePrice * item.quantity;
-          const actualPackageTotal = Number(item.unit_price) * item.quantity;
-          packageDiscount += (expectedBaseTotal - actualPackageTotal);
-        } else {
-          // Normal product
+          const expiryDate = await resolveExpiryDate(pItem.product_barcode);
+          
           rpcItems.push({
             line_no: lineNo++,
-            product_barcode: item.product_barcode,
+            product_barcode: pItem.product_barcode,
             warehouse_id: onlineWarehouseId,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            expiry_date: null,
+            quantity: pItem.quantity * item.quantity,
+            unit_price: basePrice,
+            expiry_date: expiryDate,
           });
         }
+        
+        // Discount = (Sum of base prices) - (Package price), all multiplied by how many packages bought
+        const expectedBaseTotal = totalBasePrice * item.quantity;
+        const actualPackageTotal = Number(item.unit_price) * item.quantity;
+        packageDiscount += (expectedBaseTotal - actualPackageTotal);
+      } else {
+        // Normal product
+        const expiryDate = await resolveExpiryDate(item.product_barcode);
+
+        rpcItems.push({
+          line_no: lineNo++,
+          product_barcode: item.product_barcode,
+          warehouse_id: onlineWarehouseId,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          expiry_date: expiryDate,
+        });
       }
+    }
 
     const total = subtotal + delivery_fee;
 
@@ -262,11 +364,6 @@ Deno.serve(async (req: Request) => {
       ? `${customer_address}\n\n[ ${combinedNotes} ]`
       : `[ ${combinedNotes} ]`;
 
-    // 2. Connect to Inventory and call create_quotation
-    const inventoryClient = createClient(inventoryUrl, inventoryKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
     const { data: rpcResult, error: rpcError } = await inventoryClient.rpc('create_quotation', {
       p_idempotency_key: idempotencyKey,
       p_invoice_id: invoiceId,
@@ -277,7 +374,7 @@ Deno.serve(async (req: Request) => {
       p_issuing_warehouse_id: onlineWarehouseId,
       p_payment_method: payment_method || 'CASH',
       p_wallet_provider: null,
-      p_subtotal: subtotal,
+      p_subtotal: subtotal + packageDiscount,
       p_discount: packageDiscount,
       p_delivery_fee: delivery_fee || 0,
       p_collector_id: null,
@@ -377,10 +474,26 @@ Deno.serve(async (req: Request) => {
         customerAddress: customer_address,
         total,
         notes: notes || undefined,
-        items: items.map((item: any) => ({
-          product_name: item.product_name,
-          quantity: item.quantity,
-        })),
+        items: items.map((item: any) => {
+          const isPackage = String(item.product_barcode).startsWith('PKG-');
+          let subItems: Array<{ product_name: string; quantity: number }> = [];
+          if (isPackage) {
+            const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
+            subItems = pkgItems.map((pItem: any) => {
+              const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
+              return {
+                product_name: baseProd ? baseProd.name : pItem.product_barcode,
+                quantity: pItem.quantity,
+              };
+            });
+          }
+          return {
+            product_name: item.product_name,
+            quantity: item.quantity,
+            is_package: isPackage,
+            sub_items: isPackage ? subItems : undefined,
+          };
+        }),
       });
     }
 

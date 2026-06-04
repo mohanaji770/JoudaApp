@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { APP_LOGO } from '../constants';
 
@@ -10,17 +11,39 @@ interface HeaderProps {
   onHelpClick?: () => void;
   isAdmin?: boolean;
   onAdminLogout?: () => void;
+  onLogoClick?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
   const { setIsCartOpen, totalItems } = useCart();
+
+  const [clickCount, setClickCount] = React.useState(0);
+  const [lastClickTime, setLastClickTime] = React.useState(0);
+
+  const handleLogoClick = () => {
+    const now = Date.now();
+    if (now - lastClickTime > 2000) {
+      setClickCount(1);
+    } else {
+      const nextCount = clickCount + 1;
+      setClickCount(nextCount);
+      if (nextCount >= 5) {
+        if (onLogoClick) onLogoClick();
+        setClickCount(0);
+      }
+    }
+    setLastClickTime(now);
+  };
 
   return (
     <header className="bg-warm-white dark:bg-gray-900 sticky top-0 z-40 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5)] transition-colors duration-300">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         
         {/* Branding: Jouda Logo Style - Hidden on Desktop (shown in Sidebar) */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div 
+          onClick={handleLogoClick}
+          className="flex items-center gap-3 md:hidden cursor-pointer select-none active:scale-[0.98] transition-transform"
+        >
            <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-md shadow-red-100 dark:shadow-none relative overflow-hidden bg-white border border-gray-100 dark:border-gray-800">
              <img src={APP_LOGO} alt="Jouda Logo" className="w-full h-full object-cover" />
            </div>
@@ -38,16 +61,21 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
         <div className="flex items-center gap-2">
           {/* Admin Badge */}
           {isAdmin && (
-            <div className="flex items-center gap-1 bg-brand-600 text-white px-2 py-1 rounded-lg">
-              <Shield className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold">مشرف</span>
+            <div className="flex items-center gap-1.5">
+              <Link 
+                to="/admin" 
+                className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white px-2 py-1 rounded-lg text-xs font-bold transition-colors shadow-sm"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>لوحة التحكم</span>
+              </Link>
               {onAdminLogout && (
                 <button
                   onClick={onAdminLogout}
-                  className="mr-1 p-0.5 hover:bg-white/20 rounded transition-colors"
+                  className="p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/20 text-gray-500 hover:text-red-600 rounded-lg transition-colors border border-gray-250 dark:border-gray-700"
                   title="تسجيل خروج"
                 >
-                  <LogOut className="w-3 h-3" />
+                  <LogOut className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>

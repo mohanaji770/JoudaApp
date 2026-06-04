@@ -27,6 +27,11 @@ export interface Product {
   tags?: string[];
   inStock?: boolean;
   source?: 'store' | 'bakery';
+  bundle_items?: {
+    barcode: string;
+    product_name: string;
+    quantity: number;
+  }[];
 }
 
 export interface Recipe {
@@ -79,8 +84,37 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 
     if (error) throw error;
 
+    // Fetch package items mappings
+    let packageItems: any[] = [];
+    try {
+      const { data: mappings, error: mappingsError } = await supabase
+        .from('package_items')
+        .select('*');
+      if (!mappingsError && mappings) {
+        packageItems = mappings;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch package_items mappings', e);
+    }
+
     const products: Product[] = (data || []).map((p) => {
       const isBakery = (p.category || '') === 'مخبوزات';
+      
+      // If it is a package, resolve its bundle items
+      let bundle_items: Product['bundle_items'] = undefined;
+      const isPackage = p.barcode.startsWith('PKG-') || p.category === 'عروض وبكجات';
+      if (isPackage && packageItems.length > 0) {
+        const mappings = packageItems.filter((m) => m.package_barcode === p.barcode);
+        bundle_items = mappings.map((m) => {
+          const compProduct = data.find((bp) => bp.barcode === m.product_barcode);
+          return {
+            barcode: m.product_barcode,
+            product_name: compProduct ? compProduct.name : `منتج ${m.product_barcode}`,
+            quantity: m.quantity,
+          };
+        });
+      }
+
       return {
         id: p.barcode,
         barcode: p.barcode,
@@ -97,6 +131,7 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         // Bakery items are always available (made-to-order)
         inStock: isBakery ? true : p.stock_status === 'available',
         source: isBakery ? ('bakery' as const) : ('store' as const),
+        bundle_items,
       };
     });
 

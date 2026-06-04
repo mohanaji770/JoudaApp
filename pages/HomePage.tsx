@@ -10,7 +10,7 @@ import { KnowledgeHub } from '../components/KnowledgeHub';
 import { analyzeImageWithGemini, analyzeTextWithGemini } from '../services/geminiService';
 import { checkDailyQuota, incrementDailyQuota } from '../services/quotaService';
 import { AnalysisResult } from '../types';
-import { Search, ShieldAlert, X, ChefHat, Store, ScanLine } from 'lucide-react';
+import { Search, ShieldAlert, X, ChefHat, Store, ScanLine, ChevronLeft } from 'lucide-react';
 
 const HISTORY_KEY = 'yaqeen_scan_history_v1';
 const MAX_HISTORY_ITEMS = 10;
@@ -149,49 +149,35 @@ export const HomePage: React.FC = () => {
             {/* PROMO BANNERS */}
           <PromoBanner />
 
-          {/* QUICK ACCESS — Stacked editorial layout */}
-          <div className="flex flex-col gap-4 mb-4">
+          {/* QUICK ACCESS — compact, elegant 2-column grid */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Kitchen Card */}
             <button
               onClick={() => navigate('/recipes')}
-              className="group relative w-full h-32 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 text-right p-6 transition-all duration-300 hover:bg-orange-50/5 dark:hover:bg-gray-700/50 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(234,88,12,0.04)] active:scale-[0.99] flex items-center justify-between"
+              className="group relative h-28 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-orange-100/80 dark:border-gray-700/50 text-right p-4 transition-all duration-300 hover:border-orange-200/80 hover:bg-orange-50/10 dark:hover:bg-gray-700/80 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(234,88,12,0.03)] active:scale-[0.98] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)] flex flex-col justify-between"
             >
-              {/* Soft Ambient Light Circle behind the card */}
-              <div className="absolute -top-12 -left-12 w-32 h-32 bg-orange-200/20 dark:bg-orange-500/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
-              
-              {/* Text Area */}
-              <div className="relative z-10 flex flex-col justify-center h-full max-w-[70%]">
-                <h3 className="font-black text-gray-950 dark:text-white text-lg leading-tight mb-1">مطبخ جودة</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                  اكتشف أشهى الوصفات والأكلات الصحية الخالية من الجلوتين، والمعدة خصيصاً لنمط حياتك الآمن.
-                </p>
+              <div className="flex items-center justify-between w-full">
+                <ChefHat className="w-7 h-7 text-orange-600 dark:text-orange-400 shrink-0 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300" />
+                <ChevronLeft className="w-4 h-4 text-orange-500 dark:text-orange-400 group-hover:-translate-x-1 transition-transform" />
               </div>
-
-              {/* Icon Container in a flat circle */}
-              <div className="relative z-10 w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 border border-orange-100/50 dark:border-orange-900/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300">
-                <ChefHat className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight mb-1">مطبخ جودة</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-snug line-clamp-1">وصفات وأكلات صحية خالية من الجلوتين</p>
               </div>
             </button>
 
             {/* Store Card */}
             <button
               onClick={() => navigate('/products')}
-              className="group relative w-full h-32 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 text-right p-6 transition-all duration-300 hover:bg-rose-50/5 dark:hover:bg-gray-700/50 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(211,47,47,0.04)] active:scale-[0.99] flex items-center justify-between"
+              className="group relative h-28 rounded-3xl overflow-hidden bg-warm-white dark:bg-gray-800 border border-rose-100/80 dark:border-gray-700/50 text-right p-4 transition-all duration-300 hover:border-rose-200/80 hover:bg-rose-50/10 dark:hover:bg-gray-700/80 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(211,47,47,0.03)] active:scale-[0.98] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)] flex flex-col justify-between"
             >
-              {/* Soft Ambient Light Circle behind the card */}
-              <div className="absolute -top-12 -left-12 w-32 h-32 bg-rose-200/20 dark:bg-brand-500/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500" />
-              
-              {/* Text Area */}
-              <div className="relative z-10 flex flex-col justify-center h-full max-w-[70%]">
-                <h3 className="font-black text-gray-950 dark:text-white text-lg leading-tight mb-1">المتجر</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                  تسوق بثقة تامة واحصل على كافة الأغذية والمقاضي المضمونة والخالية من الجلوتين 100%.
-                </p>
+              <div className="flex items-center justify-between w-full">
+                <Store className="w-7 h-7 text-brand-600 dark:text-brand-400 shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
+                <ChevronLeft className="w-4 h-4 text-rose-500 dark:text-rose-400 group-hover:-translate-x-1 transition-transform" />
               </div>
-
-              {/* Icon Container in a flat circle */}
-              <div className="relative z-10 w-16 h-16 rounded-full bg-rose-50 dark:bg-brand-900/20 flex items-center justify-center shrink-0 border border-rose-100/50 dark:border-brand-900/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                <Store className="w-8 h-8 text-rose-600 dark:text-rose-450" />
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight mb-1">المتجر</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-snug line-clamp-1">كافة المنتجات والمقاضي</p>
               </div>
             </button>
           </div>

@@ -1,15 +1,35 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ShoppingBag, ChefHat, ClipboardList, Info, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, ChefHat, ClipboardList, Info, LayoutDashboard, Shield } from 'lucide-react';
 import { APP_LOGO, STORE_CONFIG } from '../constants';
 
 interface SidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  isAdmin?: boolean;
+  onLogoClick?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isDarkMode, toggleDarkMode }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isDarkMode, toggleDarkMode, isAdmin, onLogoClick }) => {
   const location = useLocation();
+
+  const [clickCount, setClickCount] = React.useState(0);
+  const [lastClickTime, setLastClickTime] = React.useState(0);
+
+  const handleLogoClick = () => {
+    const now = Date.now();
+    if (now - lastClickTime > 2000) {
+      setClickCount(1);
+    } else {
+      const nextCount = clickCount + 1;
+      setClickCount(nextCount);
+      if (nextCount >= 5) {
+        if (onLogoClick) onLogoClick();
+        setClickCount(0);
+      }
+    }
+    setLastClickTime(now);
+  };
   
   const tabs = [
     { id: 'home', path: '/', label: 'الرئيسية', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -17,12 +37,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDarkMode, toggleDarkMode }) 
     { id: 'recipes', path: '/recipes', label: 'مطبخ جودة', icon: <ChefHat className="w-5 h-5" /> },
     { id: 'orders', path: '/orders', label: 'طلباتي', icon: <ClipboardList className="w-5 h-5" /> },
     { id: 'about', path: '/about', label: 'من نحن', icon: <Info className="w-5 h-5" /> },
+    ...(isAdmin ? [{ id: 'admin', path: '/admin', label: 'لوحة التحكم', icon: <Shield className="w-5 h-5 text-brand-500" /> }] : []),
   ];
 
   return (
     <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-warm-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 transition-colors duration-300 z-50">
       {/* Brand Area */}
-      <div className="p-8 flex flex-col items-center border-b border-gray-50 dark:border-gray-800">
+      <div 
+        onClick={handleLogoClick}
+        className="p-8 flex flex-col items-center border-b border-gray-50 dark:border-gray-800 cursor-pointer select-none active:scale-[0.98] transition-transform"
+      >
         <div className="w-20 h-20 rounded-2xl bg-white shadow-lg shadow-red-100 dark:shadow-none p-1 border border-gray-100 dark:border-gray-700 mb-4 overflow-hidden">
           <img src={APP_LOGO} alt="Jouda Logo" className="w-full h-full object-contain" />
         </div>

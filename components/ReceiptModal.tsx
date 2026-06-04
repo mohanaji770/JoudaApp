@@ -1,5 +1,6 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { getCachedProducts } from '../services/db';
 import { toBlob } from 'html-to-image';
 import { X, Share2, MapPin, User, FileText, ShoppingBag, Store, Scissors } from 'lucide-react';
 import { CartItem } from '../contexts/CartContext';
@@ -25,9 +26,15 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [cachedProducts, setCachedProducts] = useState<any[]>([]);
 
   // Lock body scroll when modal is open
   useScrollLock(true);
+
+  // Load products to resolve packages details when open
+  useEffect(() => {
+    getCachedProducts().then(setCachedProducts).catch(console.warn);
+  }, []);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const orderDate = new Date().toLocaleDateString('ar-SA', { 
@@ -37,8 +44,22 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const orderId = `#${Math.floor(1000 + Math.random() * 9000)}`;
 
   // Categorize Items
-  const storeItems = items.filter(item => !item.source || item.source === 'store');
-  const bakeryItems = items.filter(item => item.source === 'bakery');
+  const packagesList = items.filter(item => {
+    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+    return item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
+  });
+
+  const storeItems = items.filter(item => {
+    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+    const isPackage = item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
+    return !isPackage && (!item.source || item.source === 'store');
+  });
+
+  const bakeryItems = items.filter(item => {
+    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+    const isPackage = item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
+    return !isPackage && item.source === 'bakery';
+  });
 
   const handleShare = async () => {
     if (!receiptRef.current) return;
@@ -176,6 +197,40 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     </div>
                     
                     <div className="space-y-5">
+                        {/* Packages Section */}
+                        {packagesList.length > 0 && (
+                            <div>
+                                <h4 className="text-[10px] font-bold text-rose-600 mb-2 pb-1 border-b border-rose-100 flex items-center gap-1">
+                                    <ShoppingBag className="w-3 h-3 text-rose-500" />
+                                    <span>العروض والباكجات 🎁</span>
+                                </h4>
+                                <div className="space-y-3 pr-2">
+                                    {packagesList.map((item, idx) => {
+                                        const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+                                        const bundleItems = matchedProduct?.bundle_items || [];
+                                        return (
+                                            <div key={`package-${idx}`} className="space-y-1">
+                                                <div className="flex justify-between text-xs items-start font-bold">
+                                                    <span className="flex-1 ml-2 text-gray-900">{item.name}</span>
+                                                    <span className="font-bold font-mono">x{item.quantity}</span>
+                                                </div>
+                                                {bundleItems.length > 0 && (
+                                                    <div className="pr-3 border-r border-dashed border-gray-300 space-y-0.5 text-gray-500 text-[10px]">
+                                                        {bundleItems.map((bItem: any, bIdx: number) => (
+                                                            <div key={bIdx} className="flex justify-between items-center">
+                                                                <span>- {bItem.product_name}</span>
+                                                                <span className="font-mono">x{bItem.quantity * item.quantity}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Store Section */}
                         {storeItems.length > 0 && (
                             <div>

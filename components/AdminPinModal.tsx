@@ -9,7 +9,7 @@ interface AdminPinModalProps {
 }
 
 export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [pin, setPin] = useState(['', '', '', '']);
+  const [pin, setPin] = useState(['', '', '', '', '', '']);
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, o
 
   useEffect(() => {
     if (isOpen) {
-      setPin(['', '', '', '']);
+      setPin(['', '', '', '', '', '']);
       setError('');
       setShowPin(false);
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
@@ -32,7 +32,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, o
     setPin(newPin);
     setError('');
 
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -48,8 +48,8 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, o
 
   const handleSubmit = async () => {
     const pinString = pin.join('');
-    if (pinString.length !== 4) {
-      setError('الرجاء إدخال الرمز المكون من 4 أرقام');
+    if (pinString.length !== 6) {
+      setError('الرجاء إدخال الرمز المكون من 6 أرقام');
       return;
     }
 
@@ -64,6 +64,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({ isOpen, onClose, o
 
       if (data === true) {
         localStorage.setItem('admin_session', 'true');
+        sessionStorage.setItem('admin_pin', pinString);
         onSuccess();
       } else {
         setError('الرمز غير صحيح');

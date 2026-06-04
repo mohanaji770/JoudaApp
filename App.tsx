@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Wrench, Clock, Shield } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AdminPinModal } from './components/AdminPinModal';
+import { AdminDashboard } from './components/AdminDashboard';
 import { HomePage } from './pages/HomePage';
 import { ProductsPageRoute } from './pages/ProductsPageRoute';
 import { RecipesPageRoute } from './pages/RecipesPageRoute';
@@ -64,6 +65,7 @@ const MaintenancePage: React.FC<{ message: string; onSecretClick: () => void }> 
 const ADMIN_SESSION_KEY = 'admin_session';
 
 const AppContent: React.FC = () => {
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useLocalStorage('darkMode', false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -180,6 +182,7 @@ const AppContent: React.FC = () => {
   const handleAdminLogin = () => {
     setIsAdmin(true);
     setShowPinModal(false);
+    navigate('/admin');
   };
 
   const handleAdminLogout = () => {
@@ -222,6 +225,7 @@ const AppContent: React.FC = () => {
         onHelpClick={() => setShowOnboarding(true)}
         isAdmin={isAdmin}
         onAdminLogout={handleAdminLogout}
+        onLogoClick={() => setShowPinModal(true)}
       >
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -229,6 +233,7 @@ const AppContent: React.FC = () => {
           <Route path="/recipes" element={<RecipesPageRoute />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPageRoute />} />
+          <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <HomePage />} />
         </Routes>
       </Layout>
       

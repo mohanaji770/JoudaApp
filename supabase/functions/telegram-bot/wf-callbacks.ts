@@ -161,7 +161,9 @@ export async function handleWfCallback(
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
     const originalText = callback.message?.text || '';
-    const trail = `\n\n<b>${actionDef.emoji} ${actionDef.label}</b> — <i>${userName}</i> (${fmtDate()})`;
+    const hasHeader = originalText.includes('سجل حركات الطلب');
+    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
+    const trail = `${headerBlock}\n• ${actionDef.emoji} <b>${actionDef.label}</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
     const nextButtons = appOrderButtons(orderId, actionDef.nextStatus);
 
     await editMessage(token, chatId, messageId, originalText + trail, {
@@ -275,7 +277,7 @@ async function handleApprove(
     const originalText = callback.message?.text || '';
     const newText =
       originalText +
-      `\n\n<b>✅ تم الاعتماد</b> بواسطة: <i>${userName}</i> (${fmtDate()})`;
+      `\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>\n• ✅ <b>تم الاعتماد</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
     await editMessage(token, chatId, messageId, newText, {
       reply_markup: undefined,
     });
@@ -367,7 +369,7 @@ async function handleReject(
     const originalText = callback.message?.text || '';
     const newText =
       originalText +
-      `\n\n<b>❌ تم رفض الطلب</b> بواسطة: <i>${userName}</i> (${fmtDate()})`;
+      `\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>\n• ❌ <b>تم رفض الطلب</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
     await editMessage(token, chatId, messageId, newText, {
       reply_markup: undefined,
     });

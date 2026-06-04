@@ -33,7 +33,7 @@ GRANT EXECUTE ON FUNCTION verify_admin_pin(TEXT) TO anon, authenticated;
 
 CREATE TABLE IF NOT EXISTS app_settings (
   id INTEGER PRIMARY KEY DEFAULT 1,
-  admin_pin TEXT DEFAULT '0000',
+  admin_pin TEXT DEFAULT '562422',
   maintenance_mode BOOLEAN DEFAULT false,
   maintenance_message TEXT DEFAULT '',
   CONSTRAINT single_row CHECK (id = 1)

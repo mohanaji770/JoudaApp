@@ -54,14 +54,18 @@ export async function handleOrders(token: string, chatId: string) {
     return;
   }
 
-  let text = `<b>📋 الطلبات المعلقة (${data.length})</b>\n\n`;
+  let text = `📋 <b>قائمة الطلبات النشطة المعلقة (${data.length})</b>\n`;
+  text += `━━━━━━━━━━━━━━━━━━━\n`;
 
   for (const o of data) {
     const label = STATUS_LABEL[o.status] || o.status;
-    text += `${label}  <b>${o.order_number}</b>\n`;
-    text += `   ${o.customer_name} — ${(o.total || 0).toLocaleString()} ر.ي\n`;
-    text += `   ${fmtDate(o.created_at)}\n\n`;
+    text += `🔹 <b>#${o.order_number}</b> [<code>${label}</code>]\n`;
+    text += `   👤 العميل: <b>${o.customer_name}</b>\n`;
+    text += `   💰 الإجمالي: <b>${(o.total || 0).toLocaleString()}</b> ر.ي\n`;
+    text += `   ⏱️ <code>${fmtDate(o.created_at)}</code>\n\n`;
   }
+  text += `━━━━━━━━━━━━━━━━━━━\n`;
+  text += `<i>💡 اضغط على رقم الطلب للنسخ أو البحث السريع.</i>`;
 
   await sendMessage(token, chatId, text);
 }
@@ -85,11 +89,12 @@ export async function handleStatus(token: string, chatId: string) {
   const maintenance = settings?.maintenance_mode ? '🔴 صيانة' : '🟢 يعمل';
 
   const text = `\
-<b>📊 حالة النظام</b>
-
-${maintenance}  التطبيق
-📋  طلبات معلقة: <b>${pendingCount || 0}</b>
-📅  ${fmtDate()}`;
+📊 <b>حالة نظام جودة ⚙️</b>
+━━━━━━━━━━━━━━━━━━━
+🌐 <b>وضع صيانة التطبيق:</b> ${maintenance}
+📋 <b>الطلبات المعلقة:</b> <b>${pendingCount || 0} طلبات</b>
+━━━━━━━━━━━━━━━━━━━
+📅 <b>التوقيت:</b> <code>${fmtDate()}</code>`;
 
   await sendMessage(token, chatId, text);
 }

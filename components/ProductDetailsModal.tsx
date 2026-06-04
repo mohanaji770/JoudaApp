@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShoppingBag, Heart, ChefHat, Clock, Share2, Check, ArrowRight, Sparkles, BadgeCheck, Gift } from 'lucide-react';
 import { Product, Recipe } from '../services/supabaseService';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useScrollLock } from '../hooks';
 import { ProductRequestModal } from './ProductRequestModal';
+import { getCachedProducts } from '../services/db';
 
 interface ProductDetailsModalProps {
   product: Product;
@@ -23,6 +24,72 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   const { addToCart, getItemQuantity, decreaseQuantityByName } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+
+  const [resolvedBundleItems, setResolvedBundleItems] = useState<{
+    barcode: string;
+    product_name: string;
+    quantity: number;
+    price?: number;
+    image?: string;
+  }[]>([]);
+  const [savingsInfo, setSavingsInfo] = useState<{
+    originalTotal: number;
+    discountAmount: number;
+    discountPercentage: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const resolveBundleDetails = async () => {
+      if (!product.bundle_items || product.bundle_items.length === 0) {
+        setResolvedBundleItems([]);
+        setSavingsInfo(null);
+        return;
+      }
+      
+      try {
+        const cached = await getCachedProducts();
+        if (cached && cached.length > 0) {
+          const resolved = product.bundle_items.map(item => {
+            const comp = cached.find(p => p.barcode === item.barcode);
+            return {
+              barcode: item.barcode,
+              product_name: comp ? comp.name : item.product_name,
+              quantity: item.quantity,
+              price: comp ? comp.price : undefined,
+              image: comp ? comp.image_url || comp.image : undefined
+            };
+          });
+          setResolvedBundleItems(resolved);
+
+          // Calculate savings
+          let originalTotal = 0;
+          let hasMissingPrice = false;
+          for (const item of resolved) {
+            if (item.price) {
+              originalTotal += item.price * item.quantity;
+            } else {
+              hasMissingPrice = true;
+            }
+          }
+          if (!hasMissingPrice && originalTotal > product.price) {
+            const discountAmount = originalTotal - product.price;
+            const discountPercentage = Math.round((discountAmount / originalTotal) * 100);
+            setSavingsInfo({
+              originalTotal,
+              discountAmount,
+              discountPercentage
+            });
+          } else {
+            setSavingsInfo(null);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to resolve bundle details in modal', e);
+      }
+    };
+
+    resolveBundleDetails();
+  }, [product]);
 
   // Swipe to close logic
   const [touchStart, setTouchStart] = useState(0);
@@ -152,12 +219,22 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
            <div className="flex-1 overflow-y-auto p-6 relative bg-white dark:bg-gray-900">
               <div className="mb-6 md:mt-6">
-                 <div className="flex flex-col mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                       <div className="text-3xl md:text-4xl font-black text-brand-600 dark:text-brand-400">
-                          {product.price || '---'} <span className="text-lg md:text-xl font-bold text-gray-500 dark:text-gray-400">ر.ي</span>
-                       </div>
-                    </div>
+                  <div className="flex flex-col mb-4">
+                     <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <div className="text-3xl md:text-4xl font-black text-brand-600 dark:text-brand-400">
+                           {product.price || '---'} <span className="text-lg md:text-xl font-bold text-gray-500 dark:text-gray-400">ر.ي</span>
+                        </div>
+                        {savingsInfo && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400 line-through mt-2 font-mono">
+                              {savingsInfo.originalTotal} ر.ي
+                            </span>
+                            <span className="text-xs text-green-600 dark:text-green-400 font-black bg-green-50 dark:bg-green-950/20 px-2.5 py-1 rounded-lg border border-green-100 dark:border-green-900/30 mt-1.5">
+                              وفر {savingsInfo.discountPercentage}%
+                            </span>
+                          </div>
+                        )}
+                     </div>
                     <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white leading-tight flex items-start gap-2 flex-wrap">
                        {product.name}
                        
@@ -197,10 +274,64 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     )}
                  </div>
 
-                 <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-                    {product.description || "لا يوجد وصف إضافي لهذا المنتج، ولكنه مضمون الجودة من متجرنا."}
-                 </p>
-              </div>
+                  <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+                     {product.description || "لا يوجد وصف إضافي لهذا المنتج، ولكنه مضمون الجودة من متجرنا."}
+                  </p>
+               </div>
+
+               {/* Package Bundle Items Section */}
+               {product.bundle_items && product.bundle_items.length > 0 && (
+                 <div className="mb-6 pt-6 border-t border-gray-100 dark:border-gray-800/80 space-y-4">
+                   <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                     <Gift className="w-5 h-5 text-amber-500" />
+                     مكونات الباكج التوفيري
+                   </h3>
+                   
+                   <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                     {resolvedBundleItems.map((item, idx) => (
+                       <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/80 p-3 rounded-2xl flex items-center gap-3">
+                         <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-700 overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-gray-100 dark:border-gray-600/50">
+                           {item.image ? (
+                             <img src={item.image} alt={item.product_name} className="w-full h-full object-contain" />
+                           ) : (
+                             <ShoppingBag className="w-5 h-5 text-gray-300 dark:text-gray-500" />
+                           )}
+                         </div>
+                         <div className="flex-1 min-w-0 text-right">
+                           <h4 className="font-bold text-xs text-gray-800 dark:text-gray-200 truncate leading-snug">{item.product_name}</h4>
+                           <p className="text-[10px] text-gray-400 font-bold mt-1 font-mono">
+                             الكمية: {item.quantity} {item.price ? `(${item.price} ر.ي للواحد)` : ''}
+                           </p>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                   
+                   {/* Smart Savings Dashboard */}
+                   {savingsInfo && (
+                     <div className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-100 dark:border-green-900/30 p-4 rounded-2xl mt-4">
+                       <h4 className="text-xs font-black text-green-700 dark:text-green-400 mb-2.5 flex items-center gap-1">
+                         <span>حاسبة التوفير الذكية من جودة</span>
+                         <span>⚡</span>
+                       </h4>
+                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                         <div className="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50 flex flex-col justify-center">
+                           <span className="block text-[9px] text-gray-400 mb-1">المنتجات منفردة</span>
+                           <span className="font-bold text-gray-500 line-through font-mono leading-none">{savingsInfo.originalTotal} ر.ي</span>
+                         </div>
+                         <div className="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50 flex flex-col justify-center">
+                           <span className="block text-[9px] text-gray-400 mb-1">سعر البكج</span>
+                           <span className="font-bold text-brand-600 dark:text-brand-400 font-mono leading-none">{product.price} ر.ي</span>
+                         </div>
+                         <div className="bg-green-600 text-white p-2.5 rounded-xl shadow-sm flex flex-col justify-center">
+                           <span className="block text-[9px] text-green-100 mb-1">وفرت في جيبك</span>
+                           <span className="font-black font-mono leading-none">+{savingsInfo.discountAmount} ر.ي ({savingsInfo.discountPercentage}%)</span>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               )}
 
               {/* Related Recipes Section */}
                {relatedRecipes.length > 0 && onOpenRecipe && (

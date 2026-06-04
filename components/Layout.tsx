@@ -15,9 +15,10 @@ interface LayoutProps {
   onHelpClick: () => void;
   isAdmin?: boolean;
   onAdminLogout?: () => void;
+  onLogoClick?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
   const { lastAddedItem } = useCart();
   const location = useLocation();
 
@@ -29,6 +30,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDark
       <Sidebar 
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
+        isAdmin={isAdmin}
+        onLogoClick={onLogoClick}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -38,6 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, isDarkMode, toggleDark
           onHelpClick={onHelpClick}
           isAdmin={isAdmin}
           onAdminLogout={onAdminLogout}
+          onLogoClick={onLogoClick}
         />
 
         {/* Main Content Area */}

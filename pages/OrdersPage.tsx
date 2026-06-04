@@ -43,10 +43,6 @@ export const OrdersPage: React.FC = () => {
   const [orderItems, setOrderItems] = useState<Record<string, LiveOrderItem[]>>({});
   const [repeatingOrder, setRepeatingOrder] = useState<string | null>(null);
   const [savedPhone, setSavedPhone] = useState<string>('');
-
-  const [inputPhone, setInputPhone] = useState<string>('');
-  const [isUpdatingPhone, setIsUpdatingPhone] = useState<boolean>(false);
-  const [phoneMessage, setPhoneMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [addingFavoriteId, setAddingFavoriteId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
@@ -78,7 +74,6 @@ export const OrdersPage: React.FC = () => {
 
       const phone = localStorage.getItem('jouda_customer_phone') || '';
       setSavedPhone(phone);
-      setInputPhone(phone);
 
       if (phone) {
         const live = await fetchLiveOrders(phone);
@@ -103,26 +98,6 @@ export const OrdersPage: React.FC = () => {
     }, 30000);
     return () => clearInterval(interval);
   }, [savedPhone]);
-
-  const handleUpdatePhone = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputPhone.trim()) return;
-    setIsUpdatingPhone(true);
-    setPhoneMessage(null);
-    try {
-      const clean = inputPhone.replace(/[\s\-]/g, '');
-      localStorage.setItem('jouda_customer_phone', clean);
-      setSavedPhone(clean);
-      const live = await fetchLiveOrders(clean);
-      setLiveOrders(live);
-      setPhoneMessage({ type: 'success', text: 'تم تحديث رقم الجوال ومزامنة الطلبات بنجاح ✅' });
-      setTimeout(() => setPhoneMessage(null), 4000);
-    } catch (err) {
-      setPhoneMessage({ type: 'error', text: 'حدث خطأ أثناء جلب الطلبات. يرجى المحاولة لاحقاً.' });
-    } finally {
-      setIsUpdatingPhone(false);
-    }
-  };
 
   const toggleExpand = async (orderId: string) => {
     if (expandedOrder === orderId) { setExpandedOrder(null); return; }
@@ -279,45 +254,11 @@ export const OrdersPage: React.FC = () => {
 
       {activeTab === 'orders' && (
         <div className="space-y-6">
-          {/* iOS-Style Settings Section */}
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)] dark:shadow-none border-0">
-            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 mb-3 block">
-              رقم الجوال للمزامنة والتتبع
-            </h3>
-            <form onSubmit={handleUpdatePhone} className="flex gap-2">
-              <input
-                type="tel"
-                value={inputPhone}
-                onChange={(e) => setInputPhone(e.target.value)}
-                placeholder="أدخل رقم جوالك (مثال: 781117671)..."
-                className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50 dark:text-white"
-              />
-              <button
-                type="submit"
-                disabled={isUpdatingPhone || !inputPhone.trim()}
-                className="px-5 py-2.5 bg-gray-950 hover:bg-black dark:bg-brand-600 dark:hover:bg-brand-700 disabled:bg-gray-200 dark:disabled:bg-gray-700 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-[0.98]"
-              >
-                {isUpdatingPhone ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <span>مزامنة</span>
-                )}
-              </button>
-            </form>
-            {phoneMessage && (
-              <p className={`text-xs font-bold mt-2.5 p-2.5 rounded-xl ${
-                phoneMessage.type === 'success' ? 'bg-green-50/50 text-green-700 dark:bg-green-900/20 dark:text-green-300' : 'bg-red-50/50 text-red-700 dark:bg-red-900/20 dark:text-red-300'
-              }`}>
-                {phoneMessage.text}
-              </p>
-            )}
-          </div>
-
           {displayOrders.length === 0 && (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border-0 p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)]">
               <Package className="w-16 h-16 text-gray-200 dark:text-gray-700 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">لا توجد طلبات مسجلة</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">اطلب الآن أو تأكد من إدخال رقم جوالك الصحيح أعلاه لتتبع طلباتك</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">قم بإتمام أول طلب لتتبعه هنا تلقائياً في هذه الصفحة</p>
               <button onClick={() => navigate('/products')} className="px-6 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 transition-colors">
                 تصفح المنتجات
               </button>

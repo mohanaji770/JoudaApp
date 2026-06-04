@@ -141,7 +141,9 @@ export async function handleInvCallback(
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
     const orig = callback.message?.text || '';
-    const trail = `\n\n<b>${actionDef.emoji} ${actionDef.label}</b> — <i>${userName}</i> (${fmtDate()})`;
+    const hasHeader = orig.includes('سجل حركات الطلب');
+    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
+    const trail = `${headerBlock}\n• ${actionDef.emoji} <b>${actionDef.label}</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
     const nextBtns = invButtons(invoiceId, actionDef.nextStatus);
 
     await editMessage(token, chatId, messageId, orig + trail, {
@@ -209,10 +211,10 @@ async function handleReverse(
   // Update message: remove all buttons
   if (messageId) {
     const orig = callback.message?.text || '';
-    const newText =
-      orig +
-      `\n\n<b>🔄 تم العكس</b> — <i>${userName}</i> (${fmtDate()})`;
-    await editMessage(token, chatId, messageId, newText, {
+    const hasHeader = orig.includes('سجل حركات الطلب');
+    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
+    const trail = `${headerBlock}\n• 🔄 <b>تم العكس</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+    await editMessage(token, chatId, messageId, orig + trail, {
       reply_markup: undefined,
     });
   }

@@ -70,18 +70,20 @@ export async function handleNewInvoice(record: any) {
   const deliveryFee = record.delivery_fee || 0;
 
   const message = `\
-🛒 <b>فاتورة جديدة — POS</b>
-<code>${record.id}</code>
-👤 العميل: ${record.customer_name_snapshot}
-
-💰 المبلغ: ${companyAmount.toLocaleString()} ر.ي
-🚚 توصيل: ${deliveryFee.toLocaleString()} ر.ي
-💳 الدفع: ${paymentLabel(record.payment_method || 'CASH')}
-${record.collector_id ? `👤 المحصل: ${collectorName}` : ''}
-📦 الأصناف (${itemCount}):
+🧾 <b>فاتورة مبيعات جديدة — POS 🛒</b>
+━━━━━━━━━━━━━━━━━━━
+📄 <b>رقم الفاتورة:</b> <code>${record.id}</code>
+👤 <b>العميل:</b> <b>${record.customer_name_snapshot}</b>
+💳 <b>الدفع:</b> <code>${paymentLabel(record.payment_method || 'CASH')}</code>
+${record.collector_id ? `🧔 <b>المحصل:</b> <code>${collectorName}</code>\n` : ''}━━━━━━━━━━━━━━━━━━━
+📦 <b>المنتجات المشتراة (${itemCount} أصناف):</b>
 ${itemsList}${extraItems}
-
-📅 ${fmtDate()}`;
+━━━━━━━━━━━━━━━━━━━
+💵 <b>قيمة المبيعات:</b> <b>${companyAmount.toLocaleString()}</b> ر.ي
+🚚 <b>أجور التوصيل:</b> <b>${deliveryFee.toLocaleString()}</b> ر.ي
+💰 <b>الإجمالي الكلي:</b> <b>${(companyAmount + deliveryFee).toLocaleString()}</b> ر.ي
+━━━━━━━━━━━━━━━━━━━
+📅 <b>التوقيت:</b> <code>${fmtDate()}</code>`;
 
   const keyboard = { inline_keyboard: invButtons(record.id, 'pending') };
 
@@ -113,12 +115,14 @@ export async function handleReversedInvoice(record: any) {
   }
 
   const message = `\
-🔄 <b>تم عكس فاتورة</b>
-<code>${record.id}</code>
-${record.customer_name_snapshot || '—'}
-${(record.total_amount || 0).toLocaleString()} ر.ي
-تم إعادة المخزون وإلغاء القيد المالي
-${fmtDate()}`;
+🔄 <b>عكس فاتورة مبيعات ⚠️</b>
+━━━━━━━━━━━━━━━━━━━
+📄 <b>رقم الفاتورة:</b> <code>${record.id}</code>
+👤 <b>العميل:</b> <b>${record.customer_name_snapshot || '—'}</b>
+💰 <b>المبلغ المرتجع:</b> <b>${(record.total_amount || 0).toLocaleString()}</b> ر.ي
+━━━━━━━━━━━━━━━━━━━
+📌 <b>الإجراء:</b> <code>تم إعادة المخزون وإلغاء القيد المالي بنجاح</code>
+⏱️ <b>التوقيت:</b> <code>${fmtDate()}</code>`;
 
   for (const gId of env.groupIds()) {
     try {
