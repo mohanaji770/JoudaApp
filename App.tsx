@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Wrench, Clock, Shield } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { AdminPinModal } from './components/AdminPinModal';
+import { AdminLogin } from './pages/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
 import { HomePage } from './pages/HomePage';
 import { ProductsPageRoute } from './pages/ProductsPageRoute';
@@ -62,41 +62,45 @@ const MaintenancePage: React.FC<{ message: string; onSecretClick: () => void }> 
   );
 };
 
-const ADMIN_SESSION_KEY = 'admin_session';
-
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useLocalStorage('darkMode', false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [checkingMaintenance, setCheckingMaintenance] = useState(true);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-  });
+  
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Check for admin bypass URL parameter (triggers PIN modal, not direct bypass)
+  // Check auth session
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === 'unlock' && !isAdmin) {
-      setShowPinModal(true);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+      setCheckingAuth(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Keyboard shortcut: Ctrl+Shift+A to open admin PIN modal
+  // Keyboard shortcut: Ctrl+Shift+A to open admin login
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'A') {
         e.preventDefault();
-        setShowPinModal(true);
+        navigate('/admin/login');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [navigate]);
 
   // Check maintenance mode on mount
   useEffect(() => {
@@ -121,10 +125,6 @@ const AppContent: React.FC = () => {
 
     checkMaintenance();
 
-    // Subscribe to real-time changes
-    // NOTE: Realtime subscriptions don't work on views, so we listen on the
-    // underlying `app_settings` table. The payload only contains the columns
-    // we read here (maintenance_mode, maintenance_message) — no sensitive data.
     const subscription = supabase
       .channel('app_settings_changes')
       .on('postgres_changes', 
@@ -172,26 +172,12 @@ const AppContent: React.FC = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
   };
 
-  // Persist admin session
-  useEffect(() => {
-    if (isAdmin) {
-      localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-    }
-  }, [isAdmin]);
-
-  const handleAdminLogin = () => {
-    setIsAdmin(true);
-    setShowPinModal(false);
-    navigate('/admin');
+  const handleAdminLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
   };
 
-  const handleAdminLogout = () => {
-    localStorage.removeItem(ADMIN_SESSION_KEY);
-    setIsAdmin(false);
-    window.location.reload();
-  };
-
-  if (checkingMaintenance) {
+  if (checkingMaintenance || checkingAuth) {
     return (
       <div className="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" />
@@ -199,19 +185,12 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (maintenanceMode && !isAdmin) {
+  if (maintenanceMode && !isAdmin && location.pathname !== '/admin/login') {
     return (
-      <>
-        <MaintenancePage 
-          message={maintenanceMessage} 
-          onSecretClick={() => setShowPinModal(true)} 
-        />
-        <AdminPinModal
-          isOpen={showPinModal}
-          onClose={() => setShowPinModal(false)}
-          onSuccess={handleAdminLogin}
-        />
-      </>
+      <MaintenancePage 
+        message={maintenanceMessage} 
+        onSecretClick={() => navigate('/admin/login')} 
+      />
     );
   }
 
@@ -225,7 +204,9 @@ const AppContent: React.FC = () => {
         onHelpClick={() => setShowOnboarding(true)}
         isAdmin={isAdmin}
         onAdminLogout={handleAdminLogout}
-        onLogoClick={() => setShowPinModal(true)}
+        onLogoClick={() => {
+          if (!isAdmin) navigate('/admin/login');
+        }}
       >
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -233,17 +214,12 @@ const AppContent: React.FC = () => {
           <Route path="/recipes" element={<RecipesPageRoute />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPageRoute />} />
-          <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <HomePage />} />
+          <Route path="/admin/login" element={!isAdmin ? <AdminLogin /> : <AdminDashboard />} />
+          <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <AdminLogin />} />
         </Routes>
       </Layout>
       
       {showOnboarding && <Onboarding onClose={handleCloseOnboarding} />}
-      
-      <AdminPinModal
-        isOpen={showPinModal}
-        onClose={() => setShowPinModal(false)}
-        onSuccess={handleAdminLogin}
-      />
     </>
   );
 };

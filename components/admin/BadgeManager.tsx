@@ -6,7 +6,6 @@ import { Product } from '../../services/supabaseService';
 interface BadgeManagerProps {
   products: Product[];
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
-  pin: string;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
 }
@@ -14,7 +13,6 @@ interface BadgeManagerProps {
 export const BadgeManager: React.FC<BadgeManagerProps> = ({
   products,
   setProducts,
-  pin,
   showSuccess,
   showError,
 }) => {
@@ -29,18 +27,17 @@ export const BadgeManager: React.FC<BadgeManagerProps> = ({
   }, [products, badgeSearch]);
 
   const handleTagToggle = async (product: Product, tag: string) => {
-    if (!pin) return;
     const currentTags = product.tags || [];
     const newTags = currentTags.includes(tag)
       ? currentTags.filter(t => t !== tag)
       : [...currentTags, tag];
 
     try {
-      const { data, error: rpcError } = await supabase.rpc('admin_update_product_tags', {
-        p_pin: pin,
-        p_barcode: product.barcode,
-        p_tags: newTags
-      });
+      const { data, error: rpcError } = await supabase
+        .from('products')
+        .update({ tags: newTags })
+        .eq('barcode', product.barcode)
+        .select();
 
       if (rpcError) throw rpcError;
       if (data) {

@@ -5,7 +5,6 @@ import { Recipe } from '../../services/supabaseService';
 
 interface RecipeManagerProps {
   recipes: Recipe[];
-  pin: string;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   loadData: () => Promise<void>;
@@ -15,7 +14,6 @@ interface RecipeManagerProps {
 
 export const RecipeManager: React.FC<RecipeManagerProps> = ({
   recipes,
-  pin,
   showSuccess,
   showError,
   loadData,
@@ -53,7 +51,6 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
 
   const handleSaveRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin) return;
     if (!recipeTitle.trim()) {
       showError('عنوان الوصفة مطلوب');
       return;
@@ -61,20 +58,28 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
 
     try {
       setLoading(true);
-      const { data, error: rpcError } = await supabase.rpc('admin_upsert_recipe', {
-        p_pin: pin,
-        p_id: recipeId || null,
-        p_title: recipeTitle.trim(),
-        p_description: recipeDescription.trim(),
-        p_time: recipeTime.trim(),
-        p_difficulty: recipeDifficulty,
-        p_calories: recipeCalories.trim(),
-        p_main_product: recipeMainProduct.trim(),
-        p_ingredients: recipeIngredients,
-        p_steps: recipeSteps,
-        p_image_url: recipeImage.trim(),
-        p_video_url: recipeVideo.trim()
-      });
+      
+      const payload: any = {
+        title: recipeTitle.trim(),
+        description: recipeDescription.trim(),
+        time: recipeTime.trim(),
+        difficulty: recipeDifficulty,
+        calories: recipeCalories.trim(),
+        main_product: recipeMainProduct.trim(),
+        ingredients: recipeIngredients,
+        steps: recipeSteps,
+        image_url: recipeImage.trim(),
+        video_url: recipeVideo.trim()
+      };
+      
+      if (recipeId) {
+        payload.id = recipeId;
+      }
+
+      const { data, error: rpcError } = await supabase
+        .from('recipes')
+        .upsert(payload)
+        .select();
 
       if (rpcError) throw rpcError;
       if (data) {
@@ -102,10 +107,11 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
   const handleDeleteRecipe = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذه الوصفة؟')) return;
     try {
-      const { data, error: rpcError } = await supabase.rpc('admin_delete_recipe', {
-        p_pin: pin,
-        p_id: id
-      });
+      const { data, error: rpcError } = await supabase
+        .from('recipes')
+        .delete()
+        .eq('id', id)
+        .select();
       if (rpcError) throw rpcError;
       if (data) {
         showSuccess('تم حذف الوصفة');

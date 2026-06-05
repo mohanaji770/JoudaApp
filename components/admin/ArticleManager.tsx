@@ -5,7 +5,6 @@ import { Article } from '../../services/supabaseService';
 
 interface ArticleManagerProps {
   articles: Article[];
-  pin: string;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   loadData: () => Promise<void>;
@@ -15,7 +14,6 @@ interface ArticleManagerProps {
 
 export const ArticleManager: React.FC<ArticleManagerProps> = ({
   articles,
-  pin,
   showSuccess,
   showError,
   loadData,
@@ -31,7 +29,6 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
 
   const handleSaveArticle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin) return;
     if (!articleTitle.trim()) {
       showError('عنوان المقال مطلوب');
       return;
@@ -39,15 +36,23 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
 
     try {
       setLoading(true);
-      const { data, error: rpcError } = await supabase.rpc('admin_upsert_article', {
-        p_pin: pin,
-        p_id: articleId || null,
-        p_title: articleTitle.trim(),
-        p_content: articleContent.trim(),
-        p_image_url: articleImage.trim(),
-        p_author: articleAuthor.trim(),
-        p_published_date: articlePublishDate.trim() || new Date().toLocaleDateString('ar-YE')
-      });
+      
+      const payload: any = {
+        title: articleTitle.trim(),
+        content: articleContent.trim(),
+        image_url: articleImage.trim(),
+        author: articleAuthor.trim(),
+        published_date: articlePublishDate.trim() || new Date().toLocaleDateString('ar-YE')
+      };
+      
+      if (articleId) {
+        payload.id = articleId;
+      }
+
+      const { data, error: rpcError } = await supabase
+        .from('articles')
+        .upsert(payload)
+        .select();
 
       if (rpcError) throw rpcError;
       if (data) {
@@ -70,10 +75,11 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
   const handleDeleteArticle = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المقال؟')) return;
     try {
-      const { data, error: rpcError } = await supabase.rpc('admin_delete_article', {
-        p_pin: pin,
-        p_id: id
-      });
+      const { data, error: rpcError } = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', id)
+        .select();
       if (rpcError) throw rpcError;
       if (data) {
         showSuccess('تم حذف المقال');

@@ -5,7 +5,6 @@ import { Product } from '../../services/supabaseService';
 
 interface PackageManagerProps {
   products: Product[];
-  pin: string;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   loadData: () => Promise<void>;
@@ -15,7 +14,6 @@ interface PackageManagerProps {
 
 export const PackageManager: React.FC<PackageManagerProps> = ({
   products,
-  pin,
   showSuccess,
   showError,
   loadData,
@@ -72,7 +70,6 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
 
   const handleCreatePackage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin) return;
     if (!pkgBarcode.trim() || !pkgName.trim() || !pkgPrice.trim()) {
       showError('يرجى تعبئة الحقول الأساسية للبكج');
       return;
@@ -84,29 +81,41 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
 
     try {
       setLoading(true);
-      const jsonItems = pkgItems.map(i => ({ barcode: i.barcode, quantity: i.quantity }));
-      const { data, error: rpcError } = await supabase.rpc('admin_create_package', {
-        p_pin: pin,
-        p_package_barcode: pkgBarcode.startsWith('PKG-') ? pkgBarcode.trim() : `PKG-${pkgBarcode.trim()}`,
-        p_name: pkgName.trim(),
-        p_price: parseFloat(pkgPrice),
-        p_category: 'عروض وبكجات',
-        p_description: pkgDesc.trim(),
-        p_image_url: pkgImage.trim(),
-        p_items: jsonItems
+      const pkgBarcodeClean = pkgBarcode.startsWith('PKG-') ? pkgBarcode.trim() : `PKG-${pkgBarcode.trim()}`;
+      
+      const { error: prodError } = await supabase.from('products').upsert({
+        barcode: pkgBarcodeClean,
+        name: pkgName.trim(),
+        price: parseFloat(pkgPrice),
+        category: 'عروض وبكجات',
+        description: pkgDesc.trim(),
+        image_url: pkgImage.trim(),
+        is_active: true
       });
 
-      if (rpcError) throw rpcError;
-      if (data) {
-        showSuccess('تم إنشاء/تحديث البكج التوفيري بنجاح');
-        setPkgBarcode('');
-        setPkgName('');
-        setPkgPrice('');
-        setPkgDesc('');
-        setPkgImage('');
-        setPkgItems([]);
-        loadData();
-      }
+      if (prodError) throw prodError;
+
+      // Delete old items if updating
+      await supabase.from('package_items').delete().eq('package_barcode', pkgBarcodeClean);
+      
+      // Insert new items
+      const jsonItems = pkgItems.map(i => ({ 
+        package_barcode: pkgBarcodeClean,
+        product_barcode: i.barcode, 
+        quantity: i.quantity 
+      }));
+      
+      const { error: itemsError } = await supabase.from('package_items').insert(jsonItems);
+      if (itemsError) throw itemsError;
+
+      showSuccess('تم إنشاء/تحديث البكج التوفيري بنجاح');
+      setPkgBarcode('');
+      setPkgName('');
+      setPkgPrice('');
+      setPkgDesc('');
+      setPkgImage('');
+      setPkgItems([]);
+      loadData();
     } catch (err: any) {
       showError(err.message || 'فشل حفظ البكج');
     } finally {

@@ -24,7 +24,6 @@ interface Banner {
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'badges' | 'packages' | 'banners' | 'recipes' | 'articles'>('badges');
-  const [pin] = useState(() => sessionStorage.getItem('admin_pin') || '');
   
   // Data States
   const [products, setProducts] = useState<Product[]>([]);
@@ -64,12 +63,8 @@ export const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!pin) {
-      setError('غير مصرح: الرمز السري للمشرف مفقود. يرجى تسجيل الدخول مجدداً.');
-    } else {
-      loadData();
-    }
-  }, [pin]);
+    loadData();
+  }, []);
 
   // Flash messages helper
   const showSuccess = (message: string) => {
@@ -143,7 +138,6 @@ export const AdminDashboard: React.FC = () => {
         <BadgeManager
           products={products}
           setProducts={setProducts}
-          pin={pin}
           showSuccess={showSuccess}
           showError={showError}
         />
@@ -152,7 +146,6 @@ export const AdminDashboard: React.FC = () => {
       {!loading && activeTab === 'packages' && (
         <PackageManager
           products={products}
-          pin={pin}
           showSuccess={showSuccess}
           showError={showError}
           loadData={loadData}
@@ -164,7 +157,6 @@ export const AdminDashboard: React.FC = () => {
       {!loading && activeTab === 'banners' && (
         <BannerManager
           banners={banners}
-          pin={pin}
           showSuccess={showSuccess}
           showError={showError}
           loadData={loadData}
@@ -176,7 +168,6 @@ export const AdminDashboard: React.FC = () => {
       {!loading && activeTab === 'recipes' && (
         <RecipeManager
           recipes={recipes}
-          pin={pin}
           showSuccess={showSuccess}
           showError={showError}
           loadData={loadData}
@@ -188,7 +179,6 @@ export const AdminDashboard: React.FC = () => {
       {!loading && activeTab === 'articles' && (
         <ArticleManager
           articles={articles}
-          pin={pin}
           showSuccess={showSuccess}
           showError={showError}
           loadData={loadData}

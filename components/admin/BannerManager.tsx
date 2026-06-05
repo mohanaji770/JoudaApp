@@ -13,7 +13,6 @@ interface Banner {
 
 interface BannerManagerProps {
   banners: Banner[];
-  pin: string;
   showSuccess: (msg: string) => void;
   showError: (msg: string) => void;
   loadData: () => Promise<void>;
@@ -23,7 +22,6 @@ interface BannerManagerProps {
 
 export const BannerManager: React.FC<BannerManagerProps> = ({
   banners,
-  pin,
   showSuccess,
   showError,
   loadData,
@@ -39,7 +37,6 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
 
   const handleSaveBanner = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin) return;
     if (!bannerImage.trim()) {
       showError('رابط الصورة مطلوب للبانر');
       return;
@@ -47,15 +44,23 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
 
     try {
       setLoading(true);
-      const { data, error: rpcError } = await supabase.rpc('admin_upsert_banner', {
-        p_pin: pin,
-        p_id: bannerId || null,
-        p_title: bannerTitle.trim(),
-        p_image_url: bannerImage.trim(),
-        p_link_url: bannerLink.trim(),
-        p_is_active: bannerActive,
-        p_sort_order: bannerSort
-      });
+      
+      const payload: any = {
+        title: bannerTitle.trim(),
+        image_url: bannerImage.trim(),
+        link_url: bannerLink.trim(),
+        is_active: bannerActive,
+        sort_order: bannerSort
+      };
+      
+      if (bannerId) {
+        payload.id = bannerId;
+      }
+
+      const { data, error: rpcError } = await supabase
+        .from('banners')
+        .upsert(payload)
+        .select();
 
       if (rpcError) throw rpcError;
       if (data) {
@@ -78,10 +83,11 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
   const handleDeleteBanner = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا البانر؟')) return;
     try {
-      const { data, error: rpcError } = await supabase.rpc('admin_delete_banner', {
-        p_pin: pin,
-        p_id: id
-      });
+      const { data, error: rpcError } = await supabase
+        .from('banners')
+        .delete()
+        .eq('id', id)
+        .select();
       if (rpcError) throw rpcError;
       if (data) {
         showSuccess('تم حذف البانر');
