@@ -15,6 +15,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { useScrollToTop, useLocalStorage } from './hooks';
 import { SyncProvider } from './contexts/SyncContext';
 import { supabase } from './services/supabaseClient';
+import { AdminLayout } from './components/admin/AdminLayout';
 
 const ONBOARDING_KEY = 'jouda_onboarding_seen_v1';
 
@@ -185,7 +186,29 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (maintenanceMode && !isAdmin && location.pathname !== '/admin/login') {
+  // Handle Admin Routes completely outside the customer Layout
+  if (location.pathname.startsWith('/admin')) {
+    if (!isAdmin && location.pathname !== '/admin/login') {
+      // Redirect to login if not admin
+      window.location.href = '/admin/login';
+      return null;
+    }
+
+    if (location.pathname === '/admin/login') {
+      return !isAdmin ? <AdminLogin /> : <AdminDashboard />;
+    }
+
+    return (
+      <AdminLayout onLogout={handleAdminLogout}>
+        <Routes>
+          <Route path="/*" element={<AdminDashboard />} />
+        </Routes>
+      </AdminLayout>
+    );
+  }
+
+  // Handle Customer Routes
+  if (maintenanceMode && !isAdmin) {
     return (
       <MaintenancePage 
         message={maintenanceMessage} 
@@ -214,8 +237,6 @@ const AppContent: React.FC = () => {
           <Route path="/recipes" element={<RecipesPageRoute />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPageRoute />} />
-          <Route path="/admin/login" element={!isAdmin ? <AdminLogin /> : <AdminDashboard />} />
-          <Route path="/admin" element={isAdmin ? <AdminDashboard /> : <AdminLogin />} />
         </Routes>
       </Layout>
       

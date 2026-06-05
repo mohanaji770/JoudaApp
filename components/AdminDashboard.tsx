@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 import { fetchProductsFromSupabase, Product, Recipe, Article } from '../services/supabaseService';
+import { useLocation } from 'react-router-dom';
 
 // Extracted Sub-managers
 import { BadgeManager } from './admin/BadgeManager';
@@ -23,7 +24,9 @@ interface Banner {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'badges' | 'packages' | 'banners' | 'recipes' | 'articles'>('badges');
+  const location = useLocation();
+  const pathPart = location.pathname.split('/').pop() || '';
+  const activeTab = ['packages', 'banners', 'recipes', 'articles'].includes(pathPart) ? pathPart : 'badges';
   
   // Data States
   const [products, setProducts] = useState<Product[]>([]);
@@ -77,55 +80,20 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="pb-24 text-right" dir="rtl">
-      {/* Title */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-brand-50 dark:bg-brand-900/20 p-2.5 rounded-2xl">
-          <Shield className="w-6 h-6 text-brand-600" />
-        </div>
-        <div>
-          <h1 className="text-xl font-black text-gray-900 dark:text-white">لوحة تحكم المشرف</h1>
-          <p className="text-[10px] text-gray-400 font-bold mt-0.5">إدارة الباكجات، الشارات، والمحتوى التوعوي والتجاري</p>
-        </div>
-      </div>
-
+    <div className="pb-12 text-right w-full" dir="rtl">
       {/* Messages */}
       {success && (
-        <div className="mb-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 p-4 rounded-2xl text-xs font-bold flex items-center gap-2 animate-fade-in">
+        <div className="mb-6 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in shadow-sm">
           <Check className="w-4 h-4 shrink-0" />
           <span>{success}</span>
         </div>
       )}
       {error && (
-        <div className="mb-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded-2xl text-xs font-bold flex items-center gap-2 animate-fade-in">
+        <div className="mb-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in shadow-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
-
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 hide-scrollbar">
-        {([
-          { id: 'badges', label: 'شارات المنتجات', icon: <BadgeCheck className="w-4 h-4" /> },
-          { id: 'packages', label: 'منشئ الباكجات', icon: <Gift className="w-4 h-4" /> },
-          { id: 'banners', label: 'البانرات الإعلانية', icon: <ImageIcon className="w-4 h-4" /> },
-          { id: 'recipes', label: 'الوصفات والطهي', icon: <ChefHat className="w-4 h-4" /> },
-          { id: 'articles', label: 'المقالات الطبية', icon: <BookOpen className="w-4 h-4" /> },
-        ] as const).map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => { setActiveTab(tab.id); setError(''); setSuccess(''); }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap shrink-0 transition-all ${
-              activeTab === tab.id
-                ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
-                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
 
       {loading && !success && (
         <div className="flex items-center justify-center py-12">
