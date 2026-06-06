@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut } from 'lucide-react';
+import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { APP_LOGO } from '../../constants';
@@ -76,6 +76,15 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
               )}
             </div>
           )}
+
+          {/* Search Button */}
+          <Link 
+            to="/products"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="بحث"
+          >
+            <Search className="w-5 h-5" />
+          </Link>
 
           {/* Help Button */}
           {onHelpClick && (

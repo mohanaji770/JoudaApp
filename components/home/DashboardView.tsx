@@ -12,20 +12,15 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="animate-fade-in flex flex-col">
-      {/* Floating Search Bar */}
-      <div className="mt-4 mb-6 px-1">
-        <div className="w-full bg-white dark:bg-gray-900 rounded-[1.5rem] p-1.5 flex items-center shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-none border border-transparent dark:border-gray-800 transition-all duration-300">
-          <button
-            onClick={() => navigate('/products')}
-            className="flex-1 flex items-center gap-3 p-2.5 text-right group/btn"
-            aria-label="البحث"
-          >
-            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500 mr-1" />
-            <div className="flex-1 text-right">
-              <span className="text-sm font-bold text-gray-400 dark:text-gray-500">ابحث عن منتجات، وصفات...</span>
-            </div>
-          </button>
-        </div>
+      {/* iOS Style Minimal Hero */}
+      <div className="mt-5 mb-7 px-4">
+        <h1 className="text-[28px] font-black text-gray-900 dark:text-white mb-3 tracking-tight flex items-center gap-2">
+          <span>صباح الخير محمد</span>
+          <span className="text-2xl">☀️</span>
+        </h1>
+        <p className="text-[14px] font-bold text-gray-500 dark:text-gray-400 leading-[1.7] max-w-[90%]">
+          تطبيق جودة صُمم ليختصر عليك الوقت والجهد.. صور منتجاتك، اطبخ أشهى الوصفات، واستمتع بصحتك كل يوم
+        </p>
       </div>
 
       <PromoBanner />

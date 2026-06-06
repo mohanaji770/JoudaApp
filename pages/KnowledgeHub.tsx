@@ -1,50 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { BookOpen, ChevronLeft, Lightbulb, ShieldAlert, ScanLine, UtensilsCrossed, ChefHat, Calendar } from 'lucide-react';
+import { BookOpen, Calendar } from 'lucide-react';
 import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
 import { ArticleModal } from '../components/modals/ArticleModal';
 
 export const KnowledgeHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'blog' | 'tips'>('blog');
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-
-  // Tips Data
-  const tips = [
-    {
-      id: 1,
-      title: "المصادر الخفية",
-      content: "انتبه من مكعبات المرق، الصويا صوس، واللحوم المصنعة، فهي غالباً تحتوي على القمح.",
-      icon: <ScanLine className="w-6 h-6 text-purple-500" />,
-      bg: "bg-purple-50 dark:bg-purple-900/20",
-      border: "border-purple-100 dark:border-purple-900/30"
-    },
-    {
-      id: 2,
-      title: "خطر التلوث",
-      content: "في المطاعم، اسأل عن زيت القلي. البطاطس المقلية في نفس زيت البروستد غير آمنة.",
-      icon: <UtensilsCrossed className="w-6 h-6 text-orange-500" />,
-      bg: "bg-orange-50 dark:bg-orange-900/20",
-      border: "border-orange-100 dark:border-orange-900/30"
-    },
-    {
-      id: 3,
-      title: "مصطلحات غامضة",
-      content: "احذر من \"نشاء معدل\" أو \"نكهات طبيعية\" إذا لم يذكر المصدر، فقد تكون من القمح.",
-      icon: <ShieldAlert className="w-6 h-6 text-red-500" />,
-      bg: "bg-red-50 dark:bg-red-900/20",
-      border: "border-red-100 dark:border-red-900/30"
-    },
-    {
-      id: 4,
-      title: "أدوات المطبخ",
-      content: "الجلوتين يلتصق! خصص محمصة خبز ومصفاة خاصة بك، فهذه الأدوات يصعب تنظيفها.",
-      icon: <ChefHat className="w-6 h-6 text-blue-500" />,
-      bg: "bg-blue-50 dark:bg-blue-900/20",
-      border: "border-blue-100 dark:border-blue-900/30"
-    }
-  ];
 
   useEffect(() => {
     const load = async () => {
@@ -59,43 +22,16 @@ export const KnowledgeHub: React.FC = () => {
     <div className="w-full animate-fade-in">
       {/* Header & Tabs */}
       <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2">
-           <div className="bg-teal-100 dark:bg-teal-900/30 p-1.5 rounded-lg">
-             <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-           </div>
-           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">مساحة المعرفة 💡</h3>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="flex bg-gray-100/80 dark:bg-gray-800/80 p-0.5 rounded-[0.8rem] border border-gray-200/50 dark:border-gray-700/50">
-           <button
-             onClick={() => setActiveTab('blog')}
-             className={`px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-               activeTab === 'blog' 
-               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-none' 
-               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
-             }`}
-           >
-             المقالات
-           </button>
-           <button
-             onClick={() => setActiveTab('tips')}
-             className={`px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-               activeTab === 'tips' 
-               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-none' 
-               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
-             }`}
-           >
-             نصائح
-           </button>
-        </div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <span className="text-brand-600">💡</span>
+          <span>مساحة المعرفة</span>
+        </h3>
       </div>
 
       {/* Content Area */}
       <div className="min-h-[220px]">
-        {activeTab === 'blog' ? (
-          /* BLOG CONTENT */
-          loading ? (
+          {/* BLOG CONTENT */}
+          {loading ? (
             <div className="flex gap-3 overflow-x-auto pb-4 px-1 hide-scrollbar">
                {[1, 2].map(i => (
                   <div key={i} className="min-w-[260px] h-[280px] bg-gray-50 dark:bg-gray-800/40 rounded-3xl animate-pulse shrink-0"></div>
@@ -136,29 +72,7 @@ export const KnowledgeHub: React.FC = () => {
                 </div>
               ))}
             </div>
-          )
-        ) : (
-          /* TIPS CONTENT */
-          <div className="flex overflow-x-auto pb-6 -mx-4 px-4 gap-3 snap-x snap-mandatory hide-scrollbar animate-fade-in">
-            {tips.map((item) => (
-              <div 
-                key={item.id} 
-                className={`min-w-[240px] w-[240px] snap-center bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border ${item.border} flex flex-col transition-all active:scale-[0.98] duration-300`}
-              >
-                <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center mb-4 shrink-0`}>
-                    {item.icon}
-                </div>
-                <div className="flex-1 flex flex-col">
-                    <h4 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-2">{item.title}</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                        {item.content}
-                    </p>
-                </div>
-              </div>
-            ))}
-            <div className="w-2 shrink-0"></div>
-          </div>
-        )}
+          )}
       </div>
 
       {selectedArticle && (
