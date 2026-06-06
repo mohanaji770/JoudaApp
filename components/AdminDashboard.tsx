@@ -13,6 +13,8 @@ import { PackageManager } from './admin/PackageManager';
 import { BannerManager } from './admin/BannerManager';
 import { RecipeManager } from './admin/RecipeManager';
 import { ArticleManager } from './admin/ArticleManager';
+import { FAQManager } from './admin/FAQManager';
+import { SettingsManager } from './admin/SettingsManager';
 
 interface Banner {
   id: string;
@@ -26,7 +28,7 @@ interface Banner {
 export const AdminDashboard: React.FC = () => {
   const location = useLocation();
   const pathPart = location.pathname.split('/').pop() || '';
-  const activeTab = ['packages', 'banners', 'recipes', 'articles'].includes(pathPart) ? pathPart : 'badges';
+  const activeTab = ['packages', 'banners', 'recipes', 'articles', 'faq', 'settings'].includes(pathPart) ? pathPart : 'badges';
   
   // Data States
   const [products, setProducts] = useState<Product[]>([]);
@@ -150,6 +152,24 @@ export const AdminDashboard: React.FC = () => {
           showSuccess={showSuccess}
           showError={showError}
           loadData={loadData}
+          loading={loading}
+          setLoading={setLoading}
+        />
+      )}
+
+      {activeTab === 'faq' && (
+        <FAQManager
+          showSuccess={showSuccess}
+          showError={showError}
+          loading={loading}
+          setLoading={setLoading}
+        />
+      )}
+
+      {activeTab === 'settings' && (
+        <SettingsManager
+          showSuccess={showSuccess}
+          showError={showError}
           loading={loading}
           setLoading={setLoading}
         />

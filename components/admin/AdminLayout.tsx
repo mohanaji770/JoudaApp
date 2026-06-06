@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, X, LogOut, 
-  BadgeCheck, Gift, Image as ImageIcon, ChefHat, BookOpen, Shield 
+  BadgeCheck, Gift, Image as ImageIcon, ChefHat, BookOpen, Shield, HelpCircle, Settings 
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -16,6 +16,8 @@ const MENU_ITEMS = [
   { id: 'banners', label: 'البانرات', icon: <ImageIcon className="w-5 h-5" />, path: '/admin/banners' },
   { id: 'recipes', label: 'الوصفات', icon: <ChefHat className="w-5 h-5" />, path: '/admin/recipes' },
   { id: 'articles', label: 'المقالات', icon: <BookOpen className="w-5 h-5" />, path: '/admin/articles' },
+  { id: 'faq', label: 'الأسئلة الشائعة', icon: <HelpCircle className="w-5 h-5" />, path: '/admin/faq' },
+  { id: 'settings', label: 'إعدادات النظام', icon: <Settings className="w-5 h-5" />, path: '/admin/settings' },
 ];
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) => {

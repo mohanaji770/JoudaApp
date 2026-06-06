@@ -59,5 +59,25 @@ export const AdminContentService = {
       .eq('id', id)
       .select();
     if (error) throw error;
+  },
+
+  // ==========================
+  // FAQ
+  // ==========================
+  async upsertFAQ(payload: any): Promise<void> {
+    const { error } = await supabase
+      .from('faq')
+      .upsert(payload)
+      .select();
+    if (error) throw error;
+  },
+
+  async deleteFAQ(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('faq')
+      .delete()
+      .eq('id', id)
+      .select();
+    if (error) throw error;
   }
 };
