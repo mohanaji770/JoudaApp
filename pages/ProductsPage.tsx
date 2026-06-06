@@ -272,7 +272,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
 
       {/* Product Grid */}
       {loading ? (
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="bg-warm-white dark:bg-gray-800 rounded-3xl animate-pulse border border-gray-100 dark:border-gray-700 h-64"></div>
           ))}
@@ -358,7 +358,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
             </div>
           )}
           
-          <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2">
             {filteredProducts.slice(0, visibleCount).map((product) => {
               const isPackage = product.barcode.startsWith('PKG-') || product.category === 'عروض وبكجات';
               const savings = isPackage ? calculatePackageSavings(product, [...storeProducts, ...bakeryProducts]) : null;

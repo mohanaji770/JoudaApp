@@ -78,9 +78,9 @@ export const TrendingRecipes: React.FC = () => {
   };
 
   if (loading) return (
-    <div className="flex gap-3 overflow-hidden">
+    <div className="flex gap-4 overflow-hidden">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="min-w-[220px] h-[270px] bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse shrink-0" />
+        <div key={i} className="min-w-[240px] h-[260px] bg-white dark:bg-gray-900 rounded-[1.5rem] animate-pulse shrink-0 border border-gray-100 dark:border-gray-800" />
       ))}
     </div>
   );
@@ -118,7 +118,7 @@ export const TrendingRecipes: React.FC = () => {
       {/* Scrollable Cards */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+        className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 -mx-1 scrollbar-hide snap-x snap-mandatory scroll-smooth"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {recipes.map((recipe) => {
@@ -127,10 +127,10 @@ export const TrendingRecipes: React.FC = () => {
             <div
               key={recipe.id}
               onClick={handleCardClick}
-              className="min-w-[220px] max-w-[220px] bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer group snap-start shrink-0 flex flex-col overflow-hidden active:scale-95"
+              className="min-w-[240px] max-w-[240px] bg-white dark:bg-gray-900 rounded-[1.5rem] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none hover:shadow-xl transition-all duration-300 cursor-pointer group snap-start shrink-0 flex flex-col overflow-hidden active:scale-[0.98] border border-gray-100/80 dark:border-gray-800"
             >
               {/* Image */}
-              <div className="relative h-32 w-full bg-gray-50 dark:bg-gray-700 overflow-hidden">
+              <div className="relative h-40 w-full bg-gray-50 dark:bg-gray-800 overflow-hidden">
                 {recipe.image ? (
                   <img
                     src={recipe.image}
@@ -154,52 +154,25 @@ export const TrendingRecipes: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="p-3 flex flex-col flex-1">
-                <h4 className="font-black text-sm text-gray-900 dark:text-white line-clamp-2 leading-tight mb-1.5 min-h-[2.5em]">
+              <div className="p-4 flex flex-col flex-1 relative bg-gradient-to-t from-white to-transparent dark:from-gray-900 dark:to-gray-900">
+                <h4 className="font-black text-[15px] text-gray-900 dark:text-white line-clamp-2 leading-snug mb-4">
                   {recipe.title}
                 </h4>
 
-                {/* Metadata */}
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
+                {/* Clean Metadata Line */}
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 mt-auto">
                   {recipe.time && (
-                    <span className="flex items-center gap-0.5">
-                      <Clock className="w-3 h-3" /> {recipe.time}
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> {recipe.time}
                     </span>
                   )}
-                  {recipe.calories && (
-                    <span className="flex items-center gap-0.5">
-                      <Flame className="w-3 h-3 text-orange-400" /> {recipe.calories}
-                    </span>
-                  )}
-                </div>
-
-                {/* Ingredient Count + Difficulty */}
-                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  {ingredientCount > 0 && (
-                    <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Layers className="w-2.5 h-2.5" />
-                      {ingredientCount} مكون
-                    </span>
+                  {recipe.time && recipe.difficulty && (
+                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
                   )}
                   {recipe.difficulty && (
-                    <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <BarChart3 className="w-2.5 h-2.5" />
-                      {recipe.difficulty}
-                    </span>
+                    <span>{recipe.difficulty}</span>
                   )}
                 </div>
-
-                {/* View Recipe Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    navigate('/recipes');
-                  }}
-                  className="mt-auto w-full bg-brand-50 dark:bg-white text-brand-700 dark:text-gray-900 hover:bg-brand-100 dark:hover:bg-gray-100 active:scale-95 transition-all py-2 rounded-xl font-bold text-xs"
-                >
-                  عرض الوصفة
-                </button>
               </div>
             </div>
           );
@@ -208,10 +181,12 @@ export const TrendingRecipes: React.FC = () => {
         {/* "عرض الكل" Link at the end */}
         <button
           onClick={handleViewAll}
-          className="min-w-[100px] max-w-[100px] h-[270px] bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-all cursor-pointer snap-start shrink-0 flex flex-col items-center justify-center gap-2 group"
+          className="min-w-[120px] max-w-[120px] h-full min-h-[220px] bg-transparent rounded-[1.5rem] hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all cursor-pointer snap-start shrink-0 flex flex-col items-center justify-center gap-3 group border border-transparent hover:border-gray-200 dark:hover:border-gray-800"
         >
-          <ArrowUpLeft className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
-          <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-gray-100 dark:border-gray-700">
+             <ArrowLeft className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
+          </div>
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
             عرض الكل
           </span>
         </button>

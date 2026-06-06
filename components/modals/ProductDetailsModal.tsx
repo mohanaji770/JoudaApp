@@ -117,11 +117,11 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-900 w-full max-w-lg md:max-w-4xl h-auto max-h-[90vh] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl relative flex flex-col md:flex-row animate-slide-up-mobile sm:animate-scale-in border border-gray-200 dark:border-gray-800 overflow-hidden transition-transform"
+        className="bg-white dark:bg-gray-900 w-full max-w-md h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl relative flex flex-col animate-slide-up-mobile sm:animate-scale-in border border-gray-200 dark:border-gray-800 overflow-hidden transition-transform"
         onClick={(e) => e.stopPropagation()}
       >
         
-        <div className="relative w-full h-64 sm:h-72 md:h-auto md:w-1/2 bg-white shrink-0 p-6 flex items-center justify-center">
+        <div className="relative w-full h-64 sm:h-72 bg-white shrink-0 p-6 flex items-center justify-center">
           {product.image ? (
              <>
                <div className="absolute inset-0 bg-gray-100 animate-pulse" />
@@ -147,13 +147,13 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           <div className="absolute top-0 left-0 right-0 p-4 pt-6 flex justify-between items-start z-10">
              <button 
                onClick={onClose}
-               className="w-10 h-10 bg-gray-100/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors md:hidden shadow-sm"
+               className="w-10 h-10 bg-gray-100/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors shadow-sm"
              >
                <X className="w-5 h-5" />
              </button>
 
              {/* Desktop Close Button (Right aligned in layout, but absolute here for mobile) */}
-             <div className="hidden md:block"></div> 
+ 
 
              <div className="flex gap-2">
                <button 
@@ -175,20 +175,13 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         </div>
 
         {/* Right Side (Desktop): Content Body */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 md:border-r border-gray-100 dark:border-gray-800 min-h-0">
+        <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 min-h-0">
            
            {/* Desktop Close Button */}
-           <div className="hidden md:flex justify-end p-4 absolute top-0 left-0 z-10">
-              <button 
-                 onClick={onClose}
-                 className="w-9 h-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 transition-colors"
-              >
-                 <X className="w-5 h-5" />
-              </button>
-           </div>
 
-           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative bg-white dark:bg-gray-900">
-                <div className="mb-6 md:mt-2">
+
+           <div className="flex-1 overflow-y-auto p-6 relative bg-white dark:bg-gray-900">
+                <div className="mb-6">
                    {/* Clean Minimal Badges (moved to top for elegant hierarchy) */}
                    <div className="flex gap-4 text-[11px] font-bold text-gray-400 dark:text-gray-500 mb-3 uppercase tracking-wide">
                       <span>{product.category}</span>
@@ -198,14 +191,14 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                    </div>
 
                    {/* Title */}
-                   <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white leading-tight mb-2">
+                   <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-tight mb-2">
                       {product.name}
                    </h2>
 
                    {/* Clean Price Display */}
                    <div className="flex items-baseline gap-3 mb-6">
-                      <div className="text-3xl md:text-4xl font-black text-brand-600 dark:text-brand-400 tracking-tight">
-                         {product.price || '---'} <span className="text-lg md:text-xl text-gray-500 font-bold">ر.ي</span>
+                      <div className="text-3xl font-black text-brand-600 dark:text-brand-400 tracking-tight">
+                         {product.price || '---'} <span className="text-lg text-gray-500 font-bold">ر.ي</span>
                       </div>
                       {savingsInfo && (
                         <div className="flex items-center gap-2">
@@ -224,7 +217,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                          </span>
                       )}
                    </div>
-                   <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
                       {product.description || "لا يوجد وصف إضافي لهذا المنتج، ولكنه مضمون الجودة من متجرنا."}
                    </p>
                 </div>
@@ -283,12 +276,12 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                       <ChefHat className="w-5 h-5 text-orange-500" />
                       وصفات ذات صلة
                    </h3>
-                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 md:mx-0 md:px-0 hide-scrollbar md:flex-wrap">
+                   <div className="flex flex-col gap-3 pb-2">
                       {relatedRecipes.map(recipe => (
                          <button 
                            key={recipe.id}
                            onClick={() => onOpenRecipe(product.name)}
-                           className="min-w-[200px] md:min-w-[48%] bg-orange-50 dark:bg-gray-800 border border-orange-100 dark:border-gray-700 p-3 rounded-2xl flex items-center gap-3 text-right hover:border-orange-300 transition-colors"
+                           className="w-full bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center gap-3 text-right"
                          >
                             <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-700 shrink-0 overflow-hidden">
                                {recipe.image ? (
@@ -312,20 +305,20 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
            </div>
 
            {/* Footer Actions */}
-           <div className="p-4 md:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 safe-area-bottom mt-auto">
+           <div className="p-4 sm:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 safe-area-bottom mt-auto">
               <div className="flex gap-3">
                  {quantity > 0 ? (
                     <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl p-2 flex items-center justify-between">
                        <button 
                           onClick={() => decreaseQuantityByName(product.name)}
-                          className="w-12 h-12 md:w-10 md:h-10 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-gray-50 transition-colors"
+                          className="w-12 h-12 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-gray-50 transition-colors"
                        >
                           -
                        </button>
                        <span className="text-xl font-bold">{quantity}</span>
                        <button 
                           onClick={() => addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString())}
-                          className="w-12 h-12 md:w-10 md:h-10 bg-brand-600 text-white rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-brand-700 transition-colors"
+                          className="w-12 h-12 bg-brand-600 text-white rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-brand-700 transition-colors"
                        >
                           +
                        </button>

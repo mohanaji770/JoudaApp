@@ -67,12 +67,12 @@ export const KnowledgeHub: React.FC = () => {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+        <div className="flex bg-gray-100/80 dark:bg-gray-800/80 p-0.5 rounded-[0.8rem] border border-gray-200/50 dark:border-gray-700/50">
            <button
              onClick={() => setActiveTab('blog')}
-             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+             className={`px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                activeTab === 'blog' 
-               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-none' 
                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
              }`}
            >
@@ -80,9 +80,9 @@ export const KnowledgeHub: React.FC = () => {
            </button>
            <button
              onClick={() => setActiveTab('tips')}
-             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+             className={`px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                activeTab === 'tips' 
-               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-none' 
                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
              }`}
            >
@@ -120,18 +120,14 @@ export const KnowledgeHub: React.FC = () => {
                        </div>
                      )}
                      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent"></div>
-                     <span className="absolute bottom-2 right-2 text-[10px] text-white font-medium bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/20">
+                  </div>
+                  <div className="p-4 flex flex-1 flex-col justify-center">
+                     <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold mb-1.5">
                        {article.date}
                      </span>
-                  </div>
-                  <div className="p-3 flex flex-1 flex-col justify-between">
-                     <h4 className="font-bold text-sm text-gray-800 dark:text-gray-100 line-clamp-2 mb-2 leading-snug">
+                     <h4 className="font-bold text-[14px] text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug">
                        {article.title}
                      </h4>
-                     <div className="flex items-center justify-end text-teal-600 dark:text-teal-400 text-xs font-bold gap-1 group-hover:gap-2 transition-all">
-                        <span>اقرأ المزيد</span>
-                        <ChevronLeft className="w-3 h-3" />
-                     </div>
                   </div>
                 </div>
               ))}

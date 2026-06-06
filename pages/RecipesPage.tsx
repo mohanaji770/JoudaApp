@@ -206,7 +206,7 @@ export const RecipesPage: React.FC = () => {
       </div>
 
       {loading ? (
-         <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
+         <div className="space-y-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="bg-warm-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-24 animate-pulse">
             </div>
@@ -229,7 +229,7 @@ export const RecipesPage: React.FC = () => {
            <p className="text-gray-500 font-bold text-sm">لا توجد وصفات متاحة حالياً</p>
         </div>
       ) : (
-        <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
+        <div className="space-y-4">
             {recipes.map((recipe) => {
                 const youtubeId = recipe.videoUrl ? getYouTubeEmbedId(recipe.videoUrl) : null;
                 const isExpanded = expandedId === recipe.id;

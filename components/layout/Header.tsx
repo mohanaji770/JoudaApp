@@ -37,12 +37,12 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
 
   return (
     <header className="bg-warm-white dark:bg-gray-900 sticky top-0 z-40 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5)] transition-colors duration-300">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div className="w-full px-4 py-3 flex items-center justify-between">
         
-        {/* Branding: Jouda Logo Style - Hidden on Desktop (shown in Sidebar) */}
+        {/* Branding: Jouda Logo Style */}
         <div 
           onClick={handleLogoClick}
-          className="flex items-center gap-3 md:hidden cursor-pointer select-none active:scale-[0.98] transition-transform"
+          className="flex items-center gap-3 cursor-pointer select-none active:scale-[0.98] transition-transform"
         >
            <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-md shadow-red-100 dark:shadow-none relative overflow-hidden bg-white border border-gray-100 dark:border-gray-800">
              <img src={APP_LOGO} alt="Jouda Logo" className="w-full h-full object-cover" />
@@ -53,10 +53,6 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
            </div>
         </div>
 
-        {/* Empty placeholder for Desktop alignment if needed, or breadcrumbs */}
-        <div className="hidden md:block text-sm font-bold text-gray-400">
-           {/* Future Breadcrumbs or Title */}
-        </div>
 
         <div className="flex items-center gap-2">
           {/* Admin Badge */}
@@ -115,7 +111,6 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
               </span>
             )}
             <ShoppingBag className="w-4 h-4 group-hover:text-white transition-colors" />
-            <span className="hidden md:inline text-xs font-bold">السلة</span>
           </button>
         </div>
         

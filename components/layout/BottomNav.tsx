@@ -16,7 +16,7 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav aria-label="التصفح الرئيسي" className="fixed bottom-0 left-0 right-0 z-40 safe-area-bottom md:hidden pointer-events-none">
+    <nav aria-label="التصفح الرئيسي" className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-40 safe-area-bottom pointer-events-none">
       <div className="bg-white dark:bg-gray-900 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] dark:shadow-none border-t border-gray-100 dark:border-gray-800 rounded-t-[1.5rem] pointer-events-auto px-2 pb-2 pt-1 relative">
         <div className="max-w-md mx-auto flex items-end justify-between relative">
           {tabs.map((tab) => {
