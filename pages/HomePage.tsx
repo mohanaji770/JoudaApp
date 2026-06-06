@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useScanHistory } from '../hooks/useScanHistory';
 import { useAnalyzer } from '../hooks/useAnalyzer';
 import { DashboardView } from '../components/home/DashboardView';
@@ -8,6 +8,12 @@ import { AnalysisResult } from '../types';
 export const HomePage: React.FC = () => {
   const [showScanner, setShowScanner] = useState(false);
   const { history, saveToHistory } = useScanHistory();
+  
+  useEffect(() => {
+    const handleOpenScanner = () => setShowScanner(true);
+    window.addEventListener('open-scanner', handleOpenScanner);
+    return () => window.removeEventListener('open-scanner', handleOpenScanner);
+  }, []);
   
   const handleAnalysisSuccess = (newResult: AnalysisResult) => {
     saveToHistory(newResult);
@@ -44,7 +50,7 @@ export const HomePage: React.FC = () => {
   return (
     <>
       {!showScanner && !result ? (
-        <DashboardView onOpenScanner={() => setShowScanner(true)} />
+        <DashboardView />
       ) : (
         <ScannerView
           isAnalyzing={isAnalyzing}

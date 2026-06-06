@@ -6,11 +6,7 @@ import { KnowledgeHub } from '../../pages/KnowledgeHub';
 import { ProductRequestModal } from '../modals/ProductRequestModal';
 import { Search, ScanLine, ChefHat, Store, ChevronLeft } from 'lucide-react';
 
-interface DashboardViewProps {
-  onOpenScanner: () => void;
-}
-
-export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenScanner }) => {
+export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
   const [showProductRequest, setShowProductRequest] = useState(false);
 
@@ -18,10 +14,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenScanner }) =
     <div className="animate-fade-in flex flex-col">
       {/* Floating Search Bar */}
       <div className="mt-4 mb-6 px-1">
-        <div className="w-full bg-white dark:bg-gray-900 rounded-[1.5rem] p-1.5 flex items-center justify-between shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-none border border-transparent dark:border-gray-800 transition-all duration-300">
+        <div className="w-full bg-white dark:bg-gray-900 rounded-[1.5rem] p-1.5 flex items-center shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-none border border-transparent dark:border-gray-800 transition-all duration-300">
           <button
             onClick={() => navigate('/products')}
-            className="flex-1 flex items-center gap-3 p-2 text-right group/btn"
+            className="flex-1 flex items-center gap-3 p-2.5 text-right group/btn"
             aria-label="البحث"
           >
             <Search className="w-5 h-5 text-gray-400 dark:text-gray-500 mr-1" />
@@ -29,17 +25,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenScanner }) =
               <span className="text-sm font-bold text-gray-400 dark:text-gray-500">ابحث عن منتجات، وصفات...</span>
             </div>
           </button>
-
-          <div className="pl-1 shrink-0">
-            <button
-              onClick={onOpenScanner}
-              className="h-11 px-4 rounded-[1rem] flex items-center justify-center gap-1.5 bg-gradient-to-r from-brand-600 to-orange-500 hover:from-brand-500 hover:to-orange-400 text-white shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 transition-all duration-300 active:scale-95 group/scan"
-              aria-label="بدء الفحص بالكميرا"
-            >
-              <ScanLine className="w-4 h-4 group-hover/scan:scale-110 group-hover/scan:-rotate-3 transition-transform duration-300" />
-              <span className="text-xs font-bold tracking-wide">افحص</span>
-            </button>
-          </div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { BookOpen, ChevronLeft, Lightbulb, ShieldAlert, ScanLine, UtensilsCrossed, ChefHat } from 'lucide-react';
+import { BookOpen, ChevronLeft, Lightbulb, ShieldAlert, ScanLine, UtensilsCrossed, ChefHat, Calendar } from 'lucide-react';
 import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
 import { ArticleModal } from '../components/modals/ArticleModal';
 
@@ -96,42 +96,45 @@ export const KnowledgeHub: React.FC = () => {
         {activeTab === 'blog' ? (
           /* BLOG CONTENT */
           loading ? (
-            <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+            <div className="flex gap-3 overflow-x-auto pb-4 px-1 hide-scrollbar">
                {[1, 2].map(i => (
-                  <div key={i} className="min-w-[260px] h-40 bg-warm-100 dark:bg-gray-800 rounded-2xl animate-pulse"></div>
+                  <div key={i} className="min-w-[260px] h-[280px] bg-gray-50 dark:bg-gray-800/40 rounded-3xl animate-pulse shrink-0"></div>
                ))}
             </div>
           ) : articles.length === 0 ? (
              <div className="text-center py-8 text-gray-400 text-sm">لا توجد مقالات حالياً</div>
           ) : (
-            <div className="flex overflow-x-auto pb-6 -mx-4 px-4 gap-3 snap-x snap-mandatory hide-scrollbar animate-fade-in">
+            <div className="flex gap-3 overflow-x-auto pb-6 pt-1 px-1 -mx-1 snap-x snap-mandatory hide-scrollbar animate-fade-in">
               {articles.map((article) => (
                 <div 
                   key={article.id}
                   onClick={() => setSelectedArticle(article)}
-                  className="min-w-[260px] w-[260px] snap-center bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-all active:scale-[0.98] flex flex-col group"
+                  className="min-w-[260px] max-w-[260px] bg-gray-50 dark:bg-gray-800/40 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group snap-center shrink-0 flex flex-col overflow-hidden active:scale-[0.98] border border-transparent"
                 >
-                  <div className="h-32 w-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                  <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-t-3xl">
                      {article.image ? (
-                       <img src={article.image} alt={article.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                       <img src={article.image} alt={article.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                      ) : (
                        <div className="w-full h-full flex items-center justify-center bg-teal-50 dark:bg-teal-900/20">
-                          <BookOpen className="w-8 h-8 text-teal-200" />
+                          <BookOpen className="w-10 h-10 text-teal-300 dark:text-teal-500/50" />
                        </div>
                      )}
-                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent"></div>
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <div className="p-4 flex flex-1 flex-col justify-center">
-                     <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold mb-1.5">
-                       {article.date}
-                     </span>
-                     <h4 className="font-bold text-[14px] text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug">
+                  <div className="p-4 flex flex-col flex-1 relative bg-white/50 dark:bg-gray-900/50">
+                     <h4 className="font-bold text-[15px] text-gray-900 dark:text-white line-clamp-2 leading-snug mb-3">
                        {article.title}
                      </h4>
+                     
+                     {/* Clean Metadata Line */}
+                     <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-auto pt-3 border-t border-gray-100 dark:border-gray-800/50">
+                       <span className="flex items-center gap-1.5">
+                         <Calendar className="w-3.5 h-3.5" /> {article.date}
+                       </span>
+                     </div>
                   </div>
                 </div>
               ))}
-              <div className="w-2 shrink-0"></div>
             </div>
           )
         ) : (
