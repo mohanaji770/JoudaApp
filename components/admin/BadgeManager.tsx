@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, X, Save, Tag, Star, Gift, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
 import { Product } from '../../services/supabaseService';
+import { AdminProductService } from '../../services/admin/AdminProductService';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -199,20 +199,13 @@ export const BadgeManager: React.FC<BadgeManagerProps> = ({
   const handleSaveTags = async (product: Product, newTags: string[]) => {
     setIsSaving(true);
     try {
-      const { data, error: updateError } = await supabase
-        .from('products')
-        .update({ tags: newTags })
-        .eq('barcode', product.barcode)
-        .select();
-
-      if (updateError) throw updateError;
-      if (data) {
-        setProducts(prev =>
-          prev.map(p => (p.barcode === product.barcode ? { ...p, tags: newTags } : p))
-        );
-        showSuccess('تم حفظ الشارات بنجاح');
-        setSelectedProduct(null);
-      }
+      await AdminProductService.updateTags(product.barcode, newTags);
+      
+      setProducts(prev =>
+        prev.map(p => (p.barcode === product.barcode ? { ...p, tags: newTags } : p))
+      );
+      showSuccess('تم حفظ الشارات بنجاح');
+      setSelectedProduct(null);
     } catch (err: any) {
       showError(err.message || 'فشل حفظ الشارات');
     } finally {

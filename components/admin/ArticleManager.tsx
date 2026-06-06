@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Save, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
 import { Article } from '../../services/supabaseService';
+import { AdminContentService } from '../../services/admin/AdminContentService';
 
 interface ArticleManagerProps {
   articles: Article[];
@@ -49,13 +49,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
         payload.id = articleId;
       }
 
-      const { data, error: rpcError } = await supabase
-        .from('articles')
-        .upsert(payload)
-        .select();
-
-      if (rpcError) throw rpcError;
-      if (data) {
+      await AdminContentService.upsertArticle(payload);
         showSuccess('تم حفظ المقال بنجاح');
         setArticleId(null);
         setArticleTitle('');
@@ -64,7 +58,6 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
         setArticleAuthor('جودة');
         setArticlePublishDate('');
         loadData();
-      }
     } catch (err: any) {
       showError(err.message || 'فشل حفظ المقال');
     } finally {
@@ -75,16 +68,9 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
   const handleDeleteArticle = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المقال؟')) return;
     try {
-      const { data, error: rpcError } = await supabase
-        .from('articles')
-        .delete()
-        .eq('id', id)
-        .select();
-      if (rpcError) throw rpcError;
-      if (data) {
-        showSuccess('تم حذف المقال');
-        loadData();
-      }
+      await AdminContentService.deleteArticle(id);
+      showSuccess('تم حذف المقال');
+      loadData();
     } catch (err: any) {
       showError(err.message || 'فشل حذف المقال');
     }

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Gift, Search, Save, X } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
 import { Product } from '../../services/supabaseService';
+import { AdminProductService } from '../../services/admin/AdminProductService';
 
 interface PackageManagerProps {
   products: Product[];
@@ -83,30 +83,14 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
       setLoading(true);
       const pkgBarcodeClean = pkgBarcode.startsWith('PKG-') ? pkgBarcode.trim() : `PKG-${pkgBarcode.trim()}`;
       
-      const { error: prodError } = await supabase.from('products').upsert({
-        barcode: pkgBarcodeClean,
-        name: pkgName.trim(),
-        price: parseFloat(pkgPrice),
-        category: 'عروض وبكجات',
-        description: pkgDesc.trim(),
-        image_url: pkgImage.trim(),
-        is_active: true
-      });
-
-      if (prodError) throw prodError;
-
-      // Delete old items if updating
-      await supabase.from('package_items').delete().eq('package_barcode', pkgBarcodeClean);
-      
-      // Insert new items
-      const jsonItems = pkgItems.map(i => ({ 
-        package_barcode: pkgBarcodeClean,
-        product_barcode: i.barcode, 
-        quantity: i.quantity 
-      }));
-      
-      const { error: itemsError } = await supabase.from('package_items').insert(jsonItems);
-      if (itemsError) throw itemsError;
+      await AdminProductService.upsertPackage(
+        pkgBarcodeClean,
+        pkgName.trim(),
+        parseFloat(pkgPrice),
+        pkgDesc.trim(),
+        pkgImage.trim(),
+        pkgItems.map(i => ({ barcode: i.barcode, quantity: i.quantity }))
+      );
 
       showSuccess('تم إنشاء/تحديث البكج التوفيري بنجاح');
       setPkgBarcode('');

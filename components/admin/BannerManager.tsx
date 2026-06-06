@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image as ImageIcon, Save, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { AdminContentService } from '../../services/admin/AdminContentService';
 
 interface Banner {
   id: string;
@@ -57,13 +57,7 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
         payload.id = bannerId;
       }
 
-      const { data, error: rpcError } = await supabase
-        .from('banners')
-        .upsert(payload)
-        .select();
-
-      if (rpcError) throw rpcError;
-      if (data) {
+      await AdminContentService.upsertBanner(payload);
         showSuccess('تم حفظ البانر بنجاح');
         setBannerId(null);
         setBannerTitle('');
@@ -72,7 +66,6 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
         setBannerSort(0);
         setBannerActive(true);
         loadData();
-      }
     } catch (err: any) {
       showError(err.message || 'فشل حفظ البانر');
     } finally {
@@ -83,16 +76,9 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
   const handleDeleteBanner = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا البانر؟')) return;
     try {
-      const { data, error: rpcError } = await supabase
-        .from('banners')
-        .delete()
-        .eq('id', id)
-        .select();
-      if (rpcError) throw rpcError;
-      if (data) {
-        showSuccess('تم حذف البانر');
-        loadData();
-      }
+      await AdminContentService.deleteBanner(id);
+      showSuccess('تم حذف البانر');
+      loadData();
     } catch (err: any) {
       showError(err.message || 'فشل حذف البانر');
     }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChefHat, Save, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
 import { Recipe } from '../../services/supabaseService';
+import { AdminContentService } from '../../services/admin/AdminContentService';
 
 interface RecipeManagerProps {
   recipes: Recipe[];
@@ -76,13 +76,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
         payload.id = recipeId;
       }
 
-      const { data, error: rpcError } = await supabase
-        .from('recipes')
-        .upsert(payload)
-        .select();
-
-      if (rpcError) throw rpcError;
-      if (data) {
+      await AdminContentService.upsertRecipe(payload);
         showSuccess('تم حفظ الوصفة بنجاح');
         setRecipeId(null);
         setRecipeTitle('');
@@ -96,7 +90,6 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
         setRecipeImage('');
         setRecipeVideo('');
         loadData();
-      }
     } catch (err: any) {
       showError(err.message || 'فشل حفظ الوصفة');
     } finally {
@@ -107,16 +100,9 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
   const handleDeleteRecipe = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذه الوصفة؟')) return;
     try {
-      const { data, error: rpcError } = await supabase
-        .from('recipes')
-        .delete()
-        .eq('id', id)
-        .select();
-      if (rpcError) throw rpcError;
-      if (data) {
-        showSuccess('تم حذف الوصفة');
-        loadData();
-      }
+      await AdminContentService.deleteRecipe(id);
+      showSuccess('تم حذف الوصفة');
+      loadData();
     } catch (err: any) {
       showError(err.message || 'فشل حذف الوصفة');
     }
