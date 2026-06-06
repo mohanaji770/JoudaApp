@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { X, MessageCircle, Star, ChefHat, CheckCircle } from 'lucide-react';
-import { STORE_CONFIG } from '../constants';
+import { STORE_CONFIG } from '../../constants';
 
 interface BakeryModalProps {
   onClose: () => void;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ShoppingBag, ChefHat, ClipboardList, Info, LayoutDashboard, Shield } from 'lucide-react';
-import { APP_LOGO, STORE_CONFIG } from '../constants';
+import { APP_LOGO, STORE_CONFIG } from '../../constants';
 
 interface SidebarProps {
   isDarkMode: boolean;

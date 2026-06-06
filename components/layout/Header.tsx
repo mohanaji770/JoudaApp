@@ -2,8 +2,8 @@
 import React from 'react';
 import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { APP_LOGO } from '../constants';
+import { useCart } from '../../contexts/CartContext';
+import { APP_LOGO } from '../../constants';
 
 interface HeaderProps {
   isDarkMode?: boolean;

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Cake, ChevronLeft, Star } from 'lucide-react';
-import { BakeryModal } from './BakeryModal';
+import { BakeryModal } from '../modals/BakeryModal';
 
 export const BakeryBanner: React.FC = () => {
   const [showModal, setShowModal] = useState(false);

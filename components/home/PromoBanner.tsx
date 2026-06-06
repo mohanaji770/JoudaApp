@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../services/supabaseClient';
-import { useCart } from '../contexts/CartContext';
-import { getCachedProducts } from '../services/db';
+import { supabase } from '../../services/supabaseClient';
+import { useCart } from '../../contexts/CartContext';
+import { getCachedProducts } from '../../services/db';
 
 interface Banner {
   id: string;

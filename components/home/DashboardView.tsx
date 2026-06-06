@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PromoBanner } from '../PromoBanner';
-import { TrendingRecipes } from '../TrendingRecipes';
-import { KnowledgeHub } from '../KnowledgeHub';
-import { ProductRequestModal } from '../ProductRequestModal';
+import { PromoBanner } from './PromoBanner';
+import { TrendingRecipes } from '../blog/TrendingRecipes';
+import { KnowledgeHub } from '../../pages/KnowledgeHub';
+import { ProductRequestModal } from '../modals/ProductRequestModal';
 import { Search, ScanLine, ChefHat, Store, ChevronLeft } from 'lucide-react';
 
 interface DashboardViewProps {

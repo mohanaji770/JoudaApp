@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, MessageCircle, PackageSearch, FileText, ShoppingBag } from 'lucide-react';
-import { STORE_CONFIG } from '../constants';
+import { STORE_CONFIG } from '../../constants';
 
 interface ProductRequestModalProps {
   onClose: () => void;
@@ -38,8 +39,8 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
     }, 600);
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-scale-in border border-gray-200 dark:border-gray-800">
         
         <button 
@@ -107,6 +108,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

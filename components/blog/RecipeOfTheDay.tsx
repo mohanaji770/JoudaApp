@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Clock, Flame, ChefHat, Sparkles, Heart, Play, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
-import { fetchRecipesFromSupabase, Recipe } from '../services/supabaseService';
+import { useCart } from '../../contexts/CartContext';
+import { fetchRecipesFromSupabase, Recipe } from '../../services/supabaseService';
 
 const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
@@ -163,7 +163,7 @@ export const RecipeOfTheDay: React.FC = () => {
     const uniqueProducts = new Map<string, { name: string; barcode: string; price?: string; source?: 'store' | 'bakery' }>();
 
     try {
-      const { getCachedProducts, getCachedProductByBarcode } = await import('../services/db');
+      const { getCachedProducts, getCachedProductByBarcode } = await import('../../services/db');
       const latestProducts = await getCachedProducts();
 
       for (const itemOrBarcode of rawItems) {

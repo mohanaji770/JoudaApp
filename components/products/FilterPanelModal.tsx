@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Filter, X, ArrowUpDown, Check, Heart } from 'lucide-react';
 
 export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'popular';
@@ -34,7 +35,7 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
 }) => {
   if (!showFilters) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-end justify-center md:items-center md:justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-900 w-full max-w-md h-[85vh] md:h-auto md:max-h-[90vh] rounded-t-[2rem] md:rounded-[2rem] shadow-2xl flex flex-col animate-slide-up-mobile md:animate-slide-in-right overflow-hidden border border-gray-200 dark:border-gray-800">
         {/* Header */}
@@ -247,6 +248,7 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

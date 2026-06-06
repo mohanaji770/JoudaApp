@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecipesPage } from '../components/RecipesPage';
+import { RecipesPage } from './RecipesPage';
 
 export const RecipesPageRoute: React.FC = () => {
   return <RecipesPage />;

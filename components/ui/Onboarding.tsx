@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ScanBarcode, Store, HeartHandshake, ArrowLeft, Check, X } from 'lucide-react';
-import { useScrollLock } from '../hooks';
+import { useScrollLock } from '../../hooks/index';
 
 interface OnboardingProps {
   onClose: () => void;

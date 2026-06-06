@@ -7,14 +7,15 @@ import { Product } from '../supabaseService';
  */
 export const AdminProductService = {
   /**
-   * Updates the visual tags/badges of a product
+   * Updates the visual tags and description of a product
    * @param barcode The unique barcode of the product
    * @param tags Array of tag IDs (e.g., 'discount', 'best_seller')
+   * @param description Custom description of the product
    */
-  async updateTags(barcode: string, tags: string[]): Promise<void> {
+  async updateProductDetails(barcode: string, tags: string[], description: string | null): Promise<void> {
     const { error } = await supabase
       .from('products')
-      .update({ tags })
+      .update({ tags, description })
       .eq('barcode', barcode)
       .select();
 

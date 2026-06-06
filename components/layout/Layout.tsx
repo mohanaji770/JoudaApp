@@ -3,10 +3,10 @@ import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
-import { CartDrawer } from './CartDrawer';
+import { CartDrawer } from '../CartDrawer';
 
-import { InstallPrompt } from './InstallPrompt';
-import { useCart } from '../contexts/CartContext';
+import { InstallPrompt } from '../ui/InstallPrompt';
+import { useCart } from '../../contexts/CartContext';
 
 interface LayoutProps {
   children: ReactNode;

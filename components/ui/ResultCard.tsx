@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Share2, ShoppingBag, ExternalLink, Sparkles, BadgeCheck, Check, Plus, Image as ImageIcon, Copy } from 'lucide-react';
-import { AnalysisResult, VerdictType } from '../types';
-import { STORE_CONFIG } from '../constants';
-import { useCart } from '../contexts/CartContext';
-import { ShareModal } from './ShareModal';
+import { AnalysisResult, VerdictType } from '../../types';
+import { STORE_CONFIG } from '../../constants';
+import { useCart } from '../../contexts/CartContext';
+import { ShareModal } from '../modals/ShareModal';
 
 interface ResultCardProps {
   result: AnalysisResult;

@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft, X, Smartphone, BrainCircuit, ShoppingBag, Heart, ShieldCheck, Zap, ScanLine, ArrowLeftRight, Camera, CheckCircle, AlertTriangle, ScanBarcode } from 'lucide-react';
-import { APP_LOGO, STORE_CONFIG } from '../constants';
+import { APP_LOGO, STORE_CONFIG } from '../../constants';
 import { Scanner } from './Scanner';
 import { ResultCard } from './ResultCard';
-import { AnalysisResult, VerdictType } from '../types';
+import { AnalysisResult, VerdictType } from '../../types';
 
 interface PresentationModeProps {
   onClose: () => void;

@@ -2,8 +2,8 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { X, Calendar, User, Share2 } from 'lucide-react';
-import { Article } from '../services/supabaseService';
-import { useScrollLock } from '../hooks';
+import { Article } from '../../services/supabaseService';
+import { useScrollLock } from '../../hooks/index';
 
 interface ArticleModalProps {
   article: Article;

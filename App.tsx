@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Wrench, Clock, Shield } from 'lucide-react';
-import { Layout } from './components/Layout';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { Layout } from './components/layout/Layout';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import { AdminLogin } from './pages/AdminLogin';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { HomePage } from './pages/HomePage';
 import { ProductsPageRoute } from './pages/ProductsPageRoute';
 import { RecipesPageRoute } from './pages/RecipesPageRoute';
 import { AboutPageRoute } from './pages/AboutPageRoute';
 import { OrdersPage } from './pages/OrdersPage';
-import { Onboarding } from './components/Onboarding';
-import { OfflineIndicator } from './components/OfflineIndicator';
+import { Onboarding } from './components/ui/Onboarding';
+import { OfflineIndicator } from './components/layout/OfflineIndicator';
 import { useScrollToTop, useLocalStorage } from './hooks';
 import { SyncProvider } from './contexts/SyncContext';
 import { supabase } from './services/supabaseClient';
@@ -174,8 +174,12 @@ const AppContent: React.FC = () => {
   };
 
   const handleAdminLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    navigate('/', { replace: true });
+    // Add a tiny delay before signing out so React Router processes the navigation first
+    setTimeout(async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/';
+    }, 50);
   };
 
   if (checkingMaintenance || checkingAuth) {
@@ -190,8 +194,7 @@ const AppContent: React.FC = () => {
   if (location.pathname.startsWith('/admin')) {
     if (!isAdmin && location.pathname !== '/admin/login') {
       // Redirect to login if not admin
-      window.location.href = '/admin/login';
-      return null;
+      return <Navigate to="/admin/login" replace />;
     }
 
     if (location.pathname === '/admin/login') {

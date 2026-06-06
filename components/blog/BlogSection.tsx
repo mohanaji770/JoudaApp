@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { BookOpen, ChevronLeft, ArrowRight } from 'lucide-react';
-import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
-import { ArticleModal } from './ArticleModal';
+import { fetchArticlesFromSupabase, Article } from '../../services/supabaseService';
+import { ArticleModal } from '../modals/ArticleModal';
 
 export const BlogSection: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { X, ChefHat, Clock, Flame, ChevronDown, ChevronUp, ShoppingBag, Plus } from 'lucide-react';
-import { STORE_CONFIG } from '../constants';
-import { useCart } from '../contexts/CartContext';
+import { STORE_CONFIG } from '../../constants';
+import { useCart } from '../../contexts/CartContext';
 
 interface Recipe {
   id: string;

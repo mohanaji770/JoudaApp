@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { X, ChefHat, Clock, ArrowRight } from 'lucide-react';
-import { Recipe } from '../services/supabaseService';
+import { Recipe } from '../../services/supabaseService';
 
 interface ProductRecipesModalProps {
   productName: string;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeCheck, Clock } from 'lucide-react';
+import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeCheck } from 'lucide-react';
 import { Product } from '../../services/supabaseService';
 
 interface ProductCardProps {
@@ -40,49 +40,6 @@ const HighlightedText: React.FC<{ text: string; highlight: string }> = ({ text, 
   );
 };
 
-// Countdown Timer Component
-const CountdownTimer: React.FC<{ validUntil: string }> = ({ validUntil }) => {
-  const [timeLeft, setTimeLeft] = useState('');
-
-  useEffect(() => {
-    const targetDate = new Date(validUntil).getTime();
-
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-
-      if (difference <= 0) {
-        setTimeLeft('انتهى العرض');
-        return;
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-
-      if (days > 0) {
-        setTimeLeft(`${days} يوم و ${hours} ساعة`);
-      } else if (hours > 0) {
-        setTimeLeft(`${hours} ساعة و ${minutes} دقيقة`);
-      } else {
-        setTimeLeft(`${minutes} دقيقة`);
-      }
-    };
-
-    updateTimer();
-    const timer = setInterval(updateTimer, 60000); // Update every minute
-
-    return () => clearInterval(timer);
-  }, [validUntil]);
-
-  return (
-    <div className="absolute top-2 left-2 z-30 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse-slow border border-amber-400/50">
-      <Clock className="w-3 h-3" />
-      <span dir="rtl">{timeLeft === 'انتهى العرض' ? timeLeft : `ينتهي خلال ${timeLeft}`}</span>
-    </div>
-  );
-};
-
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   viewMode,
@@ -118,27 +75,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* UI Badges */}
         <div className="absolute top-2 right-2 z-30 flex flex-col gap-1 items-end pointer-events-none">
           {isPackage && (
-            <span className="bg-amber-600/90 backdrop-blur-sm text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+            <span className="bg-amber-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-400/30">
               <Gift className="w-2.5 h-2.5" /> بكج توفيري
             </span>
           )}
           {product.tags?.includes('discount') && (
-            <span className="bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+            <span className="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-red-400/30">
               <Sparkles className="w-3 h-3" /> خصم
             </span>
           )}
           {product.tags?.includes('best_seller') && (
-            <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+            <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-200 dark:border-amber-900/50">
               <BadgeCheck className="w-3 h-3" /> الأكثر مبيعاً
             </span>
           )}
           {product.tags?.includes('gift') && (
-            <span className="bg-green-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+            <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-green-600 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-green-200 dark:border-green-900/50">
               <Gift className="w-3 h-3" /> هدية مجانية
             </span>
           )}
           {isPackage && product.bundle_items && product.bundle_items.length > 0 && (
-            <span className="bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+            <span className="bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-gray-700/50">
               {product.bundle_items.length} منتجات
             </span>
           )}
@@ -171,17 +128,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         
         {!product.inStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 backdrop-blur-[1px]">
-            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg transform -rotate-6">
+            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg transform -rotate-6 border border-red-400/50">
               نفدت الكمية
             </span>
           </div>
         )}
 
-        {isPackage && product.valid_until && new Date(product.valid_until) > new Date() && (
-          <CountdownTimer validUntil={product.valid_until} />
-        )}
-
-        <div className="absolute bottom-2 left-2 z-10">
+        <div className="absolute top-2 left-2 z-10">
           <button 
             type="button"
             onClick={(e) => { 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { WifiOff, CloudOff, Cloud, RefreshCw } from 'lucide-react';
-import { useSync } from '../contexts/SyncContext';
-import { useOnlineStatus } from '../hooks';
+import { useSync } from '../../contexts/SyncContext';
+import { useOnlineStatus } from '../../hooks/index';
 
 export const OfflineIndicator: React.FC = () => {
   const isOnline = useOnlineStatus();

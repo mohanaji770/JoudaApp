@@ -8,13 +8,13 @@ import { fetchProductsFromSupabase, Product, Recipe, Article } from '../services
 import { useLocation } from 'react-router-dom';
 
 // Extracted Sub-managers
-import { BadgeManager } from './admin/BadgeManager';
-import { PackageManager } from './admin/PackageManager';
-import { BannerManager } from './admin/BannerManager';
-import { RecipeManager } from './admin/RecipeManager';
-import { ArticleManager } from './admin/ArticleManager';
-import { FAQManager } from './admin/FAQManager';
-import { SettingsManager } from './admin/SettingsManager';
+import { BadgeManager } from '../components/admin/BadgeManager';
+import { PackageManager } from '../components/admin/PackageManager';
+import { BannerManager } from '../components/admin/BannerManager';
+import { RecipeManager } from '../components/admin/RecipeManager';
+import { ArticleManager } from '../components/admin/ArticleManager';
+import { FAQManager } from '../components/admin/FAQManager';
+import { SettingsManager } from '../components/admin/SettingsManager';
 
 interface Banner {
   id: string;

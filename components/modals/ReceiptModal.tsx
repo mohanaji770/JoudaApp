@@ -1,11 +1,11 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { getCachedProducts } from '../services/db';
+import { getCachedProducts } from '../../services/db';
 import { toBlob } from 'html-to-image';
 import { X, Share2, MapPin, User, FileText, ShoppingBag, Store, Scissors } from 'lucide-react';
-import { CartItem } from '../contexts/CartContext';
-import { STORE_CONFIG, APP_LOGO } from '../constants';
-import { useScrollLock } from '../hooks';
+import { CartItem } from '../../contexts/CartContext';
+import { STORE_CONFIG, APP_LOGO } from '../../constants';
+import { useScrollLock } from '../../hooks/index';
 
 interface ReceiptModalProps {
   items: CartItem[];

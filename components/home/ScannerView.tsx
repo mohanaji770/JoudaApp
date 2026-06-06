@@ -1,7 +1,7 @@
 import React from 'react';
-import { Scanner } from '../Scanner';
-import { ResultCard } from '../ResultCard';
-import { HistoryList } from '../HistoryList';
+import { Scanner } from '../ui/Scanner';
+import { ResultCard } from '../ui/ResultCard';
+import { HistoryList } from '../blog/HistoryList';
 import { AnalysisResult } from '../../types';
 import { ShieldAlert, X } from 'lucide-react';
 

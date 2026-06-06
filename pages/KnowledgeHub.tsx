@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, ChevronLeft, Lightbulb, ShieldAlert, ScanLine, UtensilsCrossed, ChefHat } from 'lucide-react';
 import { fetchArticlesFromSupabase, Article } from '../services/supabaseService';
-import { ArticleModal } from './ArticleModal';
+import { ArticleModal } from '../components/modals/ArticleModal';
 
 export const KnowledgeHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'blog' | 'tips'>('blog');

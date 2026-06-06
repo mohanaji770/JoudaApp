@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Flame, ChefHat, ArrowLeft, ArrowRight, BarChart3, ArrowUpLeft, Layers } from 'lucide-react';
-import { fetchRecipesFromSupabase, Recipe } from '../services/supabaseService';
+import { fetchRecipesFromSupabase, Recipe } from '../../services/supabaseService';
 
 const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';

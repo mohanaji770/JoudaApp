@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { History, Clock, ChevronLeft, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react';
-import { AnalysisResult, VerdictType } from '../types';
+import { AnalysisResult, VerdictType } from '../../types';
 
 interface HistoryListProps {
   history: AnalysisResult[];

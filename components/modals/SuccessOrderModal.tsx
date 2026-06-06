@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Copy, Share2, Home, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useScrollLock } from '../hooks';
+import { useScrollLock } from '../../hooks/index';
 
 interface SuccessOrderModalProps {
   orderNumber: string;

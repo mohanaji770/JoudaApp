@@ -41,10 +41,10 @@ export const FeaturedPackagesCarousel: React.FC<FeaturedPackagesCarouselProps> =
         <div>
           <h3 className="font-black text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
             <Gift className="w-4 h-4 text-amber-500" />
-            عروض وبكجات التوفير المميزة 🎁
+            بكجات التوفير 🎁
           </h3>
           <p className="text-[10px] text-gray-400 font-bold mt-0.5">
-            عروض متكاملة تضمن لك أفضل قيمة توفير
+            قيمة أفضل، توفير أكثر.
           </p>
         </div>
       </div>

@@ -66,11 +66,12 @@ interface EditBadgeModalProps {
   product: Product;
   isSaving: boolean;
   onClose: () => void;
-  onSave: (product: Product, tags: string[]) => Promise<void>;
+  onSave: (product: Product, tags: string[], description: string | null) => Promise<void>;
 }
 
 const EditBadgeModal: React.FC<EditBadgeModalProps> = ({ product, isSaving, onClose, onSave }) => {
   const [draftTags, setDraftTags] = useState<string[]>(product.tags || []);
+  const [draftDescription, setDraftDescription] = useState<string>(product.description || '');
 
   useEffect(() => {
     // Prevent background scrolling on mobile when modal is open
@@ -87,7 +88,7 @@ const EditBadgeModal: React.FC<EditBadgeModalProps> = ({ product, isSaving, onCl
   };
 
   const handleSave = () => {
-    onSave(product, draftTags);
+    onSave(product, draftTags, draftDescription.trim() || null);
   };
 
   return (
@@ -100,7 +101,7 @@ const EditBadgeModal: React.FC<EditBadgeModalProps> = ({ product, isSaving, onCl
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
           <div>
-            <h2 className="font-black text-gray-900 dark:text-white text-lg">تعديل الشارات</h2>
+            <h2 className="font-black text-gray-900 dark:text-white text-lg">تعديل تفاصيل المنتج</h2>
             <p className="text-xs text-brand-600 font-bold mt-0.5 truncate max-w-[250px]">{product.name}</p>
           </div>
           <button 
@@ -112,7 +113,21 @@ const EditBadgeModal: React.FC<EditBadgeModalProps> = ({ product, isSaving, onCl
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto space-y-3">
+        <div className="p-5 overflow-y-auto space-y-6">
+          {/* Description */}
+          <div className="space-y-2">
+             <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">وصف المنتج (يظهر في نافذة التفاصيل)</label>
+             <textarea 
+               value={draftDescription}
+               onChange={(e) => setDraftDescription(e.target.value)}
+               placeholder="اكتب وصفاً مميزاً للمنتج... إذا تركته فارغاً سيظهر النص الافتراضي."
+               className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[90px] resize-none text-gray-900 dark:text-white"
+             />
+          </div>
+
+          {/* Badges */}
+          <div className="space-y-3">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">الشارات والعلامات</label>
           {BADGE_OPTIONS.map(badge => {
             const isActive = draftTags.includes(badge.id);
             return (
@@ -144,6 +159,7 @@ const EditBadgeModal: React.FC<EditBadgeModalProps> = ({ product, isSaving, onCl
               </button>
             );
           })}
+          </div>
         </div>
 
         {/* Footer */}
@@ -196,15 +212,15 @@ export const BadgeManager: React.FC<BadgeManagerProps> = ({
     );
   }, [products, searchQuery]);
 
-  const handleSaveTags = async (product: Product, newTags: string[]) => {
+  const handleSaveTags = async (product: Product, newTags: string[], newDescription: string | null) => {
     setIsSaving(true);
     try {
-      await AdminProductService.updateTags(product.barcode, newTags);
+      await AdminProductService.updateProductDetails(product.barcode, newTags, newDescription);
       
       setProducts(prev =>
-        prev.map(p => (p.barcode === product.barcode ? { ...p, tags: newTags } : p))
+        prev.map(p => (p.barcode === product.barcode ? { ...p, tags: newTags, description: newDescription } : p))
       );
-      showSuccess('تم حفظ الشارات بنجاح');
+      showSuccess('تم حفظ التعديلات بنجاح');
       setSelectedProduct(null);
     } catch (err: any) {
       showError(err.message || 'فشل حفظ الشارات');

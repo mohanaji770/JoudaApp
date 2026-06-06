@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingBag, ChevronLeft, Phone } from 'lucide-react';
-import { STORE_CONFIG } from '../constants';
+import { STORE_CONFIG } from '../../constants';
 
 export const StoreBanner: React.FC = () => {
   return (

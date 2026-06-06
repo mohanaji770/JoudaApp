@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
-import { ReceiptModal } from './ReceiptModal';
-import { SuccessOrderModal } from './SuccessOrderModal';
+import { ReceiptModal } from './modals/ReceiptModal';
+import { SuccessOrderModal } from './modals/SuccessOrderModal';
 import { useScrollLock } from '../hooks';
 import { getCachedProducts } from '../services/db';
 import { useCheckout } from '../hooks/useCheckout';

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { toBlob } from 'html-to-image';
 import { X, Share2, CheckCircle, AlertTriangle, XCircle, Leaf, ScanLine, BadgeCheck } from 'lucide-react';
-import { AnalysisResult, VerdictType } from '../types';
+import { AnalysisResult, VerdictType } from '../../types';
 
 interface ShareModalProps {
   result: AnalysisResult;

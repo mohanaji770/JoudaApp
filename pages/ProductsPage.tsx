@@ -4,17 +4,17 @@ import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { fetchProductsFromSupabase, Product } from '../services/supabaseService';
 import { getCachedProducts } from '../services/db';
-import { ProductDetailsModal } from './ProductDetailsModal';
-import { ProductRequestModal } from './ProductRequestModal';
+import { ProductDetailsModal } from '../components/modals/ProductDetailsModal';
+import { ProductRequestModal } from '../components/modals/ProductRequestModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 
-import { StoreBakeryTabs } from './products/StoreBakeryTabs';
-import { ProductSearchBar } from './products/ProductSearchBar';
-import { FeaturedPackagesCarousel } from './products/FeaturedPackagesCarousel';
-import { ProductCard } from './products/ProductCard';
-import { FilterPanelModal, FilterState } from './products/FilterPanelModal';
-import { calculatePackageSavings } from './products/utils';
+import { StoreBakeryTabs } from '../components/products/StoreBakeryTabs';
+import { ProductSearchBar } from '../components/products/ProductSearchBar';
+import { FeaturedPackagesCarousel } from '../components/products/FeaturedPackagesCarousel';
+import { ProductCard } from '../components/products/ProductCard';
+import { FilterPanelModal, FilterState } from '../components/products/FilterPanelModal';
+import { calculatePackageSavings } from '../components/products/utils';
 
 interface ProductsPageProps {
   initialViewMode?: 'store' | 'bakery';
