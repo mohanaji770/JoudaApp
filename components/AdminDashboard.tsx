@@ -36,6 +36,7 @@ export const AdminDashboard: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -64,6 +65,7 @@ export const AdminDashboard: React.FC = () => {
       setError(err.message || 'فشل تحميل البيانات');
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -97,14 +99,14 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {loading && !success && (
+      {isInitialLoad && (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" />
         </div>
       )}
 
       {/* Managers Content */}
-      {!loading && activeTab === 'badges' && (
+      {!isInitialLoad && activeTab === 'badges' && (
         <BadgeManager
           products={products}
           setProducts={setProducts}
@@ -113,7 +115,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {!loading && activeTab === 'packages' && (
+      {!isInitialLoad && activeTab === 'packages' && (
         <PackageManager
           products={products}
           showSuccess={showSuccess}
@@ -124,7 +126,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {!loading && activeTab === 'banners' && (
+      {!isInitialLoad && activeTab === 'banners' && (
         <BannerManager
           banners={banners}
           showSuccess={showSuccess}
@@ -135,7 +137,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {!loading && activeTab === 'recipes' && (
+      {!isInitialLoad && activeTab === 'recipes' && (
         <RecipeManager
           recipes={recipes}
           showSuccess={showSuccess}
@@ -146,7 +148,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {!loading && activeTab === 'articles' && (
+      {!isInitialLoad && activeTab === 'articles' && (
         <ArticleManager
           articles={articles}
           showSuccess={showSuccess}
@@ -157,7 +159,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {activeTab === 'faq' && (
+      {!isInitialLoad && activeTab === 'faq' && (
         <FAQManager
           showSuccess={showSuccess}
           showError={showError}
@@ -166,7 +168,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
 
-      {activeTab === 'settings' && (
+      {!isInitialLoad && activeTab === 'settings' && (
         <SettingsManager
           showSuccess={showSuccess}
           showError={showError}

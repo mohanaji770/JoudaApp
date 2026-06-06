@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeCheck, Clock } from 'lucide-react';
 import { Product } from '../../services/supabaseService';
 
 interface ProductCardProps {
@@ -37,6 +37,49 @@ const HighlightedText: React.FC<{ text: string; highlight: string }> = ({ text, 
         )
       )}
     </>
+  );
+};
+
+// Countdown Timer Component
+const CountdownTimer: React.FC<{ validUntil: string }> = ({ validUntil }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const targetDate = new Date(validUntil).getTime();
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+
+      if (difference <= 0) {
+        setTimeLeft('انتهى العرض');
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        setTimeLeft(`${days} يوم و ${hours} ساعة`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours} ساعة و ${minutes} دقيقة`);
+      } else {
+        setTimeLeft(`${minutes} دقيقة`);
+      }
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [validUntil]);
+
+  return (
+    <div className="absolute top-2 left-2 z-30 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse-slow border border-amber-400/50">
+      <Clock className="w-3 h-3" />
+      <span dir="rtl">{timeLeft === 'انتهى العرض' ? timeLeft : `ينتهي خلال ${timeLeft}`}</span>
+    </div>
   );
 };
 
@@ -134,7 +177,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        <div className="absolute top-2 left-2 z-10">
+        {isPackage && product.valid_until && new Date(product.valid_until) > new Date() && (
+          <CountdownTimer validUntil={product.valid_until} />
+        )}
+
+        <div className="absolute bottom-2 left-2 z-10">
           <button 
             type="button"
             onClick={(e) => { 

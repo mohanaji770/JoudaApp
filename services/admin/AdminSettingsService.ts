@@ -12,26 +12,23 @@ export const AdminSettingsService = {
    * Fetches the single row from app_settings
    */
   async getSettings(): Promise<AppSettings | null> {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('*')
-      .eq('id', 1)
-      .single();
+    const { data, error } = await supabase.rpc('admin_get_app_settings');
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    if (error) {
       throw error;
     }
-    return data;
+    return data as AppSettings;
   },
 
   /**
    * Updates the settings. Assuming ID 1 is the universal settings row.
    */
   async updateSettings(payload: Partial<AppSettings>): Promise<void> {
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert({ id: 1, ...payload })
-      .select();
+    const { error } = await supabase.rpc('admin_update_app_settings', {
+      p_maintenance_mode: payload.maintenance_mode,
+      p_maintenance_message: payload.maintenance_message || null,
+      p_ai_api_key: payload.ai_api_key || null
+    });
 
     if (error) {
       throw error;

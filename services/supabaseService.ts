@@ -25,6 +25,7 @@ export interface Product {
   unit?: string;
   popular?: boolean;
   tags?: string[];
+  valid_until?: string | null;
   inStock?: boolean;
   source?: 'store' | 'bakery';
   bundle_items?: {
@@ -128,6 +129,7 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         stock_status: p.stock_status,
         unit: p.unit,
         tags: p.tags || [],
+        valid_until: p.valid_until,
         // Bakery items are always available (made-to-order)
         inStock: isBakery ? true : p.stock_status === 'available',
         source: isBakery ? ('bakery' as const) : ('store' as const),

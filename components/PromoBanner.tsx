@@ -19,6 +19,7 @@ export const PromoBanner: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { addToCart, setIsCartOpen } = useCart();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -102,8 +103,6 @@ export const PromoBanner: React.FC = () => {
   if (banners.length === 0) return null;
 
   const banner = banners[currentIndex];
-
-  const { addToCart, setIsCartOpen } = useCart();
 
   const handleClick = async () => {
     if (banner?.link_url) {
