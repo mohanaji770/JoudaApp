@@ -1,77 +1,295 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient, SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
-// Edge Function: submit-order
-// Receives order from JoudaApp frontend
-// Calls create_quotation() in Inventory Project via RPC
-// Stores result in JoudaApp customer_orders
-
-const corsHeaders = {
+const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// --- Types & Interfaces ---
+interface Config {
+  joudaUrl: string;
+  joudaAnonKey: string;
+  joudaServiceKey: string;
+  inventoryUrl: string;
+  inventoryKey: string;
+  systemUserUuid: string;
+  onlineWarehouseId: string;
+}
+
+interface OrderItemPayload {
+  product_barcode: string;
+  product_name?: string;
+  quantity: number;
+  unit_price: number;
+}
+
+interface OrderPayload {
+  customer_name: string;
+  customer_phone: string;
+  customer_address?: string;
+  order_type: string;
+  branch_id?: string;
+  payment_method?: string;
+  notes?: string;
+  items: OrderItemPayload[];
+  subtotal: number;
+  delivery_fee?: number;
+}
+
+interface RpcItem {
+  line_no: number;
+  product_barcode: string;
+  warehouse_id: string;
+  quantity: number;
+  unit_price: number;
+  expiry_date: string | null;
+}
+
+// --- 1. HTTP Helpers ---
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders,
-    },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
-// Telegram Notification Helper — with Inline Buttons
-async function sendTelegramNotification(orderData: {
-  orderId: string;
-  orderNumber: string;
-  customerName: string;
-  customerPhone: string;
-  customerAddress?: string;
-  total: number;
-  items: Array<{
-    product_name: string;
-    quantity: number;
-    is_package?: boolean;
-    sub_items?: Array<{ product_name: string; quantity: number }>;
-  }>;
-  notes?: string;
-}) {
-  const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
-  const chatIdsStr = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
+function handleCors() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
-  if (!botToken || !chatIdsStr) {
-    console.warn('Telegram notification skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_ADMIN_CHAT_ID');
-    return;
+// --- 2. Configuration & Validation ---
+function loadConfiguration(): Config {
+  const config = {
+    joudaUrl: Deno.env.get('SUPABASE_URL') || '',
+    joudaAnonKey: Deno.env.get('SUPABASE_ANON_KEY') || '',
+    joudaServiceKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+    inventoryUrl: Deno.env.get('INVENTORY_SUPABASE_URL') || '',
+    inventoryKey: Deno.env.get('INVENTORY_SERVICE_ROLE_KEY') || '',
+    systemUserUuid: Deno.env.get('SYSTEM_USER_UUID') || '',
+    onlineWarehouseId: Deno.env.get('ONLINE_WAREHOUSE_ID') || '',
+  };
+
+  const missing = Object.entries(config).filter(([k, v]) => !v && k !== 'joudaAnonKey');
+  if (missing.length > 0) {
+    throw new Error(`Missing server configuration: ${missing.map(m => m[0]).join(', ')}`);
   }
 
-  const { orderId, orderNumber, customerName, customerPhone, customerAddress, total, items } = orderData;
+  return config;
+}
 
-  const itemsList = items
-    .map((item) => {
-      if (item.is_package && item.sub_items && item.sub_items.length > 0) {
-        const subList = item.sub_items
-          .map((sub) => `      ▫️ 🛒 ${sub.product_name} × ${sub.quantity * item.quantity}`)
-          .join('\n');
-        return `• 📦 <b>${item.product_name}</b> × ${item.quantity}\n${subList}`;
-      } else {
-        return `• 🛒 ${item.product_name} × ${item.quantity}`;
+async function checkMaintenanceMode(config: Config): Promise<{ isMaintenance: boolean; message?: string }> {
+  if (!config.joudaAnonKey) return { isMaintenance: false };
+  try {
+    const anonClient = createClient(config.joudaUrl, config.joudaAnonKey, { auth: { persistSession: false } });
+    const { data } = await anonClient.from('app_settings_public').select('maintenance_mode, maintenance_message').eq('id', 1).single();
+    if (data?.maintenance_mode) return { isMaintenance: true, message: data.maintenance_message };
+  } catch (e) {
+    console.warn('Maintenance check failed, proceeding...', e);
+  }
+  return { isMaintenance: false };
+}
+
+function validatePayload(body: any): OrderPayload {
+  const { customer_name, customer_phone, items } = body;
+  if (!customer_name || !customer_phone || !Array.isArray(items) || items.length === 0) {
+    throw new Error('بيانات الطلب غير مكتملة أو السلة فارغة');
+  }
+
+  for (const item of items) {
+    if (!item.product_barcode || !item.quantity || item.quantity <= 0 || item.unit_price === undefined || item.unit_price < 0) {
+       throw new Error('توجد مشكلة في بيانات بعض المنتجات في السلة (الكمية أو السعر غير صالح)');
+    }
+  }
+
+  return body as OrderPayload;
+}
+
+// --- 3. Business Logic Helpers ---
+async function processPackagesAndExpiry(payload: OrderPayload, joudaClient: SupabaseClient, inventoryClient: SupabaseClient, warehouseId: string) {
+  const { items } = payload;
+  const itemBarcodes = items.map(i => i.product_barcode);
+  
+  const { data: packageMappings } = await joudaClient.from('package_items').select('package_barcode, product_barcode, quantity').in('package_barcode', itemBarcodes);
+  const baseBarcodes = packageMappings?.map(m => m.product_barcode) || [];
+  const { data: baseProducts } = baseBarcodes.length > 0 
+    ? await joudaClient.from('products').select('barcode, name, price').in('barcode', baseBarcodes)
+    : { data: [] };
+
+  const allBarcodesToQuery = [
+    ...items.filter(i => !i.product_barcode.startsWith('PKG-')).map(i => i.product_barcode),
+    ...baseBarcodes
+  ];
+
+  const { data: invProducts } = allBarcodesToQuery.length > 0
+    ? await inventoryClient.from('products').select('barcode, track_expiry').in('barcode', allBarcodesToQuery).eq('is_active', true)
+    : { data: [] };
+
+  const barcodesWithExpiry = (invProducts || []).filter(p => p.track_expiry).map(p => p.barcode);
+  const { data: activeBatches } = barcodesWithExpiry.length > 0
+    ? await inventoryClient.from('active_expiry_batches').select('product_barcode, expiry_date, remaining_qty').in('product_barcode', barcodesWithExpiry).eq('warehouse_id', warehouseId).gt('remaining_qty', 0).order('expiry_date', { ascending: true })
+    : { data: [] };
+
+  const resolveExpiryDate = async (barcode: string): Promise<string | null> => {
+    const isTracked = invProducts?.find(p => p.barcode === barcode)?.track_expiry;
+    if (!isTracked) return null;
+
+    const batch = activeBatches?.find(b => b.product_barcode === barcode && b.remaining_qty > 0);
+    if (batch) return batch.expiry_date;
+
+    try {
+      const { data: hist } = await inventoryClient.from('inventory_movements').select('expiry_date').eq('product_barcode', barcode).eq('action_type', 'IN').not('expiry_date', 'is', null).order('expiry_date', { ascending: false }).limit(1);
+      if (hist && hist.length > 0) return hist[0].expiry_date;
+    } catch {}
+
+    const fallback = new Date();
+    fallback.setMonth(fallback.getMonth() + 6);
+    return fallback.toISOString().split('T')[0];
+  };
+
+  const rpcItems: RpcItem[] = [];
+  let packageDiscount = 0;
+  let lineNo = 1;
+
+  for (const item of items) {
+    const isPackage = item.product_barcode.startsWith('PKG-');
+    
+    if (isPackage) {
+      const pkgItems = packageMappings?.filter(m => m.package_barcode === item.product_barcode) || [];
+      if (pkgItems.length === 0) throw new Error(`عذراً، البكج (${item.product_name}) غير مكتمل. يرجى إبلاغ الإدارة.`);
+
+      let totalBasePrice = 0;
+      for (const pItem of pkgItems) {
+        const baseProd = baseProducts?.find(bp => bp.barcode === pItem.product_barcode);
+        const basePrice = baseProd ? Number(baseProd.price) : 0;
+        totalBasePrice += (basePrice * pItem.quantity);
+        
+        rpcItems.push({
+          line_no: lineNo++,
+          product_barcode: pItem.product_barcode,
+          warehouse_id: warehouseId,
+          quantity: pItem.quantity * item.quantity,
+          unit_price: basePrice,
+          expiry_date: await resolveExpiryDate(pItem.product_barcode),
+        });
       }
-    })
-    .join('\n');
+      const expectedBaseTotal = totalBasePrice * item.quantity;
+      const actualPackageTotal = Number(item.unit_price) * item.quantity;
+      packageDiscount += (expectedBaseTotal - actualPackageTotal);
+    } else {
+      rpcItems.push({
+        line_no: lineNo++,
+        product_barcode: item.product_barcode,
+        warehouse_id: warehouseId,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        expiry_date: await resolveExpiryDate(item.product_barcode),
+      });
+    }
+  }
+
+  return { rpcItems, packageDiscount, packageMappings, baseProducts };
+}
+
+async function createInventoryQuotation(payload: OrderPayload, rpcItems: RpcItem[], packageDiscount: number, config: Config, inventoryClient: SupabaseClient, invoiceId: string, idempotencyKey: string, orderNumber: string) {
+  let combinedNotes = `رقم طلب التطبيق: ${orderNumber}`;
+  if (payload.notes) combinedNotes += `\nملاحظات العميل: ${payload.notes}`;
+  const finalAddress = payload.customer_address ? `${payload.customer_address}\n\n[ ${combinedNotes} ]` : `[ ${combinedNotes} ]`;
+
+  const { data: rpcResult, error: rpcError } = await inventoryClient.rpc('create_quotation', {
+    p_idempotency_key: idempotencyKey,
+    p_invoice_id: invoiceId,
+    p_customer_id: null,
+    p_customer_name_snapshot: payload.customer_name,
+    p_customer_phone_snapshot: payload.customer_phone || null,
+    p_customer_address_snapshot: finalAddress,
+    p_issuing_warehouse_id: config.onlineWarehouseId,
+    p_payment_method: payload.payment_method || 'CASH',
+    p_wallet_provider: null,
+    p_subtotal: payload.subtotal + packageDiscount,
+    p_discount: packageDiscount,
+    p_delivery_fee: payload.delivery_fee || 0,
+    p_collector_id: null,
+    p_created_by: config.systemUserUuid,
+    p_items: rpcItems,
+  });
+
+  if (rpcError) throw new Error('فشل حجز الطلب في نظام المخزون.');
+
+  let quotationResult: any = rpcResult;
+  if (typeof rpcResult === 'string') {
+    try { quotationResult = JSON.parse(rpcResult); } catch { /* ignore */ }
+  }
+
+  return {
+    quotationId: quotationResult?.invoice_id || invoiceId,
+    success: quotationResult?.success !== false
+  };
+}
+
+async function saveOrderLocally(payload: OrderPayload, quotationId: string, orderNumber: string, rpcSuccess: boolean, joudaClient: SupabaseClient) {
+  const total = payload.subtotal + (payload.delivery_fee || 0);
+
+  const { data: insertedOrder, error: insertError } = await joudaClient.from('customer_orders').insert({
+    quotation_id: quotationId,
+    order_number: orderNumber,
+    customer_name: payload.customer_name,
+    customer_phone: payload.customer_phone,
+    customer_address: payload.customer_address || null,
+    order_type: payload.order_type,
+    branch_id: payload.branch_id || null,
+    subtotal: payload.subtotal,
+    discount: 0,
+    delivery_fee: payload.delivery_fee || 0,
+    total,
+    payment_method: payload.payment_method || 'CASH',
+    notes: payload.notes || null,
+    status: rpcSuccess ? 'submitted' : 'failed',
+  }).select().single();
+
+  if (insertError) throw new Error(`Insert order error: ${insertError.message}`);
+
+  const orderItemsToInsert = payload.items.map(item => ({
+    order_id: insertedOrder.id,
+    product_barcode: item.product_barcode,
+    product_name: item.product_name || item.product_barcode,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    total_price: item.quantity * item.unit_price,
+  }));
+
+  const { error: itemsError } = await joudaClient.from('order_items').insert(orderItemsToInsert);
+  if (itemsError) throw new Error(`Insert items error: ${itemsError.message}`);
+
+  return insertedOrder;
+}
+
+async function voidQuotation(quotationId: string, config: Config, inventoryClient: SupabaseClient) {
+  try {
+    await inventoryClient.rpc('void_quotation', { p_invoice_id: quotationId, p_actor_user_id: config.systemUserUuid });
+    console.log('Compensation successful: quotation voided');
+  } catch (compErr) {
+    console.error('Compensation failed:', compErr);
+  }
+}
+
+// --- 4. Telegram Notification Engine ---
+function buildTelegramMessage(orderData: any): string {
+  const { orderNumber, customerName, customerPhone, customerAddress, total, items, notes } = orderData;
+  const itemsList = items.map((item: any) => {
+    if (item.is_package && item.sub_items && item.sub_items.length > 0) {
+      const subList = item.sub_items.map((sub: any) => `      ▫️ 🛒 ${sub.product_name} × ${sub.quantity * item.quantity}`).join('\n');
+      return `• 📦 <b>${item.product_name}</b> × ${item.quantity}\n${subList}`;
+    }
+    return `• 🛒 ${item.product_name} × ${item.quantity}`;
+  }).join('\n');
 
   const now = new Date();
-  const y = now.getFullYear();
-  const mo = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  let h = now.getHours();
-  const period = h >= 12 ? 'م' : 'ص';
-  h = h % 12; if (h === 0) h = 12;
-  const mi = String(now.getMinutes()).padStart(2, '0');
-  const dateStr = `${y}-${mo}-${d} ${h}:${mi} ${period}`;
+  let h = now.getHours(); const period = h >= 12 ? 'م' : 'ص'; h = h % 12 || 12;
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${String(now.getMinutes()).padStart(2,'0')} ${period}`;
+  const notesLine = notes ? `\n📝 <b>ملاحظات:</b> <code>${notes}</code>\n` : '';
 
-  const notesLine = orderData.notes ? `\n📝 <b>ملاحظات:</b> <code>${orderData.notes}</code>\n` : '';
-  const message = `
+  return `
 📥 <b>طلب جديد من التطبيق 📱</b>
 ━━━━━━━━━━━━━━━━━━━
 🆔 <b>رقم الطلب:</b> <code>#${orderNumber}</code>
@@ -86,428 +304,126 @@ ${notesLine}━━━━━━━━━━━━━━━━━━━
 ━━━━━━━━━━━━━━━━━━━
 ⏱️ <b>التوقيت:</b> <code>${dateStr}</code>
 `.trim();
+}
 
-  // Admin Approval Buttons (Only for Admins)
+async function dispatchTelegramNotification(message: string, orderId: string) {
+  const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+  const chatIdsStr = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
+  if (!botToken || !chatIdsStr) return;
+
   const inline_keyboard = [
     [{ text: '✅ اعتماد الطلب (إرسال للجروب)', callback_data: `wf_approve_${orderId}` }],
     [{ text: '❌ رفض وإلغاء الطلب', callback_data: `wf_reject_${orderId}` }]
   ];
 
-  const chatIds = chatIdsStr.split(',').map(id => id.trim()).filter(id => id);
-  // Filter for private admin chats only (IDs without a minus sign)
-  const adminIds = chatIds.filter(id => !id.startsWith('-'));
+  const adminIds = chatIdsStr.split(',').map(id => id.trim()).filter(id => id && !id.startsWith('-'));
 
   for (const chatId of adminIds) {
     try {
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'HTML',
-          reply_markup: { inline_keyboard },
-        }),
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML', reply_markup: { inline_keyboard } }),
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error(`Telegram notification failed for ${chatId}:`, error);
-      }
     } catch (e) {
       console.error(`Telegram notification error for ${chatId}:`, e);
     }
   }
 }
 
+// --- 5. Main Route Handler ---
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
-  }
-
-  if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
+  // 1. CORS
+  if (req.method === 'OPTIONS') return handleCors();
+  if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
 
   try {
-    // Check maintenance mode first (use anon key for public reads)
-    const joudaUrl = Deno.env.get('SUPABASE_URL');
-    const joudaAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const joudaServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // 2. Setup
+    const config = loadConfiguration();
     
-    if (joudaUrl && joudaAnonKey) {
-      const anonClient = createClient(joudaUrl, joudaAnonKey, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-      
-      const { data: settings } = await anonClient
-        .from('app_settings_public')
-        .select('maintenance_mode, maintenance_message')
-        .eq('id', 1)
-        .single();
-        
-      if (settings?.maintenance_mode) {
-        return jsonResponse({ 
-          success: false, 
-          message: settings.maintenance_message || 'النظام تحت الصيانة حالياً' 
-        }, 503);
-      }
+    // 3. Maintenance Check
+    const { isMaintenance, message } = await checkMaintenanceMode(config);
+    if (isMaintenance) return jsonResponse({ success: false, message: message || 'النظام تحت الصيانة حالياً' }, 503);
+
+    // 4. Input Validation
+    let payload: OrderPayload;
+    try {
+      payload = validatePayload(await req.json());
+    } catch (e: any) {
+      return jsonResponse({ success: false, message: e.message || 'Invalid JSON format' }, 400);
     }
 
-    if (!joudaUrl || !joudaServiceKey) {
-      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    }
-
-    const inventoryUrl = Deno.env.get('INVENTORY_SUPABASE_URL')!;
-    const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY')!;
-    const systemUserUuid = Deno.env.get('SYSTEM_USER_UUID')!;
-    const onlineWarehouseId = Deno.env.get('ONLINE_WAREHOUSE_ID')!;
-
-    if (!inventoryUrl || !inventoryKey || !systemUserUuid || !onlineWarehouseId) {
-      return jsonResponse({ success: false, message: 'Missing server configuration' }, 500);
-    }
-
-    const body = await req.json();
-    const { customer_name, customer_phone, customer_address, order_type, branch_id, payment_method, notes, items, subtotal, delivery_fee } = body;
-
-    if (!customer_name || !customer_phone || !items || items.length === 0) {
-      return jsonResponse({ success: false, message: 'Missing required fields' }, 400);
-    }
-
+    const joudaClient = createClient(config.joudaUrl, config.joudaServiceKey, { auth: { persistSession: false } });
+    const inventoryClient = createClient(config.inventoryUrl, config.inventoryKey, { auth: { persistSession: false } });
+    
     const invoiceId = crypto.randomUUID();
     const idempotencyKey = crypto.randomUUID();
 
-    // 1. Initialize JoudaApp Client FIRST
-    const joudaClient = createClient(joudaUrl, joudaServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    // 2. Connect to Inventory
-    const inventoryClient = createClient(inventoryUrl, inventoryKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    // Handle Packages: decompose packages into their base products and calculate package discount
-    const itemBarcodes = items.map((i: any) => i.product_barcode);
-    const { data: packageMappings } = await joudaClient
-      .from('package_items')
-      .select('package_barcode, product_barcode, quantity')
-      .in('package_barcode', itemBarcodes);
-
-    let packageDiscount = 0;
-    const rpcItems: any[] = [];
-    let lineNo = 1;
-
-    let baseProducts: any[] = [];
-    if (packageMappings && packageMappings.length > 0) {
-      const baseBarcodes = packageMappings.map((m: any) => m.product_barcode);
-      const { data } = await joudaClient
-        .from('products')
-        .select('barcode, name, price')
-        .in('barcode', baseBarcodes);
-      if (data) baseProducts = data;
-    }
-
-    // 3. Resolve track_expiry setting from inventory database for all items
-    const allBarcodesToQuery = [
-      ...items.filter((i: any) => !String(i.product_barcode).startsWith('PKG-')).map((i: any) => i.product_barcode),
-      ...(packageMappings || []).map((m: any) => m.product_barcode)
-    ];
-
-    let invProducts: any[] = [];
-    if (allBarcodesToQuery.length > 0) {
-      const { data: fetchedInvProducts, error: invProdError } = await inventoryClient
-        .from('products')
-        .select('barcode, track_expiry')
-        .in('barcode', allBarcodesToQuery)
-        .eq('is_active', true);
-      if (invProdError) {
-        console.error('Error fetching track_expiry from inventory database:', invProdError);
-      }
-      if (fetchedInvProducts) invProducts = fetchedInvProducts;
-    }
-
-    // 4. Retrieve active expiry batches from the materialized view
-    const barcodesWithExpiry = invProducts
-      .filter((p: any) => p.track_expiry === true)
-      .map((p: any) => p.barcode);
-
-    let activeBatches: any[] = [];
-    if (barcodesWithExpiry.length > 0) {
-      const { data: fetchedBatches, error: batchErr } = await inventoryClient
-        .from('active_expiry_batches')
-        .select('product_barcode, expiry_date, remaining_qty')
-        .in('product_barcode', barcodesWithExpiry)
-        .eq('warehouse_id', onlineWarehouseId)
-        .gt('remaining_qty', 0)
-        .order('expiry_date', { ascending: true });
-      if (batchErr) {
-        console.error('Error fetching active expiry batches:', batchErr);
-      }
-      if (fetchedBatches) activeBatches = fetchedBatches;
-    }
-
-    // Helper function to resolve expiry_date
-    const resolveExpiryDate = async (barcode: string): Promise<string | null> => {
-      const isExpiryTracked = invProducts.find((p: any) => p.barcode === barcode)?.track_expiry === true;
-      if (!isExpiryTracked) return null;
-
-      // Try active batches in the online warehouse
-      const matchedBatches = activeBatches.filter(
-        (b: any) => b.product_barcode === barcode && Number(b.remaining_qty) > 0
-      );
-      if (matchedBatches.length > 0) {
-        return matchedBatches[0].expiry_date;
-      }
-
-      // Try historical incoming movements
-      try {
-        const { data: hist, error: histError } = await inventoryClient
-          .from('inventory_movements')
-          .select('expiry_date')
-          .eq('product_barcode', barcode)
-          .eq('action_type', 'IN')
-          .not('expiry_date', 'is', null)
-          .order('expiry_date', { ascending: false })
-          .limit(1);
-
-        if (!histError && hist && hist.length > 0) {
-          return hist[0].expiry_date;
-        }
-      } catch (e) {
-        console.error(`Historical expiry lookup failed for ${barcode}:`, e);
-      }
-
-      // Fallback: 6 months in the future
-      const fallback = new Date();
-      fallback.setMonth(fallback.getMonth() + 6);
-      return fallback.toISOString().split('T')[0];
-    };
-
-    for (const item of items) {
-      const isPackage = String(item.product_barcode).startsWith('PKG-');
-      const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
-      
-      if (isPackage) {
-        if (pkgItems.length === 0) {
-          return jsonResponse({ 
-            success: false, 
-            message: `عذراً، العرض/البكج (${item.product_name || item.product_barcode}) غير مكتمل (لا يحتوي على منتجات محددة). يرجى إبلاغ الإدارة.`
-          }, 400);
-        }
-
-        let totalBasePrice = 0;
-        for (const pItem of pkgItems) {
-          const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
-          const basePrice = baseProd ? Number(baseProd.price) : 0;
-          totalBasePrice += (basePrice * pItem.quantity);
-          
-          const expiryDate = await resolveExpiryDate(pItem.product_barcode);
-          
-          rpcItems.push({
-            line_no: lineNo++,
-            product_barcode: pItem.product_barcode,
-            warehouse_id: onlineWarehouseId,
-            quantity: pItem.quantity * item.quantity,
-            unit_price: basePrice,
-            expiry_date: expiryDate,
-          });
-        }
-        
-        // Discount = (Sum of base prices) - (Package price), all multiplied by how many packages bought
-        const expectedBaseTotal = totalBasePrice * item.quantity;
-        const actualPackageTotal = Number(item.unit_price) * item.quantity;
-        packageDiscount += (expectedBaseTotal - actualPackageTotal);
-      } else {
-        // Normal product
-        const expiryDate = await resolveExpiryDate(item.product_barcode);
-
-        rpcItems.push({
-          line_no: lineNo++,
-          product_barcode: item.product_barcode,
-          warehouse_id: onlineWarehouseId,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          expiry_date: expiryDate,
-        });
-      }
-    }
-
-    const total = subtotal + delivery_fee;
-
-    // JoudaApp Client already initialized above
-
     let orderNumber = 'J-0000';
     try {
-      const { data: orderNumberResult, error: seqError } = await joudaClient
-        .rpc('generate_order_number');
-      
-      if (seqError) {
-        console.error('Sequence Error:', seqError);
-      }
-      
-      orderNumber = orderNumberResult || 'J-0000';
-    } catch (e) {
-      console.error('generate_order_number failed:', e);
-    }
+      const { data } = await joudaClient.rpc('generate_order_number');
+      if (data) orderNumber = data;
+    } catch {}
 
-    // Embed order_number and notes in the address so the POS cashier sees them
-    let combinedNotes = `رقم طلب التطبيق: ${orderNumber}`;
-    if (notes) {
-      combinedNotes += `\nملاحظات العميل: ${notes}`;
-    }
-    const finalAddress = customer_address 
-      ? `${customer_address}\n\n[ ${combinedNotes} ]`
-      : `[ ${combinedNotes} ]`;
+    // 5. Business Logic: Packages & Expiry
+    const { rpcItems, packageDiscount, packageMappings, baseProducts } = await processPackagesAndExpiry(payload, joudaClient, inventoryClient, config.onlineWarehouseId);
+    
+    // 6. Create Quotation in Inventory
+    const { quotationId, success: rpcSuccess } = await createInventoryQuotation(payload, rpcItems, packageDiscount, config, inventoryClient, invoiceId, idempotencyKey, orderNumber);
 
-    const { data: rpcResult, error: rpcError } = await inventoryClient.rpc('create_quotation', {
-      p_idempotency_key: idempotencyKey,
-      p_invoice_id: invoiceId,
-      p_customer_id: null,
-      p_customer_name_snapshot: customer_name,
-      p_customer_phone_snapshot: customer_phone || null,
-      p_customer_address_snapshot: finalAddress,
-      p_issuing_warehouse_id: onlineWarehouseId,
-      p_payment_method: payment_method || 'CASH',
-      p_wallet_provider: null,
-      p_subtotal: subtotal + packageDiscount,
-      p_discount: packageDiscount,
-      p_delivery_fee: delivery_fee || 0,
-      p_collector_id: null,
-      p_created_by: systemUserUuid,
-      p_items: rpcItems,
-    });
-
-    if (rpcError) {
-      console.error('RPC Error:', rpcError);
-      return jsonResponse({ success: false, message: rpcError.message || 'Failed to create quotation' }, 500);
-    }
-
-    // Parse RPC result
-    let quotationResult: any = rpcResult;
-    if (typeof rpcResult === 'string') {
-      try { quotationResult = JSON.parse(rpcResult); } catch { /* keep as string */ }
-    }
-
-    const quotationId = quotationResult?.invoice_id || invoiceId;
-    const rpcSuccess = quotationResult?.success !== false;
-
-    // 3. Store in JoudaApp local database
+    // 7. Save to JoudaApp & Compensate on Failure
     let orderRecord: any = null;
-
     try {
-      const { data: insertedOrder, error: insertError } = await joudaClient
-        .from('customer_orders')
-        .insert({
-          quotation_id: quotationId,
-          order_number: orderNumber,
-          customer_name,
-          customer_phone,
-          customer_address: customer_address || null,
-          order_type,
-          branch_id: branch_id || null,
-          subtotal,
-          discount: 0,
-          delivery_fee: delivery_fee || 0,
-          total,
-          payment_method: payment_method || 'CASH',
-          notes: notes || null,
-          status: rpcSuccess ? 'submitted' : 'failed',
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        throw new Error(`Failed to insert order: ${insertError.message}`);
-      }
-      orderRecord = insertedOrder;
-
-      // Store order items
-      if (orderRecord?.id) {
-        const orderItemsToInsert = items.map((item: any) => ({
-          order_id: orderRecord.id,
-          product_barcode: item.product_barcode,
-          product_name: item.product_name || item.product_barcode,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.quantity * item.unit_price,
-        }));
-
-        const { error: itemsError } = await joudaClient
-          .from('order_items')
-          .insert(orderItemsToInsert);
-
-        if (itemsError) {
-          console.error('Insert order items error:', itemsError);
-          // Non-critical: order exists but items failed. Don't roll back.
-        }
-      }
-    } catch (localErr: any) {
-      // Compensation: Cancel the quotation in Inventory since local save failed
-      console.error('Local save failed, attempting compensation:', localErr);
-      try {
-        const suid = Deno.env.get('SYSTEM_USER_UUID') || 'system';
-        await inventoryClient.rpc('reverse_invoice', {
-          p_invoice_id: quotationId,
-          p_actor_user_id: suid,
-          p_reason: 'Compensation: JoudaApp insert failed',
-          p_idempotency_key: crypto.randomUUID(),
-        });
-        console.log('Compensation successful: quotation reversed');
-      } catch (compErr) {
-        console.error('Compensation failed:', compErr);
-      }
-      return jsonResponse({ success: false, message: 'فشل حفظ الطلب محلياً. تم إلغاء الحجز.' }, 500);
+      orderRecord = await saveOrderLocally(payload, quotationId, orderNumber, rpcSuccess, joudaClient);
+    } catch (localErr) {
+      console.error('Local DB Failure. Initiating Rollback:', localErr);
+      await voidQuotation(quotationId, config, inventoryClient);
+      return jsonResponse({ success: false, message: 'فشل حفظ الطلب محلياً. تم إلغاء الحجز تلقائياً.' }, 500);
     }
 
-    // Send Telegram notification on success
-    if (rpcSuccess) {
-      await sendTelegramNotification({
-        orderId: orderRecord?.id || '',
+    // 8. Telegram Background Notification
+    if (rpcSuccess && orderRecord) {
+      const notificationData = {
+        orderId: orderRecord.id,
         orderNumber,
-        customerName: customer_name,
-        customerPhone: customer_phone,
-        customerAddress: customer_address,
-        total,
-        notes: notes || undefined,
-        items: items.map((item: any) => {
+        customerName: payload.customer_name,
+        customerPhone: payload.customer_phone,
+        customerAddress: payload.customer_address,
+        total: payload.subtotal + (payload.delivery_fee || 0),
+        notes: payload.notes,
+        items: payload.items.map((item: any) => {
           const isPackage = String(item.product_barcode).startsWith('PKG-');
-          let subItems: Array<{ product_name: string; quantity: number }> = [];
-          if (isPackage) {
-            const pkgItems = packageMappings ? packageMappings.filter((m: any) => m.package_barcode === item.product_barcode) : [];
-            subItems = pkgItems.map((pItem: any) => {
-              const baseProd = baseProducts.find((bp: any) => bp.barcode === pItem.product_barcode);
-              return {
-                product_name: baseProd ? baseProd.name : pItem.product_barcode,
-                quantity: pItem.quantity,
-              };
+          let subItems: any[] = [];
+          if (isPackage && packageMappings) {
+            subItems = packageMappings.filter((m: any) => m.package_barcode === item.product_barcode).map((pItem: any) => {
+              const baseProd = baseProducts?.find((bp: any) => bp.barcode === pItem.product_barcode);
+              return { product_name: baseProd ? baseProd.name : pItem.product_barcode, quantity: pItem.quantity };
             });
           }
-          return {
-            product_name: item.product_name,
-            quantity: item.quantity,
-            is_package: isPackage,
-            sub_items: isPackage ? subItems : undefined,
-          };
+          return { product_name: item.product_name, quantity: item.quantity, is_package: isPackage, sub_items: isPackage ? subItems : undefined };
         }),
-      });
+      };
+
+      const tgMessage = buildTelegramMessage(notificationData);
+      const notifyPromise = dispatchTelegramNotification(tgMessage, orderRecord.id).catch(e => console.error('TG Background Error:', e));
+
+      // Non-blocking wait
+      if (typeof (globalThis as any).EdgeRuntime !== 'undefined') {
+        (globalThis as any).EdgeRuntime.waitUntil(notifyPromise);
+      }
     }
 
+    // 9. Instant Response
     return jsonResponse({
       success: rpcSuccess,
       order_number: orderNumber,
       quotation_id: quotationId,
       order_id: orderRecord?.id || null,
-      message: rpcSuccess
-        ? 'Order submitted successfully'
-        : quotationResult?.message || 'Quotation creation returned unclear result',
+      message: 'تم إرسال الطلب بنجاح',
     });
+
   } catch (error: any) {
-    console.error('submit-order error:', error);
-    return jsonResponse({ success: false, message: error.message || 'Internal server error' }, 500);
+    console.error('Critical request error:', error);
+    return jsonResponse({ success: false, message: error.message || 'حدث خطأ غير متوقع' }, 400);
   }
 });

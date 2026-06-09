@@ -180,7 +180,7 @@ export async function handleWfCallback(
     order.customer_phone
   ) {
     const msgs: Record<string, string> = {
-      preparing: 'طلبك قيد التحضير الآن 👨‍🍳',
+      preparing: 'جاري تجميع وتجهيز طلبك 📦',
       delivered: 'تم تسليم طلبك. شكراً لتسوقك من جودة 🎉',
     };
     const waText = `*جودة — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جودة`;
@@ -342,7 +342,26 @@ async function handleReject(
   userName: string,
 ) {
   const messageId = callback.message?.message_id;
-  const { jouda } = getClients();
+  const { jouda, inventory } = getClients();
+
+  // Void the quotation in Inventory to prevent it from hanging forever
+  if (order.quotation_id) {
+    const suid = env.systemUserId();
+    const { error: voidErr } = await inventory.rpc('void_quotation', {
+      p_invoice_id: order.quotation_id,
+      p_actor_user_id: suid
+    });
+    
+    if (voidErr) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل أرشفة عرض السعر في المخزون: ${voidErr.message}`,
+        true,
+      );
+      return;
+    }
+  }
 
   const { data: updated, error } = await jouda
     .from('customer_orders')

@@ -36,12 +36,16 @@ Deno.serve(async (req: Request) => {
     const inventoryKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
     const joudaUrl = Deno.env.get('SUPABASE_URL');
     const joudaServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const onlineWarehouseId = Deno.env.get('ONLINE_WAREHOUSE_ID');
 
     if (!inventoryUrl || !inventoryKey) {
       throw new Error('Missing INVENTORY_SUPABASE_URL or INVENTORY_SERVICE_ROLE_KEY');
     }
     if (!joudaUrl || !joudaServiceKey) {
       throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    }
+    if (!onlineWarehouseId) {
+      throw new Error('Missing ONLINE_WAREHOUSE_ID');
     }
 
     // 1. Connect to Inventory Project
@@ -52,7 +56,7 @@ Deno.serve(async (req: Request) => {
     // 2. Fetch products from Inventory
     const { data: inventoryProducts, error: productsError } = await inventoryClient
       .from('products')
-      .select('barcode, name, price, category, image_url, is_active, unit, min_stock')
+      .select('barcode, name, price, category, image_url, is_active, unit, min_stock, is_stock_tracked')
       .eq('is_active', true);
 
     if (productsError) throw productsError;
@@ -63,10 +67,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 3. Fetch stock summary from Inventory View
+    // 3. Fetch stock summary from Inventory View (Filtered by Online Warehouse)
     const { data: stockData, error: stockError } = await inventoryClient
       .from('product_stock_summary')
-      .select('product_barcode, current_stock');
+      .select('product_barcode, current_stock')
+      .eq('warehouse_id', onlineWarehouseId);
 
     if (stockError) {
       console.warn('Failed to fetch stock summary:', stockError.message);
@@ -81,9 +86,11 @@ Deno.serve(async (req: Request) => {
     }
 
     // 5. Prepare upsert data
-    const productsToUpsert = (inventoryProducts as InventoryProduct[]).map((p) => {
+    const productsToUpsert = (inventoryProducts as any[]).map((p) => {
       const stockQty = stockMap.get(p.barcode) ?? 0;
       const isBakery = (p.category ?? '') === 'مخبوزات';
+      const isAlwaysAvailable = p.is_stock_tracked === false || isBakery;
+      
       return {
         barcode: p.barcode,
         name: p.name,
@@ -91,8 +98,7 @@ Deno.serve(async (req: Request) => {
         category: p.category ?? 'عام',
         image_url: p.image_url,
         is_active: p.is_active,
-        // Bakery items are always available (made-to-order), others follow stock
-        stock_status: isBakery ? 'available' : (stockQty > 0 ? 'available' : 'out_of_stock'),
+        stock_status: isAlwaysAvailable ? 'available' : (stockQty > 0 ? 'available' : 'out_of_stock'),
         unit: p.unit ?? 'piece',
         min_stock: p.min_stock ?? 0,
         last_synced: new Date().toISOString(),
@@ -116,7 +122,7 @@ Deno.serve(async (req: Request) => {
       const { error: deactivateError } = await joudaClient
         .from('products')
         .update({ is_active: false })
-        .not('barcode', 'in', activeBarcodes)
+        .not('barcode', 'in', `(${activeBarcodes.join(',')})`)
         .neq('category', 'عروض وبكجات');
       if (deactivateError) {
         console.warn('Failed to deactivate stale products:', deactivateError.message);
