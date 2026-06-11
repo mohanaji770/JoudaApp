@@ -82,38 +82,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
           </div>
         </div>
 
-        <div>
-          <label className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
-            منطقة التوصيل *
-            {isSaved('jouda_delivery_zone', deliveryZone) && (
-              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
-            )}
-          </label>
-          <div className="grid grid-cols-1 gap-2">
-            {[
-              { id: 'sanaa_near', label: 'صنعاء (الجراف والستين وما جاورها)' },
-              { id: 'sanaa_far', label: 'صنعاء (مناطق أخرى)' },
-              { id: 'provinces', label: 'محافظات أخرى' }
-            ].map(zone => (
-              <button
-                key={zone.id}
-                onClick={() => setDeliveryZone(zone.id)}
-                className={`py-3.5 px-4 rounded-xl border-2 font-bold text-base transition-all flex items-center gap-3 ${
-                  deliveryZone === zone.id
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 shadow-sm'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  deliveryZone === zone.id ? 'border-brand-500' : 'border-gray-300 dark:border-gray-600'
-                }`}>
-                  {deliveryZone === zone.id && <div className="w-2.5 h-2.5 bg-brand-500 rounded-full" />}
-                </div>
-                <span>{zone.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         <div>
           <label htmlFor="cart-address" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">

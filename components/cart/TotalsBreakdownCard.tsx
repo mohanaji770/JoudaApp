@@ -26,11 +26,7 @@ export const TotalsBreakdownCard: React.FC<TotalsBreakdownCardProps> = ({
     )}
     <div className="flex justify-between text-sm font-bold">
       <span className="text-gray-600 dark:text-gray-400">رسوم التوصيل</span>
-      {isFreeDelivery ? (
-        <span className="text-green-600">مجاناً! 🎉</span>
-      ) : (
-        <span className="text-gray-800 dark:text-gray-200 tabular-nums">{currentFee.toLocaleString('en-US')} ريال</span>
-      )}
+      <span className="text-gray-800 dark:text-gray-200">تُحدد لاحقاً بناءً على الموقع</span>
     </div>
   </section>
 );

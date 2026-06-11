@@ -118,11 +118,7 @@ export const CartDrawer: React.FC = () => {
                         handleDecrease={handleDecrease}
                         handleRemove={handleRemove}
                       />
-                      <DeliveryProgressBar
-                        isFreeDelivery={checkout.isFreeDelivery}
-                        deliveryProgress={checkout.deliveryProgress}
-                        deliveryRemaining={checkout.deliveryRemaining}
-                      />
+
                       <TotalsBreakdownCard
                         currentSubtotal={checkout.currentSubtotal}
                         totalSavings={checkout.totalSavings}

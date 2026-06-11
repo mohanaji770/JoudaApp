@@ -69,20 +69,18 @@ export const useCheckout = (
   }, [items, cachedProducts]);
 
   const { currentFee, isFreeDelivery } = useMemo(() => {
-    const config = DELIVERY_CONFIG[deliveryZone] || DELIVERY_CONFIG.sanaa_near;
-    const isFree = currentSubtotal >= config.freeTarget;
     return {
-      currentFee: isFree ? 0 : config.fee,
-      isFreeDelivery: isFree
+      currentFee: 0,
+      isFreeDelivery: true
     };
-  }, [deliveryZone, currentSubtotal]);
+  }, []);
 
   const grandTotal = currentSubtotal + currentFee;
   const isFormValid = customerName.trim() !== '' && phone.trim() !== '' && address.trim() !== '';
 
   const config = DELIVERY_CONFIG[deliveryZone] || DELIVERY_CONFIG.sanaa_near;
-  const deliveryProgress = Math.min((currentSubtotal / config.freeTarget) * 100, 100);
-  const deliveryRemaining = Math.max(config.freeTarget - currentSubtotal, 0);
+  const deliveryProgress = 100;
+  const deliveryRemaining = 0;
 
   const isSaved = (key: string, val: string) => !!val && localStorage.getItem(key) === val;
 

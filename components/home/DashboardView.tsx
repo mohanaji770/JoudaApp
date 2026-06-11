@@ -58,7 +58,7 @@ export const DashboardView: React.FC = () => {
           {/* Text Area */}
           <div className="flex-1 text-right">
             <h3 className="font-black text-gray-900 dark:text-white text-[15px] mb-0.5">افحص أي منتج الآن</h3>
-            <p className="text-[11px] text-gray-500 font-bold">بالكاميرا أو البحث الكتابي.. وتأكد هل هو مسموح!</p>
+            <p className="text-[11px] text-gray-500 font-bold">بالكاميرا أو البحث النصي.. وتأكد هل هو خالي من الجلوتين!</p>
           </div>
 
           {/* Search Icon Hint */}
@@ -70,24 +70,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Minimal Categories (Bento Style) */}
       <div className="grid grid-cols-2 gap-3 mb-8 px-4">
-        <button
-          onClick={() => navigate('/recipes')}
-          className="group relative h-28 rounded-[1.5rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-10 h-10 rounded-[0.8rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-               <ChefHat className="w-5 h-5 text-orange-500 dark:text-orange-400" />
-            </div>
-            <div className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ChevronLeft className="w-3 h-3 text-gray-400" />
-            </div>
-          </div>
-          <div>
-            <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight mb-1">مخبز جودة</h3>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-snug line-clamp-1">وصفات وأكلات صحية</p>
-          </div>
-        </button>
-
+        {/* متجر جودة - الآن في اليمين */}
         <button
           onClick={() => navigate('/products')}
           className="group relative h-28 rounded-[1.5rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between"
@@ -103,6 +86,25 @@ export const DashboardView: React.FC = () => {
           <div>
             <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight mb-1">متجر جودة </h3>
             <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-snug line-clamp-1">كافة المنتجات والمقاضي</p>
+          </div>
+        </button>
+
+        {/* مخبز جودة - الآن في اليسار */}
+        <button
+          onClick={() => navigate('/recipes')}
+          className="group relative h-28 rounded-[1.5rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="w-10 h-10 rounded-[0.8rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
+               <ChefHat className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+            </div>
+            <div className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <ChevronLeft className="w-3 h-3 text-gray-400" />
+            </div>
+          </div>
+          <div>
+            <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight mb-1">مخبز جودة</h3>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-snug line-clamp-1">وصفات وأكلات صحية</p>
           </div>
         </button>
       </div>
