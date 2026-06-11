@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Image as ImageIcon, Save, Edit, Trash2 } from 'lucide-react';
 import { AdminContentService } from '../../services/admin/AdminContentService';
+import { ImageUploadInput } from './ImageUploadInput';
 
 interface Banner {
   id: string;
@@ -115,14 +116,11 @@ export const BannerManager: React.FC<BannerManagerProps> = ({
         </div>
 
         <div>
-          <label className="block text-[10px] text-gray-400 font-bold mb-1.5">رابط صورة البانر *</label>
-          <input
-            type="text"
-            placeholder="https://..."
-            required
-            value={bannerImage}
-            onChange={e => setBannerImage(e.target.value)}
-            className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
+          <ImageUploadInput 
+            value={bannerImage} 
+            onChange={setBannerImage} 
+            folder="banners" 
+            label="صورة البانر *" 
           />
         </div>
 

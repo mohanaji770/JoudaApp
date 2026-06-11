@@ -39,6 +39,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Role-Based Access Control (RBAC)
+    if (user.email !== 'joudafood@gmail.com') {
+      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), { 
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
     // 3. Parse Payload
     const { barcode, category } = await req.json();
     if (!barcode || !category) {

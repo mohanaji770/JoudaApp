@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ScanBarcode, Store, HeartHandshake, ArrowLeft, Check, X, ChefHat, Sparkles } from 'lucide-react';
+import { ScanBarcode, Store, HeartHandshake, ArrowLeft, Check, ChefHat } from 'lucide-react';
 import { useScrollLock } from '../../hooks/index';
 
 interface OnboardingProps {
@@ -15,24 +14,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
 
   const steps = [
     {
-      title: "لست وحدك في رحلة السيلياك 🤍",
+      title: "لست وحدك في رحلة السيلياك",
       desc: "قد تكون البداية صعبة: هل هذا المنتج آمن؟ ماذا أطبخ اليوم؟ لهذا صممنا تطبيق جودة ليكون رفيقك الدائم.",
-      icon: <HeartHandshake className="w-20 h-20 text-brand-600" />
+      icon: <HeartHandshake className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "نتيجة فورية وواضحة 🔍",
-      desc: "وجّه كاميرا هاتفك إلى أي منتج، ويخبرك جودة فوراً: آمن أو يحتوي على جلوتين. قرارك أصبح أسهل من أي وقت مضى.",
-      icon: <ScanBarcode className="w-20 h-20 text-brand-600" />
+      title: "افحص المنتجات بثقة",
+      desc: "وجّه كاميرا هاتفك إلى أي منتج، وسنخبرك فوراً: هل هو آمن أم يحتوي على جلوتين؟ قرارك أصبح أسهل.",
+      icon: <ScanBarcode className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "اطبخ أشهى الوصفات 👨‍🍳",
+      title: "وصفات لذيذة وآمنة",
       desc: "وصفات مجرّبة تناسب كل الأذواق، من العصيد إلى الكيك.. استمتع بأكلك بدون حرمان.",
-      icon: <ChefHat className="w-20 h-20 text-brand-600" />
+      icon: <ChefHat className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "تسوق بضمان 100% 🛒",
+      title: "تسوق بضمان 100%",
       desc: "كل المنتجات في متجرنا مضمونة وخالية من الجلوتين. ابدأ حياتك بلا قلق لأنك تستحق السعادة.",
-      icon: <Store className="w-20 h-20 text-brand-600" />
+      icon: <Store className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     }
   ];
 
@@ -45,56 +44,65 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-warm-white dark:bg-gray-900 flex flex-col animate-fade-in">
+    <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-950 flex flex-col animate-fade-in">
       
-      {/* Top Section */}
-      <div className="relative flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
-        {/* Skip Button */}
+      {/* Top Header */}
+      <div className="flex justify-between items-center p-6 w-full max-w-md mx-auto">
+        <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center">
+           <span className="text-brand-600 font-black text-xs">جودة</span>
+        </div>
         <button 
           onClick={onClose}
-          className="absolute top-8 left-6 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-4 py-2 text-sm font-bold bg-white/60 dark:bg-gray-800/60 rounded-full backdrop-blur-md shadow-sm transition-all"
+          className="text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm font-bold transition-colors"
         >
           تخطي
         </button>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center w-full max-w-md">
-          <div className="w-44 h-44 bg-brand-50 dark:bg-brand-900/10 rounded-full flex items-center justify-center mb-10 animate-bounce-in shadow-inner border-[10px] border-white dark:border-gray-800 transition-all duration-300">
-            {steps[step].icon}
-          </div>
-          
-          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-5 leading-tight tracking-tight">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col justify-center px-8 w-full max-w-md mx-auto relative">
+        <div className="absolute top-1/4 right-8 w-32 h-32 bg-brand-200/30 dark:bg-brand-900/10 rounded-full blur-3xl -z-10" />
+        
+        {/* Animated Icon Container */}
+        <div 
+          key={`icon-${step}`}
+          className="w-28 h-28 bg-gray-50 dark:bg-gray-900 rounded-[2rem] flex items-center justify-center mb-10 shadow-sm border border-gray-100 dark:border-gray-800 animate-slide-up"
+        >
+          {steps[step].icon}
+        </div>
+        
+        {/* Texts */}
+        <div key={`text-${step}`} className="animate-slide-up text-right">
+          <h2 className="text-[28px] font-black text-gray-900 dark:text-white mb-4 leading-tight tracking-tight">
             {steps[step].title}
           </h2>
-          
-          <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-[16px] font-bold px-4">
+          <p className="text-gray-500 dark:text-gray-400 leading-[1.8] text-[15px] font-bold">
             {steps[step].desc}
           </p>
         </div>
       </div>
 
-      {/* Footer Controls */}
-      <div className="p-8 pb-12 bg-white dark:bg-gray-900 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] dark:shadow-none border-t border-gray-100 dark:border-gray-800 rounded-t-[2.5rem]">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          {/* Indicators */}
-          <div className="flex gap-2">
-            {steps.map((_, i) => (
-              <div 
-                key={i} 
-                className={`h-2.5 rounded-full transition-all duration-500 ${i === step ? 'w-10 bg-brand-600 shadow-sm shadow-brand-200' : 'w-2.5 bg-gray-200 dark:bg-gray-700'}`}
-              />
-            ))}
-          </div>
-
-          {/* Next Button */}
-          <button 
-            onClick={handleNext}
-            className="bg-brand-600 hover:bg-brand-700 text-white px-8 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-200 dark:shadow-none transition-transform active:scale-95 gap-3 font-bold text-lg"
-          >
-            <span>{step === steps.length - 1 ? 'ابدأ الآن' : 'التالي'}</span>
-            {step === steps.length - 1 ? <Check className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
-          </button>
+      {/* Footer Area */}
+      <div className="p-6 pb-10 w-full max-w-md mx-auto flex flex-col gap-8 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-950 dark:via-gray-950">
+        
+        {/* Progress Dots */}
+        <div className="flex gap-2 justify-center">
+          {steps.map((_, i) => (
+            <div 
+              key={i} 
+              className={`h-1.5 rounded-full transition-all duration-500 ${i === step ? 'w-8 bg-brand-600' : 'w-2 bg-gray-200 dark:bg-gray-800'}`}
+            />
+          ))}
         </div>
+
+        {/* Action Button */}
+        <button 
+          onClick={handleNext}
+          className="w-full bg-gray-900 dark:bg-brand-600 text-white h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-[0.98] gap-3 font-bold text-[16px] shadow-lg shadow-gray-200 dark:shadow-none"
+        >
+          <span>{step === steps.length - 1 ? 'ابدأ تجربتك' : 'التالي'}</span>
+          {step === steps.length - 1 ? <Check className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
+        </button>
       </div>
 
     </div>

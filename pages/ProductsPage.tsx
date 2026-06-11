@@ -11,7 +11,7 @@ import { useRecentSearches } from '../hooks/useRecentSearches';
 
 import { StoreBakeryTabs } from '../components/products/StoreBakeryTabs';
 import { ProductSearchBar } from '../components/products/ProductSearchBar';
-import { FeaturedPackagesCarousel } from '../components/products/FeaturedPackagesCarousel';
+import { HomePackagesCarousel } from '../components/home/HomePackagesCarousel';
 import { ProductCard } from '../components/products/ProductCard';
 import { FilterPanelModal, FilterState } from '../components/products/FilterPanelModal';
 import { calculatePackageSavings } from '../components/products/utils';
@@ -257,17 +257,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
 
       {/* Featured Packages Carousel */}
       {!loading && !error && viewMode === 'store' && selectedCategory === 'الكل' && !searchQuery && (
-        <FeaturedPackagesCarousel
-          storeProducts={storeProducts}
-          bakeryProducts={bakeryProducts}
-          isFavorite={isFavorite}
-          toggleFavorite={toggleFavorite}
-          getItemQuantity={getItemQuantity}
-          handleAddToCart={handleAddToCart}
-          decreaseQuantityByName={decreaseQuantityByName}
-          setSelectedProductDetails={setSelectedProductDetails}
-          justAdded={justAdded}
-        />
+        <HomePackagesCarousel />
       )}
 
       {/* Product Grid */}

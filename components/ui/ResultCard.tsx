@@ -5,6 +5,7 @@ import { AnalysisResult, VerdictType } from '../../types';
 import { STORE_CONFIG } from '../../constants';
 import { useCart } from '../../contexts/CartContext';
 import { ShareModal } from '../modals/ShareModal';
+import { getCachedProducts } from '../../services/db';
 
 interface ResultCardProps {
   result: AnalysisResult;
@@ -15,12 +16,30 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart, addToCartWithBarcode } = useCart();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (isAddingToCart || !result.matchedStoreItem) return;
     setIsAddingToCart(true);
-    addToCart(result.matchedStoreItem, 'store');
+    
+    try {
+      const cachedProducts = await getCachedProducts();
+      const matchedProd = cachedProducts.find(p => p.name === result.matchedStoreItem);
+      
+      if (matchedProd) {
+        addToCartWithBarcode({
+          name: matchedProd.name,
+          barcode: matchedProd.barcode,
+          price: matchedProd.price?.toString(),
+          source: 'store'
+        });
+      } else {
+        addToCart(result.matchedStoreItem, 'store');
+      }
+    } catch (e) {
+      addToCart(result.matchedStoreItem, 'store');
+    }
+
     setTimeout(() => {
       setIsAddingToCart(false);
     }, 2000);

@@ -1,6 +1,28 @@
 import { supabase } from '../supabaseClient';
+import { compressImage } from '../../utils/imageCompression';
 
 export const AdminContentService = {
+  // ==========================
+  // STORAGE (IMAGES)
+  // ==========================
+  async uploadAdminImage(file: File, folder: string = 'general'): Promise<string> {
+    const compressed = await compressImage(file);
+    const ext = compressed.name.split('.').pop() || 'jpg';
+    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('public-assets')
+      .upload(fileName, compressed, { upsert: true, contentType: compressed.type });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('public-assets')
+      .getPublicUrl(fileName);
+
+    return `${publicUrl}?t=${Date.now()}`;
+  },
+
   // ==========================
   // RECIPES
   // ==========================

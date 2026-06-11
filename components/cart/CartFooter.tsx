@@ -10,6 +10,8 @@ interface CartFooterProps {
   handleSubmitOrder: () => void;
   showReceipt: boolean;
   setShowReceipt: (v: boolean) => void;
+  step?: 'cart' | 'checkout';
+  onNext?: () => void;
 }
 
 export const CartFooter: React.FC<CartFooterProps> = ({
@@ -20,7 +22,9 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   handleSendOrder,
   handleSubmitOrder,
   showReceipt,
-  setShowReceipt
+  setShowReceipt,
+  step = 'cart',
+  onNext
 }) => (
   <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 safe-area-bottom mt-auto shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
     <div className="px-5 pt-4 pb-2">
@@ -52,39 +56,50 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       )}
 
       <div className="flex flex-col gap-3">
-        <button
-          onClick={handleSubmitOrder}
-          disabled={!isFormValid || submitting}
-          className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98]"
-        >
-          <ShoppingBag className="w-5 h-5" />
-          <span>{submitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}</span>
-        </button>
+        {step === 'cart' ? (
+          <button
+            onClick={onNext}
+            className="w-full bg-brand-600 hover:bg-brand-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] text-lg"
+          >
+            <span>التالي: بيانات التوصيل 🚚</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmitOrder}
+            disabled={!isFormValid || submitting}
+            className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] text-lg"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span>{submitting ? 'جاري الإرسال...' : 'تأكيد وإرسال الطلب ✅'}</span>
+          </button>
+        )}
         
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={handleSendOrder}
-            disabled={!isFormValid || submitting}
-            className="py-2 text-[12px] text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>أو إرسال عبر واتساب</span>
-          </button>
+        {step === 'checkout' && (
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={handleSendOrder}
+              disabled={!isFormValid || submitting}
+              className="py-2 text-[12px] text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>أو إرسال عبر واتساب</span>
+            </button>
 
-          <span className="text-gray-300 dark:text-gray-700">|</span>
+            <span className="text-gray-300 dark:text-gray-700">|</span>
 
-          <button
-            onClick={() => {
-              if (!isFormValid) return;
-              setShowReceipt(true);
-            }}
-            disabled={!isFormValid || submitting}
-            className="py-2 text-[12px] text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
-          >
-            <FileOutput className="w-4 h-4" />
-            <span>معاينة الفاتورة</span>
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                if (!isFormValid) return;
+                setShowReceipt(true);
+              }}
+              disabled={!isFormValid || submitting}
+              className="py-2 text-[12px] text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              <FileOutput className="w-4 h-4" />
+              <span>معاينة الفاتورة</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   </div>

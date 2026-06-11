@@ -1,6 +1,6 @@
-
 import React, { useRef, useState } from 'react';
 import { Camera, Upload, ScanSearch, Search, Type, Info, ImagePlus, X } from 'lucide-react';
+import { compressImage, fileToBase64 } from '../../utils/imageCompression';
 
 interface ScannerProps {
   onImageSelected: (base64: string) => void;
@@ -20,53 +20,15 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
   const [isSubmittingText, setIsSubmittingText] = useState(false);
 
   // Helper to compress image
-  const compressImage = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1024; // Limit width to 1024px
-          const MAX_HEIGHT = 1024;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to JPEG with 0.7 quality
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          resolve(dataUrl.split(',')[1]);
-        };
-        img.onerror = (error) => reject(error);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
+  // compressImage is now imported from utils/imageCompression
 
   const processFile = async (file: File) => {
       if (isProcessingImage || isAnalyzing) return;
       setIsProcessingImage(true);
       try {
-        const base64Data = await compressImage(file);
-        onImageSelected(base64Data);
+        const compressedFile = await compressImage(file);
+        const base64Data = await fileToBase64(compressedFile);
+        onImageSelected(base64Data.split(',')[1]);
       } catch (error) {
         console.error("Image processing failed", error);
         // Fallback to raw if compression fails

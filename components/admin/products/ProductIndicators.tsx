@@ -17,9 +17,9 @@ export const ProductIndicators: React.FC<{ product: Product }> = ({ product }) =
           <XCircle className="w-2.5 h-2.5" /> منتهي
         </span>
       )}
-      {tags.includes('discount') && <Tag className="w-3.5 h-3.5 text-red-500" title="خصم" />}
-      {tags.includes('best_seller') && <Star className="w-3.5 h-3.5 text-amber-500" title="الأكثر مبيعاً" />}
-      {tags.includes('gift') && <Gift className="w-3.5 h-3.5 text-green-500" title="هدية" />}
+      {tags.includes('discount') && <span title="خصم"><Tag className="w-3.5 h-3.5 text-red-500" /></span>}
+      {tags.includes('best_seller') && <span title="الأكثر مبيعاً"><Star className="w-3.5 h-3.5 text-amber-500" /></span>}
+      {tags.includes('gift') && <span title="هدية"><Gift className="w-3.5 h-3.5 text-green-500" /></span>}
     </div>
   );
 };

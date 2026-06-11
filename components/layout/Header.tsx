@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { ShoppingBag, Moon, Sun, HelpCircle, Shield, LogOut, Search } from 'lucide-react';
+import { Moon, Sun, HelpCircle, Shield, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../../contexts/CartContext';
 import { APP_LOGO } from '../../constants';
 
 interface HeaderProps {
@@ -15,8 +14,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
-  const { setIsCartOpen, totalItems } = useCart();
-
   const [clickCount, setClickCount] = React.useState(0);
   const [lastClickTime, setLastClickTime] = React.useState(0);
 
@@ -77,14 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
             </div>
           )}
 
-          {/* Search Button */}
-          <Link 
-            to="/products"
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="بحث"
-          >
-            <Search className="w-5 h-5" />
-          </Link>
+
 
           {/* Help Button */}
           {onHelpClick && (
@@ -108,19 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
             </button>
           )}
 
-          {/* Cart Button */}
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            aria-label={`السلة (${totalItems})`}
-            className="flex items-center gap-2 bg-gray-900 dark:bg-brand-600 text-white px-3 py-2 rounded-xl shadow-lg shadow-gray-200 dark:shadow-none hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 group relative"
-          >
-            {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[11px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border border-white dark:border-gray-900 px-0.5">
-                {totalItems}
-              </span>
-            )}
-            <ShoppingBag className="w-4 h-4 group-hover:text-white transition-colors" />
-          </button>
+
         </div>
         
       </div>

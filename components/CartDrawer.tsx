@@ -32,6 +32,7 @@ export const CartDrawer: React.FC = () => {
   const [cachedProducts, setCachedProducts] = useState<any[]>([]);
   const [bouncingItemId, setBouncingItemId] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [step, setStep] = useState<'cart' | 'checkout'>('cart');
 
   // ── Checkout Logic (Custom Hook) ──
   const checkout = useCheckout(
@@ -63,6 +64,7 @@ export const CartDrawer: React.FC = () => {
   const handleClose = () => {
     setIsCartOpen(false);
     setShowReceipt(false);
+    setTimeout(() => setStep('cart'), 300);
   };
 
   const handleDecrease = (id: string) => {
@@ -93,50 +95,65 @@ export const CartDrawer: React.FC = () => {
             className="bg-gray-50 dark:bg-gray-900 w-full max-w-md h-[85vh] md:h-full md:max-w-lg md:rounded-l-3xl rounded-t-3xl shadow-2xl flex flex-col animate-slide-up-mobile md:animate-slide-in-right overflow-hidden border-l border-gray-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            <CartHeader totalItems={totalItems} handleClose={handleClose} />
+            <CartHeader 
+              totalItems={totalItems} 
+              handleClose={handleClose} 
+              step={step}
+              onBack={() => setStep('cart')}
+            />
 
             <div className="flex-1 overflow-y-auto p-5 relative space-y-4">
               {items.length === 0 ? (
                 <EmptyCartView handleClose={handleClose} />
               ) : (
                 <>
-                  <CartItemsList
-                    items={items}
-                    cachedProducts={cachedProducts}
-                    totalItems={totalItems}
-                    bouncingItemId={bouncingItemId}
-                    handleIncrease={handleIncrease}
-                    handleDecrease={handleDecrease}
-                    handleRemove={handleRemove}
-                  />
-
-                  <DeliveryProgressBar
-                    isFreeDelivery={checkout.isFreeDelivery}
-                    deliveryProgress={checkout.deliveryProgress}
-                    deliveryRemaining={checkout.deliveryRemaining}
-                  />
-
-                  <CheckoutFormFields
-                    customerName={checkout.customerName}
-                    setCustomerName={checkout.setCustomerName}
-                    phone={checkout.phone}
-                    setPhone={checkout.setPhone}
-                    deliveryZone={checkout.deliveryZone}
-                    setDeliveryZone={checkout.setDeliveryZone}
-                    address={checkout.address}
-                    setAddress={checkout.setAddress}
-                    notes={checkout.notes}
-                    setNotes={checkout.setNotes}
-                    isFormValid={checkout.isFormValid}
-                    isSaved={checkout.isSaved}
-                  />
-
-                  <TotalsBreakdownCard
-                    currentSubtotal={checkout.currentSubtotal}
-                    totalSavings={checkout.totalSavings}
-                    currentFee={checkout.currentFee}
-                    isFreeDelivery={checkout.isFreeDelivery}
-                  />
+                  {step === 'cart' ? (
+                    <>
+                      <CartItemsList
+                        items={items}
+                        cachedProducts={cachedProducts}
+                        totalItems={totalItems}
+                        bouncingItemId={bouncingItemId}
+                        handleIncrease={handleIncrease}
+                        handleDecrease={handleDecrease}
+                        handleRemove={handleRemove}
+                      />
+                      <DeliveryProgressBar
+                        isFreeDelivery={checkout.isFreeDelivery}
+                        deliveryProgress={checkout.deliveryProgress}
+                        deliveryRemaining={checkout.deliveryRemaining}
+                      />
+                      <TotalsBreakdownCard
+                        currentSubtotal={checkout.currentSubtotal}
+                        totalSavings={checkout.totalSavings}
+                        currentFee={checkout.currentFee}
+                        isFreeDelivery={checkout.isFreeDelivery}
+                      />
+                    </>
+                  ) : (
+                    <div className="animate-fade-in space-y-6">
+                      <CheckoutFormFields
+                        customerName={checkout.customerName}
+                        setCustomerName={checkout.setCustomerName}
+                        phone={checkout.phone}
+                        setPhone={checkout.setPhone}
+                        deliveryZone={checkout.deliveryZone}
+                        setDeliveryZone={checkout.setDeliveryZone}
+                        address={checkout.address}
+                        setAddress={checkout.setAddress}
+                        notes={checkout.notes}
+                        setNotes={checkout.setNotes}
+                        isFormValid={checkout.isFormValid}
+                        isSaved={checkout.isSaved}
+                      />
+                      <TotalsBreakdownCard
+                        currentSubtotal={checkout.currentSubtotal}
+                        totalSavings={checkout.totalSavings}
+                        currentFee={checkout.currentFee}
+                        isFreeDelivery={checkout.isFreeDelivery}
+                      />
+                    </div>
+                  )}
                 </>
               )}
               <div className="h-8"></div>
@@ -152,6 +169,8 @@ export const CartDrawer: React.FC = () => {
                 handleSubmitOrder={() => checkout.handleSubmitOrder(() => setIsCartOpen(false))}
                 showReceipt={showReceipt}
                 setShowReceipt={setShowReceipt}
+                step={step}
+                onNext={() => setStep('checkout')}
               />
             )}
           </div>

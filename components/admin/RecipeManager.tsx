@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChefHat, Save, Edit, Trash2 } from 'lucide-react';
 import { Recipe } from '../../services/supabaseService';
 import { AdminContentService } from '../../services/admin/AdminContentService';
+import { ImageUploadInput } from './ImageUploadInput';
 
 interface RecipeManagerProps {
   recipes: Recipe[];
@@ -191,13 +192,11 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
 
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">رابط الصورة</label>
-            <input
-              type="text"
-              placeholder="https://..."
-              value={recipeImage}
-              onChange={e => setRecipeImage(e.target.value)}
-              className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
+            <ImageUploadInput 
+              value={recipeImage} 
+              onChange={setRecipeImage} 
+              folder="recipes" 
+              label="صورة الوصفة *" 
             />
           </div>
           <div>

@@ -32,109 +32,120 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
 }) => (
   <section className="mt-4 mb-4">
     <div className="w-full flex items-center justify-between mb-3 py-1">
-      <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-        <Wallet className="w-4 h-4 text-brand-600" />
-        بيانات التوصيل
+      <h3 className="text-base font-black text-gray-800 dark:text-gray-100 flex items-center gap-2">
+        <Wallet className="w-5 h-5 text-brand-600" />
+        الرجاء تعبئة بيانات الاستلام
         {isFormValid && (
-          <span className="text-[10px] text-green-500 font-bold">✓ مكتمل</span>
+          <span className="text-xs text-green-500 font-bold">✓ مكتمل</span>
         )}
       </h3>
     </div>
 
     <div className="space-y-3 px-1.5 py-1.5">
         <div>
-          <label htmlFor="cart-name" className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-1.5 mr-1">
+          <label htmlFor="cart-name" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
             الاسم الكريم *
             {isSaved('jouda_customer_name', customerName) && (
-              <span className="text-[9px] text-green-500 font-bold">محفوظ ✓</span>
+              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
             )}
           </label>
           <div className="relative">
-            <User className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            <User className="w-6 h-6 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
             <input 
               id="cart-name"
               type="text" 
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full pr-10 pl-4 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white font-medium"
+              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white font-bold transition-all shadow-sm"
               placeholder="الاسم الثلاثي"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="cart-phone" className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-1.5 mr-1">
-            رقم الهاتف *
+          <label htmlFor="cart-phone" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
+            رقم الجوال *
             {isSaved('jouda_customer_phone', phone) && (
-              <span className="text-[9px] text-green-500 font-bold">محفوظ ✓</span>
+              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
             )}
           </label>
           <div className="relative">
-            <MessageCircle className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            <MessageCircle className="w-6 h-6 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
             <input 
               id="cart-phone"
               type="tel" 
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full pr-10 pl-4 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white font-medium"
-              placeholder="مثال: 967781117671"
+              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-xl dark:text-white font-black transition-all shadow-sm"
+              placeholder="77XXXXXXX"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="cart-zone" className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-1.5 mr-1">
+          <label className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
             منطقة التوصيل *
             {isSaved('jouda_delivery_zone', deliveryZone) && (
-              <span className="text-[9px] text-green-500 font-bold">محفوظ ✓</span>
+              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
             )}
           </label>
-          <div className="relative">
-            <Truck className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            <select 
-              id="cart-zone"
-              value={deliveryZone}
-              onChange={(e) => setDeliveryZone(e.target.value)}
-              className="w-full pr-10 pl-4 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white font-medium appearance-none"
-            >
-              <option value="sanaa_near">صنعاء - الجراف والستين وما جاورها</option>
-              <option value="sanaa_far">صنعاء - مناطق أخرى</option>
-              <option value="provinces">محافظات أخرى</option>
-            </select>
+          <div className="grid grid-cols-1 gap-2">
+            {[
+              { id: 'sanaa_near', label: 'صنعاء (الجراف والستين وما جاورها)' },
+              { id: 'sanaa_far', label: 'صنعاء (مناطق أخرى)' },
+              { id: 'provinces', label: 'محافظات أخرى' }
+            ].map(zone => (
+              <button
+                key={zone.id}
+                onClick={() => setDeliveryZone(zone.id)}
+                className={`py-3.5 px-4 rounded-xl border-2 font-bold text-base transition-all flex items-center gap-3 ${
+                  deliveryZone === zone.id
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-300'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  deliveryZone === zone.id ? 'border-brand-500' : 'border-gray-300 dark:border-gray-600'
+                }`}>
+                  {deliveryZone === zone.id && <div className="w-2.5 h-2.5 bg-brand-500 rounded-full" />}
+                </div>
+                <span>{zone.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <div>
-          <label htmlFor="cart-address" className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-1.5 mr-1">
-            عنوان التوصيل *
+          <label htmlFor="cart-address" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
+            وصف البيت أو العنوان *
             {isSaved('jouda_customer_address', address) && (
-              <span className="text-[9px] text-green-500 font-bold">محفوظ ✓</span>
+              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
             )}
           </label>
           <div className="relative">
-            <MapPin className="w-5 h-5 text-gray-400 absolute right-3 top-3" />
+            <MapPin className="w-6 h-6 text-gray-400 absolute right-4 top-4" />
             <textarea 
               id="cart-address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               rows={2}
-              className="w-full pr-10 pl-4 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white resize-none font-medium"
-              placeholder="المدينة - الحي - أقرب معلم"
+              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white resize-none font-bold transition-all shadow-sm"
+              placeholder="مثال: الحصبة - بجوار مطعم..."
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="cart-notes" className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-1.5 mr-1">ملاحظات (اختياري)</label>
+          <label htmlFor="cart-notes" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">ملاحظات (اختياري)</label>
           <div className="relative">
-            <FileText className="w-5 h-5 text-gray-400 absolute right-3 top-3" />
+            <FileText className="w-6 h-6 text-gray-400 absolute right-4 top-4" />
             <textarea 
               id="cart-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full pr-10 pl-4 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white resize-none font-medium"
-              placeholder="تعليمات خاصة..."
+              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white resize-none font-bold transition-all shadow-sm"
+              placeholder="أي تعليمات إضافية..."
             />
           </div>
         </div>

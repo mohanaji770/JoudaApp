@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Package, Heart, ShoppingCart, Calendar, Repeat, Trash2,
+  Package, Heart, ShoppingCart, Calendar, Repeat, Trash2, Settings, User as UserIcon, LogOut,
   Clock, MapPin, Phone, Truck, Store, AlertCircle, X, RefreshCw,
   Check, MessageCircle, Send, CheckCircle2, Building, AlertTriangle, ShieldCheck
 } from 'lucide-react';
@@ -38,7 +38,8 @@ export const OrdersPage: React.FC = () => {
   const [localOrders, setLocalOrders] = useState<CompletedOrder[]>([]);
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'orders' | 'favorites'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'favorites' | 'settings'>('orders');
+  const storedName = localStorage.getItem('jouda_customer_name') || 'صديق جودة';
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, LiveOrderItem[]>>({});
   const [repeatingOrder, setRepeatingOrder] = useState<string | null>(null);
@@ -199,61 +200,79 @@ export const OrdersPage: React.FC = () => {
 
   return (
     <div className="pb-24 md:pb-8 animate-fade-in">
-      {/* Editorial App Store Header */}
-      <div className="pt-4 pb-2 mb-6">
-        <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-1">
-          {liveOrders.length > 0 ? 'المزامنة التلقائية نشطة • اليوم' : 'سجل الطلبات والمفضلة • اليوم'}
-        </span>
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-black text-gray-950 dark:text-white tracking-tight">طلباتي</h2>
-          <div className="flex items-center gap-2">
-            {localOrders.length > 0 && (
-              <button 
-                onClick={handleClearAllLocal} 
-                title="مسح السجل المحلي" 
-                className="p-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1.5 text-xs font-bold bg-white dark:bg-gray-800 shadow-sm active:scale-95"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">مسح السجل</span>
-              </button>
-            )}
-            {savedPhone && (
-              <button 
-                onClick={loadData} 
-                title="تحديث الطلبات" 
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm hover:text-brand-700 transition-colors active:scale-95"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            )}
+      {/* Profile Header */}
+      <div className="pt-6 pb-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border-2 border-white dark:border-gray-800 shadow-sm">
+            <UserIcon className="w-8 h-8" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-black text-gray-950 dark:text-white tracking-tight leading-none mb-1">
+              أهلاً، {storedName} 👋
+            </h2>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">
+              {savedPhone ? `رقم الجوال: ${savedPhone}` : 'سجل الطلبات والمفضلة'}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Pill Tab Switcher */}
-      <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl md:max-w-md">
+      <div className="flex gap-1 mb-6 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl w-full">
         <button
           onClick={() => setActiveTab('orders')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${
             activeTab === 'orders' ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          <Package className="w-3.5 h-3.5" />
-          الطلبات ({displayOrders.length})
+          <Package className="w-4 h-4 mb-0.5" />
+          طلباتي
         </button>
         <button
           onClick={() => setActiveTab('favorites')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${
             activeTab === 'favorites' ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          <Heart className="w-3.5 h-3.5" />
-          المفضلة ({favorites.length})
+          <Heart className="w-4 h-4 mb-0.5" />
+          المفضلة
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all duration-200 ${
+            activeTab === 'settings' ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <Settings className="w-4 h-4 mb-0.5" />
+          الإعدادات
         </button>
       </div>
 
       {activeTab === 'orders' && (
         <div className="space-y-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg">سجل الطلبات</h3>
+            <div className="flex items-center gap-2">
+              {localOrders.length > 0 && (
+                <button 
+                  onClick={handleClearAllLocal} 
+                  title="مسح السجل المحلي" 
+                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              {savedPhone && (
+                <button 
+                  onClick={loadData} 
+                  title="تحديث الطلبات" 
+                  className="p-1.5 rounded-lg text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
           {displayOrders.length === 0 && (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border-0 p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)]">
               <Package className="w-16 h-16 text-gray-200 dark:text-gray-700 mx-auto mb-4" />
@@ -533,6 +552,46 @@ export const OrdersPage: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">معلومات الحساب</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">الاسم</label>
+                <div className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                  {storedName}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">رقم الجوال المربوط بالطلبات</label>
+                <div className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                  {savedPhone || 'لم يتم التسجيل بعد'}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1.5">يتم ربط رقم الجوال تلقائياً عند إتمام أول طلب.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl p-5 border border-red-100 dark:border-red-900/20">
+             <button 
+               onClick={() => {
+                 if(window.confirm('هل أنت متأكد من تسجيل الخروج؟ سيتم مسح بياناتك واسمك من التطبيق.')) {
+                   localStorage.removeItem('jouda_customer_name');
+                   localStorage.removeItem('jouda_customer_phone');
+                   window.location.reload();
+                 }
+               }}
+               className="w-full flex items-center justify-between text-red-600 dark:text-red-400 font-bold text-sm"
+             >
+               <span className="flex items-center gap-2"><LogOut className="w-4 h-4" /> تسجيل الخروج ومسح البيانات</span>
+             </button>
+          </div>
         </div>
       )}
     </div>
