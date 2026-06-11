@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, X, LogOut, 
-  BadgeCheck, Gift, Image as ImageIcon, ChefHat, BookOpen, Shield, HelpCircle, Settings 
+  Gift, Image as ImageIcon, ChefHat, BookOpen, Shield, HelpCircle, Settings, Activity, PackageSearch
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -11,7 +11,8 @@ interface AdminLayoutProps {
 }
 
 const MENU_ITEMS = [
-  { id: 'badges', label: 'شارات المنتجات', icon: <BadgeCheck className="w-5 h-5" />, path: '/admin/badges' },
+  { id: 'overview', label: 'الرئيسية', icon: <Activity className="w-5 h-5" />, path: '/admin/overview' },
+  { id: 'products', label: 'خصائص المنتجات', icon: <PackageSearch className="w-5 h-5" />, path: '/admin/products' },
   { id: 'packages', label: 'الباكجات', icon: <Gift className="w-5 h-5" />, path: '/admin/packages' },
   { id: 'banners', label: 'البانرات', icon: <ImageIcon className="w-5 h-5" />, path: '/admin/banners' },
   { id: 'recipes', label: 'الوصفات', icon: <ChefHat className="w-5 h-5" />, path: '/admin/recipes' },
@@ -81,7 +82,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {MENU_ITEMS.map((item) => {
-            const isActive = currentPath.startsWith(item.path) || (currentPath === '/admin' && item.id === 'badges');
+            const isActive = currentPath.startsWith(item.path) || (currentPath === '/admin' && item.id === 'overview');
             return (
               <button
                 key={item.id}

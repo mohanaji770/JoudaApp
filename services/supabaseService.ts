@@ -16,11 +16,14 @@ export interface Product {
   barcode: string;
   name: string;
   category: string;
+  app_category?: string | null;
   description?: string;
   price: number;
   image?: string; // backward compat
   image_url?: string;
   is_active?: boolean;
+  is_hidden_in_app?: boolean;
+  force_out_of_stock?: boolean;
   stock_status?: 'available' | 'out_of_stock';
   unit?: string;
   popular?: boolean;
@@ -60,6 +63,31 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface AppCategory {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+export const fetchAppCategoriesFromSupabase = async (): Promise<AppCategory[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('app_categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    
+    if (error) {
+      // 42P01 = undefined_table (table does not exist yet)
+      if (error.code === '42P01') return []; 
+      throw error;
+    }
+    return data || [];
+  } catch (err) {
+    console.warn('Supabase app_categories failed or not found', err);
+    return [];
+  }
+};
+
 export interface Article {
   id: string;
   title: string;
@@ -98,12 +126,15 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
       console.warn('Failed to fetch package_items mappings', e);
     }
 
-    const products: Product[] = (data || []).map((p) => {
-      const isBakery = (p.category || '') === 'مخبوزات';
+    const products: Product[] = (data || [])
+      .filter((p) => p.is_hidden_in_app !== true)
+      .map((p) => {
+      const resolvedCategory = p.app_category || p.category || 'عام';
+      const isBakery = resolvedCategory === 'مخبوزات' || p.category === 'مخبوزات';
       
       // If it is a package, resolve its bundle items
       let bundle_items: Product['bundle_items'] = undefined;
-      const isPackage = p.barcode.startsWith('PKG-') || p.category === 'عروض وبكجات';
+      const isPackage = p.barcode.startsWith('PKG-') || resolvedCategory === 'عروض وبكجات' || p.category === 'عروض وبكجات';
       if (isPackage && packageItems.length > 0) {
         const mappings = packageItems.filter((m) => m.package_barcode === p.barcode);
         bundle_items = mappings.map((m) => {
@@ -116,22 +147,28 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         });
       }
 
+      const isForcedOut = p.force_out_of_stock === true;
+      const finalStockStatus = isForcedOut ? 'out_of_stock' : p.stock_status;
+
       return {
         id: p.barcode,
         barcode: p.barcode,
         name: p.name,
-        category: p.category || 'عام',
+        category: resolvedCategory,
+        app_category: p.app_category,
         description: p.description || '',
         price: p.price || 0,
         image: p.image_url,
         image_url: p.image_url,
         is_active: p.is_active,
-        stock_status: p.stock_status,
+        is_hidden_in_app: p.is_hidden_in_app,
+        force_out_of_stock: p.force_out_of_stock,
+        stock_status: finalStockStatus,
         unit: p.unit,
         tags: p.tags || [],
         valid_until: p.valid_until,
         // Bakery items are always available (made-to-order)
-        inStock: isBakery ? true : p.stock_status === 'available',
+        inStock: isBakery ? true : finalStockStatus === 'available',
         source: isBakery ? ('bakery' as const) : ('store' as const),
         bundle_items,
       };

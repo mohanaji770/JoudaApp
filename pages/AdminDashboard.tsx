@@ -8,13 +8,14 @@ import { fetchProductsFromSupabase, Product, Recipe, Article } from '../services
 import { useLocation } from 'react-router-dom';
 
 // Extracted Sub-managers
-import { BadgeManager } from '../components/admin/BadgeManager';
 import { PackageManager } from '../components/admin/PackageManager';
 import { BannerManager } from '../components/admin/BannerManager';
 import { RecipeManager } from '../components/admin/RecipeManager';
 import { ArticleManager } from '../components/admin/ArticleManager';
 import { FAQManager } from '../components/admin/FAQManager';
 import { SettingsManager } from '../components/admin/SettingsManager';
+import { ProductManager } from '../components/admin/ProductManager';
+import { DashboardOverview } from '../components/admin/DashboardOverview';
 
 interface Banner {
   id: string;
@@ -28,7 +29,8 @@ interface Banner {
 export const AdminDashboard: React.FC = () => {
   const location = useLocation();
   const pathPart = location.pathname.split('/').pop() || '';
-  const activeTab = ['packages', 'banners', 'recipes', 'articles', 'faq', 'settings'].includes(pathPart) ? pathPart : 'badges';
+  const validTabs = ['packages', 'banners', 'recipes', 'articles', 'faq', 'settings', 'products'];
+  const activeTab = validTabs.includes(pathPart) ? pathPart : 'overview';
   
   // Data States
   const [products, setProducts] = useState<Product[]>([]);
@@ -106,12 +108,16 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Managers Content */}
-      {!isInitialLoad && activeTab === 'badges' && (
-        <BadgeManager
-          products={products}
-          setProducts={setProducts}
+      {!isInitialLoad && activeTab === 'overview' && (
+        <DashboardOverview showError={showError} />
+      )}
+
+      {!isInitialLoad && activeTab === 'products' && (
+        <ProductManager
           showSuccess={showSuccess}
           showError={showError}
+          loading={loading}
+          setLoading={setLoading}
         />
       )}
 
