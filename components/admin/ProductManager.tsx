@@ -25,6 +25,8 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
   const [categories, setCategories] = useState<AppCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [visibleCount, setVisibleCount] = useState(50);
+
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isManageCatsOpen, setIsManageCatsOpen] = useState(false);
@@ -92,6 +94,10 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
     return Array.from(cats).sort();
   }, [products]);
 
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [searchTerm, categoryFilter]);
+
   return (
     <div className="bg-gray-50 dark:bg-gray-950 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-100 md:dark:border-gray-800 md:p-6 md:rounded-3xl animate-fade-in relative min-h-screen md:min-h-[600px] flex flex-col">
       <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-950 md:bg-transparent pb-4 pt-2 md:pt-0">
@@ -153,7 +159,7 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
 
       <div className="flex-1 overflow-y-auto px-2 md:px-0 pb-24">
         <div className="flex flex-col gap-1.5 md:gap-2">
-          {filteredProducts.slice(0, 50).map(product => (
+          {filteredProducts.slice(0, visibleCount).map(product => (
             <ProductCard 
               key={product.barcode} 
               product={product} 
@@ -166,6 +172,15 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
               <Search className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
               <p className="text-gray-500 dark:text-gray-400 font-bold text-sm">لا توجد منتجات مطابقة للبحث</p>
             </div>
+          )}
+
+          {visibleCount < filteredProducts.length && (
+            <button
+              onClick={() => setVisibleCount(v => v + 50)}
+              className="mt-4 mb-4 py-3 px-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-brand-600 dark:text-brand-400 rounded-xl text-sm font-bold transition-all shadow-sm mx-auto flex items-center justify-center"
+            >
+              عرض المزيد ({filteredProducts.length - visibleCount} متبقي)
+            </button>
           )}
         </div>
       </div>
