@@ -12,6 +12,7 @@ import { EmptyCartView } from './cart/EmptyCartView';
 import { CartItemsList } from './cart/CartItemsList';
 import { DeliveryProgressBar } from './cart/DeliveryProgressBar';
 import { CheckoutFormFields } from './cart/CheckoutFormFields';
+import { MapLocationPicker } from './MapLocationPicker';
 import { TotalsBreakdownCard } from './cart/TotalsBreakdownCard';
 import { CartFooter } from './cart/CartFooter';
 
@@ -33,6 +34,7 @@ export const CartDrawer: React.FC = () => {
   const [bouncingItemId, setBouncingItemId] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
+  const [showMap, setShowMap] = useState(false);
 
   // ── Checkout Logic (Custom Hook) ──
   const checkout = useCheckout(
@@ -135,18 +137,14 @@ export const CartDrawer: React.FC = () => {
                         phone={checkout.phone}
                         setPhone={checkout.setPhone}
                         customerLat={checkout.customerLat}
-                        setCustomerLat={checkout.setCustomerLat}
                         customerLng={checkout.customerLng}
-                        setCustomerLng={checkout.setCustomerLng}
-                        storeLat={checkout.storeLat}
-                        storeLng={checkout.storeLng}
-                        pricePerKm={checkout.pricePerKm}
                         address={checkout.address}
                         setAddress={checkout.setAddress}
                         notes={checkout.notes}
                         setNotes={checkout.setNotes}
                         isFormValid={checkout.isFormValid}
                         isSaved={checkout.isSaved}
+                        onOpenMap={() => setShowMap(true)}
                       />
                       <TotalsBreakdownCard
                         currentSubtotal={checkout.currentSubtotal}
@@ -178,6 +176,21 @@ export const CartDrawer: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {showMap && (
+        <MapLocationPicker
+          onLocationSelected={(lat, lng) => {
+            checkout.setCustomerLat(lat);
+            checkout.setCustomerLng(lng);
+          }}
+          onClose={() => setShowMap(false)}
+          defaultLat={checkout.customerLat || undefined}
+          defaultLng={checkout.customerLng || undefined}
+          storeLat={checkout.storeLat}
+          storeLng={checkout.storeLng}
+          pricePerKm={checkout.pricePerKm}
+        />
       )}
 
       {showReceipt && (

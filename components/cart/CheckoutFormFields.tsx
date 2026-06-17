@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Wallet, User, MessageCircle, MapPin, FileText, Map } from 'lucide-react';
-import { MapLocationPicker } from '../MapLocationPicker';
 
 interface CheckoutFormFieldsProps {
   customerName: string;
@@ -8,18 +7,14 @@ interface CheckoutFormFieldsProps {
   phone: string;
   setPhone: (v: string) => void;
   customerLat: number | null;
-  setCustomerLat: (v: number | null) => void;
   customerLng: number | null;
-  setCustomerLng: (v: number | null) => void;
-  storeLat: number;
-  storeLng: number;
-  pricePerKm: number;
   address: string;
   setAddress: (v: string) => void;
   notes: string;
   setNotes: (v: string) => void;
   isFormValid: boolean;
   isSaved: (key: string, value: string) => boolean;
+  onOpenMap: () => void;
 }
 
 export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
@@ -28,20 +23,15 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
   phone,
   setPhone,
   customerLat,
-  setCustomerLat,
   customerLng,
-  setCustomerLng,
-  storeLat,
-  storeLng,
-  pricePerKm,
   address,
   setAddress,
   notes,
   setNotes,
   isFormValid,
-  isSaved
+  isSaved,
+  onOpenMap
 }) => {
-  const [showMap, setShowMap] = useState(false);
   const [showNotes, setShowNotes] = useState(!!notes);
 
   return (
@@ -104,7 +94,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
             </label>
             <button
               type="button"
-              onClick={() => setShowMap(true)}
+              onClick={onOpenMap}
               className={`w-full py-3.5 px-4 rounded-xl font-medium text-base flex items-center justify-between transition-all border shadow-sm ${
                 customerLat && customerLng 
                   ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800/50 dark:text-green-400' 
@@ -178,21 +168,6 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
             </div>
           )}
         </div>
-
-        {showMap && (
-          <MapLocationPicker
-            onLocationSelected={(lat, lng) => {
-              setCustomerLat(lat);
-              setCustomerLng(lng);
-            }}
-            onClose={() => setShowMap(false)}
-            defaultLat={customerLat || undefined}
-            defaultLng={customerLng || undefined}
-            storeLat={storeLat}
-            storeLng={storeLng}
-            pricePerKm={pricePerKm}
-          />
-        )}
     </section>
   );
 };
