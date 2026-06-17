@@ -124,6 +124,7 @@ export const CartDrawer: React.FC = () => {
                         totalSavings={checkout.totalSavings}
                         currentFee={checkout.currentFee}
                         isFreeDelivery={checkout.isFreeDelivery}
+                        distanceKm={checkout.distanceKm}
                       />
                     </>
                   ) : (
@@ -133,8 +134,13 @@ export const CartDrawer: React.FC = () => {
                         setCustomerName={checkout.setCustomerName}
                         phone={checkout.phone}
                         setPhone={checkout.setPhone}
-                        deliveryZone={checkout.deliveryZone}
-                        setDeliveryZone={checkout.setDeliveryZone}
+                        customerLat={checkout.customerLat}
+                        setCustomerLat={checkout.setCustomerLat}
+                        customerLng={checkout.customerLng}
+                        setCustomerLng={checkout.setCustomerLng}
+                        storeLat={checkout.storeLat}
+                        storeLng={checkout.storeLng}
+                        pricePerKm={checkout.pricePerKm}
                         address={checkout.address}
                         setAddress={checkout.setAddress}
                         notes={checkout.notes}
@@ -147,6 +153,7 @@ export const CartDrawer: React.FC = () => {
                         totalSavings={checkout.totalSavings}
                         currentFee={checkout.currentFee}
                         isFreeDelivery={checkout.isFreeDelivery}
+                        distanceKm={checkout.distanceKm}
                       />
                     </div>
                   )}

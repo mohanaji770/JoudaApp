@@ -1,34 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
+import { calculateDistance, calculateDeliveryFee } from '../utils/distanceUtils';
 
-/* ═══════════════════════════════════════════════
-   Delivery Constants & Configurations
-   ═══════════════════════════════════════════════ */
-export interface DeliveryZoneConfig {
-  freeTarget: number;
-  fee: number;
-}
-
-export const DELIVERY_CONFIG: Record<string, DeliveryZoneConfig> = {
-  sanaa_near: { freeTarget: 20000, fee: 500 },
-  sanaa_far: { freeTarget: 20000, fee: 1000 },
-  provinces: { freeTarget: 40000, fee: 2000 },
-};
-
-/* ═══════════════════════════════════════════════
-   useCheckout Hook
-   ═══════════════════════════════════════════════ */
 export const useCheckout = (
   items: any[], 
   cachedProducts: any[],
   sendOrderToWhatsApp: (name: string, address: string, notes: string) => void,
   submitOrderToSystem: (data: any) => Promise<any>
 ) => {
-  const [deliveryZone, setDeliveryZone] = useState(() => localStorage.getItem('jouda_delivery_zone') || 'sanaa_near');
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('jouda_customer_name') || '');
   const [address, setAddress] = useState(() => localStorage.getItem('jouda_customer_address') || '');
   const [notes, setNotes] = useState('');
   const [phone, setPhone] = useState(() => localStorage.getItem('jouda_customer_phone') || '');
   
+  // Map settings and location state
+  const [storeLat, setStoreLat] = useState<number>(15.3980555);
+  const [storeLng, setStoreLng] = useState<number>(44.2094444);
+  const [pricePerKm, setPricePerKm] = useState<number>(150);
+  
+  const [customerLat, setCustomerLat] = useState<number | null>(null);
+  const [customerLng, setCustomerLng] = useState<number | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -38,6 +30,23 @@ export const useCheckout = (
     orderId?: string;
     total: number;
   } | null>(null);
+
+  // Fetch store coordinates and delivery price per km on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.from('app_settings_public').select('store_latitude, store_longitude, delivery_price_per_km').eq('id', 1).single();
+        if (data && !error) {
+          setStoreLat(data.store_latitude ?? 15.3980555);
+          setStoreLng(data.store_longitude ?? 44.2094444);
+          setPricePerKm(data.delivery_price_per_km ?? 150);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch map settings', e);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // ── Computed Values ──
   const currentSubtotal = useMemo(() => {
@@ -68,19 +77,26 @@ export const useCheckout = (
     }, 0);
   }, [items, cachedProducts]);
 
-  const { currentFee, isFreeDelivery } = useMemo(() => {
+  const { currentFee, isFreeDelivery, distanceKm } = useMemo(() => {
+    if (customerLat && customerLng) {
+      const dist = calculateDistance(storeLat, storeLng, customerLat, customerLng);
+      const isFar = dist > 20;
+      const fee = isFar ? 0 : calculateDeliveryFee(dist, pricePerKm);
+      return {
+        currentFee: fee,
+        isFreeDelivery: fee === 0,
+        distanceKm: dist
+      };
+    }
     return {
       currentFee: 0,
-      isFreeDelivery: true
+      isFreeDelivery: true,
+      distanceKm: 0
     };
-  }, []);
+  }, [customerLat, customerLng, storeLat, storeLng, pricePerKm]);
 
   const grandTotal = currentSubtotal + currentFee;
-  const isFormValid = customerName.trim() !== '' && phone.trim() !== '' && address.trim() !== '';
-
-  const config = DELIVERY_CONFIG[deliveryZone] || DELIVERY_CONFIG.sanaa_near;
-  const deliveryProgress = 100;
-  const deliveryRemaining = 0;
+  const isFormValid = customerName.trim() !== '' && phone.trim() !== '' && address.trim() !== '' && customerLat !== null && customerLng !== null;
 
   const isSaved = (key: string, val: string) => !!val && localStorage.getItem(key) === val;
 
@@ -95,7 +111,7 @@ export const useCheckout = (
 
   const handleSubmitOrder = async (onSuccess: () => void) => {
     if (!isFormValid) {
-      alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، وعنوان التوصيل');
+      alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، عنوان التوصيل، وتحديد موقعك على الخريطة');
       return;
     }
 
@@ -103,15 +119,19 @@ export const useCheckout = (
     setSubmitResult(null);
 
     try {
+      const isFar = distanceKm > 20;
+      
       const result = await submitOrderToSystem({
         customer_name: customerName.trim(),
         customer_phone: phone.trim(),
         customer_address: address,
-        order_type: 'delivery',
+        order_type: isFar ? 'shipping' : 'delivery',
         payment_method: 'CASH',
         notes: notes || undefined,
         subtotal: currentSubtotal,
-        delivery_fee: currentFee,
+        delivery_fee: isFar ? 0 : currentFee,
+        latitude: customerLat,
+        longitude: customerLng
       });
 
       if (result.success) {
@@ -119,7 +139,6 @@ export const useCheckout = (
         localStorage.setItem('jouda_customer_phone', phone.trim());
         localStorage.setItem('jouda_customer_name', customerName.trim());
         localStorage.setItem('jouda_customer_address', address.trim());
-        localStorage.setItem('jouda_delivery_zone', deliveryZone);
 
         setLastOrderDetails({
           orderNumber: result.order_number || result.quotation_id || '',
@@ -145,14 +164,18 @@ export const useCheckout = (
     setPhone('');
     setAddress('');
     setNotes('');
+    setCustomerLat(null);
+    setCustomerLng(null);
   };
 
   return {
-    deliveryZone, setDeliveryZone,
     customerName, setCustomerName,
     address, setAddress,
     notes, setNotes,
     phone, setPhone,
+    customerLat, setCustomerLat,
+    customerLng, setCustomerLng,
+    storeLat, storeLng, pricePerKm,
     submitting,
     submitResult,
     showSuccessModal, setShowSuccessModal,
@@ -161,13 +184,13 @@ export const useCheckout = (
     totalSavings,
     currentFee,
     isFreeDelivery,
+    distanceKm,
     grandTotal,
     isFormValid,
-    deliveryProgress,
-    deliveryRemaining,
     isSaved,
     handleSendOrder,
     handleSubmitOrder,
     resetForm
   };
 };
+

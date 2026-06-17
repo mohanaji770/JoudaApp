@@ -35,6 +35,8 @@ interface OrderPayload {
   items: OrderItemPayload[];
   subtotal: number;
   delivery_fee?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface RpcItem {
@@ -245,6 +247,8 @@ async function saveOrderLocally(payload: OrderPayload, quotationId: string, orde
     payment_method: payload.payment_method || 'CASH',
     notes: payload.notes || null,
     status: rpcSuccess ? 'submitted' : 'failed',
+    latitude: payload.latitude || null,
+    longitude: payload.longitude || null,
   }).select().single();
 
   if (insertError) throw new Error(`Insert order error: ${insertError.message}`);
@@ -275,7 +279,7 @@ async function voidQuotation(quotationId: string, config: Config, inventoryClien
 
 // --- 4. Telegram Notification Engine ---
 function buildTelegramMessage(orderData: any): string {
-  const { orderNumber, customerName, customerPhone, customerAddress, total, items, notes } = orderData;
+  const { orderNumber, customerName, customerPhone, customerAddress, total, items, notes, latitude, longitude } = orderData;
   const itemsList = items.map((item: any) => {
     if (item.is_package && item.sub_items && item.sub_items.length > 0) {
       const subList = item.sub_items.map((sub: any) => `      ▫️ 🛒 ${sub.product_name} × ${sub.quantity * item.quantity}`).join('\n');
@@ -288,6 +292,7 @@ function buildTelegramMessage(orderData: any): string {
   let h = now.getHours(); const period = h >= 12 ? 'م' : 'ص'; h = h % 12 || 12;
   const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${String(now.getMinutes()).padStart(2,'0')} ${period}`;
   const notesLine = notes ? `\n📝 <b>ملاحظات:</b> <code>${notes}</code>\n` : '';
+  const mapLink = (latitude && longitude) ? `\n🗺️ <b>الموقع الجغرافي:</b> <a href="https://www.google.com/maps?q=${latitude},${longitude}">رابط خرائط جوجل</a>\n` : '';
 
   return `
 📥 <b>طلب جديد من التطبيق 📱</b>
@@ -295,7 +300,7 @@ function buildTelegramMessage(orderData: any): string {
 🆔 <b>رقم الطلب:</b> <code>#${orderNumber}</code>
 👤 <b>العميل:</b> <b>${customerName}</b>
 📱 <b>الهاتف:</b> <code>${customerPhone}</code>
-📍 <b>العنوان:</b> <code>${customerAddress || 'غير محدد'}</code>
+📍 <b>العنوان:</b> <code>${customerAddress || 'غير محدد'}</code>${mapLink}
 ━━━━━━━━━━━━━━━━━━━
 📦 <b>الأصناف المطلوبة:</b>
 ${itemsList}
@@ -391,6 +396,8 @@ Deno.serve(async (req: Request) => {
         customerAddress: payload.customer_address,
         total: payload.subtotal + (payload.delivery_fee || 0),
         notes: payload.notes,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
         items: payload.items.map((item: any) => {
           const isPackage = String(item.product_barcode).startsWith('PKG-');
           let subItems: any[] = [];

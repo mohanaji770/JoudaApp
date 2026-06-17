@@ -1,13 +1,19 @@
-import React from 'react';
-import { Wallet, User, MessageCircle, Truck, MapPin, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, User, MessageCircle, MapPin, FileText, Map } from 'lucide-react';
+import { MapLocationPicker } from '../MapLocationPicker';
 
 interface CheckoutFormFieldsProps {
   customerName: string;
   setCustomerName: (v: string) => void;
   phone: string;
   setPhone: (v: string) => void;
-  deliveryZone: string;
-  setDeliveryZone: (v: string) => void;
+  customerLat: number | null;
+  setCustomerLat: (v: number | null) => void;
+  customerLng: number | null;
+  setCustomerLng: (v: number | null) => void;
+  storeLat: number;
+  storeLng: number;
+  pricePerKm: number;
   address: string;
   setAddress: (v: string) => void;
   notes: string;
@@ -21,103 +27,150 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
   setCustomerName,
   phone,
   setPhone,
-  deliveryZone,
-  setDeliveryZone,
+  customerLat,
+  setCustomerLat,
+  customerLng,
+  setCustomerLng,
+  storeLat,
+  storeLng,
+  pricePerKm,
   address,
   setAddress,
   notes,
   setNotes,
   isFormValid,
   isSaved
-}) => (
-  <section className="mt-4 mb-4">
-    <div className="w-full flex items-center justify-between mb-3 py-1">
-      <h3 className="text-base font-black text-gray-800 dark:text-gray-100 flex items-center gap-2">
-        <Wallet className="w-5 h-5 text-brand-600" />
-        الرجاء تعبئة بيانات الاستلام
+}) => {
+  const [showMap, setShowMap] = useState(false);
+
+  return (
+    <section className="mb-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Wallet className="w-5 h-5 text-brand-600" />
+          بيانات الاستلام
+        </h3>
         {isFormValid && (
-          <span className="text-xs text-green-500 font-bold">✓ مكتمل</span>
+          <span className="text-xs text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 font-bold px-2 py-1 rounded-full">✓ مكتمل</span>
         )}
-      </h3>
-    </div>
-
-    <div className="space-y-3 px-1.5 py-1.5">
-        <div>
-          <label htmlFor="cart-name" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
-            الاسم الكريم *
-            {isSaved('jouda_customer_name', customerName) && (
-              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
-            )}
-          </label>
-          <div className="relative">
-            <User className="w-6 h-6 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
-            <input 
-              id="cart-name"
-              type="text" 
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white font-bold transition-all shadow-sm"
-              placeholder="الاسم الثلاثي"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="cart-phone" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
-            رقم الجوال *
-            {isSaved('jouda_customer_phone', phone) && (
-              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
-            )}
-          </label>
-          <div className="relative">
-            <MessageCircle className="w-6 h-6 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
-            <input 
-              id="cart-phone"
-              type="tel" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-xl dark:text-white font-black transition-all shadow-sm"
-              placeholder="77XXXXXXX"
-            />
-          </div>
-        </div>
-
-
-
-        <div>
-          <label htmlFor="cart-address" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">
-            وصف البيت أو العنوان *
-            {isSaved('jouda_customer_address', address) && (
-              <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
-            )}
-          </label>
-          <div className="relative">
-            <MapPin className="w-6 h-6 text-gray-400 absolute right-4 top-4" />
-            <textarea 
-              id="cart-address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={2}
-              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white resize-none font-bold transition-all shadow-sm"
-              placeholder="مثال: الحصبة - بجوار مطعم..."
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="cart-notes" className="flex items-center gap-1 text-sm font-black text-gray-600 dark:text-gray-300 mb-2 mr-1">ملاحظات (اختياري)</label>
-          <div className="relative">
-            <FileText className="w-6 h-6 text-gray-400 absolute right-4 top-4" />
-            <textarea 
-              id="cart-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              className="w-full pr-12 pl-4 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-lg dark:text-white resize-none font-bold transition-all shadow-sm"
-              placeholder="أي تعليمات إضافية..."
-            />
-          </div>
-        </div>
       </div>
-  </section>
-);
+
+      <div className="space-y-5">
+          <div>
+            <label htmlFor="cart-name" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+              الاسم الكريم
+              {isSaved('jouda_customer_name', customerName) && (
+                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+              )}
+            </label>
+            <div className="relative">
+              <User className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+              <input 
+                id="cart-name"
+                type="text" 
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium transition-all shadow-sm"
+                placeholder="الاسم الثلاثي"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="cart-phone" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+              رقم الجوال
+              {isSaved('jouda_customer_phone', phone) && (
+                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+              )}
+            </label>
+            <div className="relative">
+              <MessageCircle className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+              <input 
+                id="cart-phone"
+                type="tel" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium transition-all shadow-sm text-left"
+                placeholder="77XXXXXXX"
+                dir="ltr"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+              موقع التوصيل على الخريطة
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowMap(true)}
+              className={`w-full py-3.5 px-4 rounded-xl font-medium text-base flex items-center justify-between transition-all border shadow-sm ${
+                customerLat && customerLng 
+                  ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800/50 dark:text-green-400' 
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-brand-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Map className={`w-5 h-5 ${customerLat && customerLng ? 'text-green-500' : 'text-brand-500'}`} />
+                <span>
+                  {customerLat && customerLng ? 'تم تحديد الموقع بنجاح ✓' : 'انقر لتحديد موقعك'}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          <div>
+            <label htmlFor="cart-address" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+              وصف إضافي للعنوان
+              {isSaved('jouda_customer_address', address) && (
+                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+              )}
+            </label>
+            <div className="relative">
+              <MapPin className="w-5 h-5 text-gray-400 absolute right-4 top-4" />
+              <textarea 
+                id="cart-address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                rows={2}
+                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
+                placeholder="مثال: الحصبة - بجوار مطعم..."
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="cart-notes" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">ملاحظات إضافية</label>
+            <div className="relative">
+              <FileText className="w-5 h-5 text-gray-400 absolute right-4 top-4" />
+              <textarea 
+                id="cart-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
+                placeholder="أي تعليمات إضافية للمندوب..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {showMap && (
+          <MapLocationPicker
+            onLocationSelected={(lat, lng) => {
+              setCustomerLat(lat);
+              setCustomerLng(lng);
+            }}
+            onClose={() => setShowMap(false)}
+            defaultLat={customerLat || undefined}
+            defaultLng={customerLng || undefined}
+            storeLat={storeLat}
+            storeLng={storeLng}
+            pricePerKm={pricePerKm}
+          />
+        )}
+    </section>
+  );
+};
+
+

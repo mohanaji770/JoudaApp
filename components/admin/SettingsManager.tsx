@@ -21,6 +21,11 @@ export const SettingsManager: React.FC<SettingsManagerProps> = ({
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [aiApiKey, setAiApiKey] = useState('');
+  
+  // Map settings
+  const [deliveryPricePerKm, setDeliveryPricePerKm] = useState<number>(150);
+  const [storeLatitude, setStoreLatitude] = useState<number>(15.3980555);
+  const [storeLongitude, setStoreLongitude] = useState<number>(44.2094444);
 
   const loadSettings = async () => {
     try {
@@ -31,6 +36,9 @@ export const SettingsManager: React.FC<SettingsManagerProps> = ({
         setMaintenanceMode(data.maintenance_mode);
         setMaintenanceMessage(data.maintenance_message || '');
         setAiApiKey(data.ai_api_key || '');
+        setDeliveryPricePerKm(data.delivery_price_per_km ?? 150);
+        setStoreLatitude(data.store_latitude ?? 15.3980555);
+        setStoreLongitude(data.store_longitude ?? 44.2094444);
       }
     } catch (err: any) {
       showError('فشل تحميل إعدادات النظام');
@@ -51,7 +59,10 @@ export const SettingsManager: React.FC<SettingsManagerProps> = ({
       await AdminSettingsService.updateSettings({
         maintenance_mode: maintenanceMode,
         maintenance_message: maintenanceMessage.trim() || null,
-        ai_api_key: aiApiKey.trim() || null
+        ai_api_key: aiApiKey.trim() || null,
+        delivery_price_per_km: deliveryPricePerKm,
+        store_latitude: storeLatitude,
+        store_longitude: storeLongitude
       });
       showSuccess('تم حفظ الإعدادات بنجاح');
       loadSettings();
@@ -91,6 +102,52 @@ export const SettingsManager: React.FC<SettingsManagerProps> = ({
               <AlertTriangle className="w-3 h-3 text-amber-500" />
               هذا المفتاح سري جداً، يتم تخزينه بأمان ويستخدم في الخوادم فقط (Edge Functions).
             </p>
+          </div>
+        </div>
+
+        {/* Map Settings Section */}
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl space-y-5">
+          <div className="flex items-center gap-3 border-b border-gray-50 dark:border-gray-800 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+              <span className="text-xl">📍</span>
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-gray-900 dark:text-white">إعدادات الخرائط والتوصيل</h2>
+              <p className="text-[10px] text-gray-500 mt-1">تحديد سعر الكيلومتر لتسعيرة التوصيل وإحداثيات المتجر (المستودع)</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-gray-700 dark:text-gray-300 font-bold mb-2">سعر التوصيل للكيلومتر (ريال)</label>
+              <input
+                type="number"
+                min="0"
+                value={deliveryPricePerKm}
+                onChange={e => setDeliveryPricePerKm(Number(e.target.value))}
+                className="w-full h-12 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-700 dark:text-gray-300 font-bold mb-2">خط العرض للمتجر (Latitude)</label>
+              <input
+                type="number"
+                step="any"
+                value={storeLatitude}
+                onChange={e => setStoreLatitude(Number(e.target.value))}
+                className="w-full h-12 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-700 dark:text-gray-300 font-bold mb-2">خط الطول للمتجر (Longitude)</label>
+              <input
+                type="number"
+                step="any"
+                value={storeLongitude}
+                onChange={e => setStoreLongitude(Number(e.target.value))}
+                className="w-full h-12 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white font-mono"
+              />
+            </div>
           </div>
         </div>
 

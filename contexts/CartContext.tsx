@@ -35,6 +35,8 @@ interface CartContextType {
     notes?: string;
     subtotal: number;
     delivery_fee: number;
+    latitude?: number | null;
+    longitude?: number | null;
   }) => Promise<{ success: boolean; order_number?: string; quotation_id?: string; order_id?: string; message: string }>;
   totalItems: number;
   getItemQuantity: (name: string) => number;
@@ -255,6 +257,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     notes?: string;
     subtotal: number;
     delivery_fee: number;
+    latitude?: number | null;
+    longitude?: number | null;
   }) => {
     if (items.length === 0) {
       return { success: false, message: 'السلة فارغة' };
