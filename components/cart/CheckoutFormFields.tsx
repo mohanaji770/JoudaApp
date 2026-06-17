@@ -42,6 +42,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
   isSaved
 }) => {
   const [showMap, setShowMap] = useState(false);
+  const [showNotes, setShowNotes] = useState(!!notes);
 
   return (
     <section className="mb-6">
@@ -113,7 +114,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
               <div className="flex items-center gap-3">
                 <Map className={`w-5 h-5 ${customerLat && customerLng ? 'text-green-500' : 'text-brand-500'}`} />
                 <span>
-                  {customerLat && customerLng ? 'تم تحديد الموقع بنجاح ✓' : 'انقر لتحديد موقعك'}
+                  {customerLat && customerLng ? 'تم تحديد الموقع بدقة ✓' : 'حدد موقع التوصيل على الخريطة 📍'}
                 </span>
               </div>
             </button>
@@ -121,38 +122,61 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
 
           <div>
             <label htmlFor="cart-address" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              وصف إضافي للعنوان
+              توضيح الموقع (رقم العمارة / الشقة)
               {isSaved('jouda_customer_address', address) && (
                 <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
               )}
             </label>
             <div className="relative">
-              <MapPin className="w-5 h-5 text-gray-400 absolute right-4 top-4" />
-              <textarea 
+              <MapPin className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+              <input 
                 id="cart-address"
+                type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                rows={2}
-                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
-                placeholder="مثال: الحصبة - بجوار مطعم..."
+                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium transition-all shadow-sm"
+                placeholder="مثال: الدور الثاني شقة 4، أو بجوار..."
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="cart-notes" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">ملاحظات إضافية</label>
-            <div className="relative">
-              <FileText className="w-5 h-5 text-gray-400 absolute right-4 top-4" />
-              <textarea 
-                id="cart-notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-                className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
-                placeholder="أي تعليمات إضافية للمندوب..."
-              />
+          {!showNotes ? (
+            <button
+              type="button"
+              onClick={() => setShowNotes(true)}
+              className="text-sm font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1.5 py-1"
+            >
+              <span className="text-lg leading-none">+</span>
+              أضف تعليمات للمندوب (اختياري)
+            </button>
+          ) : (
+            <div className="animate-fade-in">
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="cart-notes" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400">تعليمات للمندوب</label>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowNotes(false);
+                    setNotes('');
+                  }}
+                  className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  إلغاء
+                </button>
+              </div>
+              <div className="relative">
+                <FileText className="w-5 h-5 text-gray-400 absolute right-4 top-4" />
+                <textarea 
+                  id="cart-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
+                  placeholder="أي تعليمات إضافية للمندوب..."
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {showMap && (
