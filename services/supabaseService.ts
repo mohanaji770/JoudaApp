@@ -167,8 +167,8 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         unit: p.unit,
         tags: p.tags || [],
         valid_until: p.valid_until,
-        // Bakery items are always available (made-to-order)
-        inStock: isBakery ? true : finalStockStatus === 'available',
+        // Bakery items are always available unless explicitly forced out of stock
+        inStock: isForcedOut ? false : (isBakery ? true : finalStockStatus === 'available'),
         source: isBakery ? ('bakery' as const) : ('store' as const),
         bundle_items,
       };

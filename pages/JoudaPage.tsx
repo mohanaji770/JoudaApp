@@ -50,29 +50,32 @@ export const JoudaPage: React.FC = () => {
       
       {/* 1. Header */}
       <div className="text-center py-8 md:py-12">
-         <div className="w-20 h-20 md:w-24 md:h-24 rounded-full mx-auto mb-5 overflow-hidden shadow-lg ring-2 ring-gray-100 dark:ring-gray-700">
-             <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-cover" />
-          </div>
+         <div className="relative w-24 h-24 md:w-28 md:h-28 mx-auto mb-6">
+             <div className="absolute inset-0 bg-brand-400 dark:bg-brand-500 blur-2xl opacity-20 dark:opacity-30 rounded-full"></div>
+             <div className="relative w-full h-full rounded-full overflow-hidden shadow-xl ring-4 ring-white dark:ring-gray-800">
+                <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-cover" />
+             </div>
+         </div>
          <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">{STORE_CONFIG.NAME}</h1>
          <p className="text-base text-gray-500 dark:text-gray-400 font-medium max-w-lg mx-auto leading-relaxed">
-           نجمع بين الصحة والمذاق الرائع لنمنحك تجربة حياة طبيعية وآمنة.
+           نخبز ونصنع بحب، لنعيد لك متعة الأكل الآمن والخالي تماماً من الجلوتين.
          </p>
       </div>
 
       <div className="space-y-8 md:space-y-10">
         
         {/* 2. Story */}
-        <div className="bg-white dark:bg-gray-800 rounded-[2rem] p-6 md:p-10 border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-orange-50/80 dark:bg-orange-900/10 rounded-[2rem] p-8 md:p-10 border-none shadow-inner">
            <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-right">
-              <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-full shrink-0">
-                 <Quote className="w-8 h-8 text-brand-600" />
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-full shrink-0 shadow-sm">
+                 <Quote className="w-8 h-8 text-orange-500" />
               </div>
               <div>
                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 leading-snug">
-                   "من قلب المعاناة .. <span className="text-brand-600">وُلد الأمل"</span>
+                   "لأننا عشنا التجربة.. <span className="text-brand-600">صنعنا الحل"</span>
                  </h2>
                  <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-loose font-medium">
-                   بدأت جودة من تجربة شخصية حين تم تشخيص أحد أقربائنا بمرض السلياك. واجهنا صعوبة في إيجاد أكل آمن ولذيذ، فقررنا أن نكون السند لكل مريض، ونوفر منتجات نثق بها لأننا نستخدمها في بيوتنا.
+                   حين تم تشخيص أحد أفراد عائلتنا بالسيلياك، أدركنا ندرة الخيارات الآمنة واللذيذة معاً. لذلك أسسنا "جودة".. لتكون مصدر ثقتك الأول للغذاء الآمن 100%. نحن لا نبيع منتجات تجارية، بل نقدم لك ما نثق بإطعامه لأبنائنا في بيوتنا.
                  </p>
               </div>
            </div>
@@ -112,16 +115,17 @@ export const JoudaPage: React.FC = () => {
                  <span className="text-xs font-bold">5.0</span>
               </div>
            </div>
-           <div className="space-y-3">
+           <div className="space-y-4">
               {TESTIMONIALS.map((review) => (
-                 <div key={review.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-3">
-                    <img src={review.image} alt={review.name} className="w-10 h-10 rounded-full shrink-0" />
-                    <div className="flex-1 min-w-0">
-                       <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-bold text-sm text-gray-900 dark:text-white">{review.name}</h4>
+                 <div key={review.id} className="relative overflow-hidden bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 duration-300">
+                    <Quote className="absolute top-2 left-2 w-16 h-16 text-gray-100 dark:text-gray-700 opacity-50 z-0 rotate-180" />
+                    <img src={review.image} alt={review.name} className="w-12 h-12 rounded-full shrink-0 relative z-10 border-2 border-white dark:border-gray-700 shadow-sm" />
+                    <div className="flex-1 min-w-0 relative z-10">
+                       <div className="flex items-center gap-2 mb-1.5">
+                          <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white">{review.name}</h4>
                           <span className="text-xs text-gray-400">{review.time}</span>
                        </div>
-                       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">"{review.text}"</p>
+                       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">"{review.text}"</p>
                     </div>
                  </div>
               ))}
@@ -163,7 +167,7 @@ export const JoudaPage: React.FC = () => {
                <a href="https://www.instagram.com/joudafood/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 flex items-center justify-center transition-colors"><Instagram className="w-5 h-5" /></a>
                <a href={STORE_CONFIG.URL} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"><Globe className="w-5 h-5" /></a>
             </div>
-            <p className="text-xs font-bold text-gray-400 dark:text-gray-500">© 2024 عالم جودة. صنع بحب لمرضى السيلياك</p>
+            <p className="text-xs font-bold text-gray-400 dark:text-gray-500">© 2024 عالم جودة. صُنع بحرص وحب لكل من يبحث عن حياة خالية من الجلوتين.</p>
         </div>
 
       </div>

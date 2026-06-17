@@ -7,7 +7,7 @@
 
 import { answerCallback, editMessage, sendMessage } from './telegram.ts';
 import { getClients } from './db.ts';
-import { env, isAdmin } from './config.ts';
+import { env, isAdmin, getInventoryUserId } from './config.ts';
 import { APP_ACTIONS, appOrderButtons } from './workflow.ts';
 import { fmtDate, whatsappButton } from './format.ts';
 
@@ -39,6 +39,14 @@ export async function handleWfCallback(
 
   if (!order || orderErr) {
     await answerCallback(token, callback.id, '⚠️ الطلب غير موجود', true);
+    return;
+  }
+
+  // ── 1.5 Special action: undo ──
+  if (action === 'undo') {
+    const prevStatus = parts[2];
+    const targetOrderId = parts.slice(3).join('_');
+    await handleUndo(token, chatId, callback, targetOrderId, prevStatus, userName);
     return;
   }
 
@@ -124,6 +132,20 @@ export async function handleWfCallback(
     }
   }
 
+  // ── 5.6 Invoice Assignment (Driver Mapping) ──
+  if (['reserve', 'prepare', 'deliver'].includes(action) && order.quotation_id) {
+    const inventoryUserId = getInventoryUserId(userId);
+    if (inventoryUserId) {
+      inventory.rpc('assign_invoice_to_collector', {
+        p_invoice_id: order.quotation_id,
+        p_collector_id: inventoryUserId,
+        p_actor_user_id: env.systemUserId(),
+      }).then(({ error }) => {
+        if (error) console.error('Failed to assign invoice:', error);
+      });
+    }
+  }
+
   // ── 6. Update status (optimistic lock) ──
   const updatePayload: Record<string, unknown> = {
     status: actionDef.nextStatus,
@@ -161,10 +183,17 @@ export async function handleWfCallback(
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
     const originalText = callback.message?.text || '';
-    const hasHeader = originalText.includes('سجل حركات الطلب');
-    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
-    const trail = `${headerBlock}\n• ${actionDef.emoji} <b>${actionDef.label}</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+    const hasHeader = originalText.includes('سجل الحركات');
+    const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
+    const trail = `${headerBlock}\n${actionDef.emoji} <b>${actionDef.label}</b> (بواسطة: ${userName})`;
     const nextButtons = appOrderButtons(orderId, actionDef.nextStatus);
+
+    // Append Undo button if eligible
+    if (['reserve', 'prepare', 'deliver', 'paid'].includes(action)) {
+      nextButtons.push([
+        { text: '🔙 تراجع عن الحركة السابقة', callback_data: `wf_undo_${order.status}_${orderId}` }
+      ]);
+    }
 
     await editMessage(token, chatId, messageId, originalText + trail, {
       reply_markup:
@@ -277,7 +306,7 @@ async function handleApprove(
     const originalText = callback.message?.text || '';
     const newText =
       originalText +
-      `\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>\n• ✅ <b>تم الاعتماد</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+      `\n\n📋 <b>سجل الحركات:</b>\n✅ <b>تم الاعتماد</b> (بواسطة: ${userName})`;
     await editMessage(token, chatId, messageId, newText, {
       reply_markup: undefined,
     });
@@ -388,11 +417,77 @@ async function handleReject(
     const originalText = callback.message?.text || '';
     const newText =
       originalText +
-      `\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>\n• ❌ <b>تم رفض الطلب</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+      `\n\n📋 <b>سجل الحركات:</b>\n❌ <b>تم رفض الطلب</b> (بواسطة: ${userName})`;
     await editMessage(token, chatId, messageId, newText, {
       reply_markup: undefined,
     });
   }
 
   await answerCallback(token, callback.id, '❌ تم رفض الطلب');
+}
+
+// ─── Undo (Fat Finger Rescue) ───────────────────────────
+
+async function handleUndo(
+  token: string,
+  chatId: string,
+  callback: any,
+  orderId: string,
+  prevStatus: string,
+  userName: string,
+) {
+  const { jouda } = getClients();
+  const messageId = callback.message?.message_id;
+
+  // 1. Time Limit Guard (60 seconds)
+  const editDate = callback.message?.edit_date || callback.message?.date || 0;
+  const now = Math.floor(Date.now() / 1000);
+  if (now - editDate > 60) {
+    await answerCallback(token, callback.id, '⏳ انتهى وقت التراجع المسموح (دقيقة واحدة)', true);
+    return;
+  }
+
+  // 2. Fetch order to verify
+  const { data: order, error: orderErr } = await jouda
+    .from('customer_orders')
+    .select('id, status')
+    .eq('id', orderId)
+    .single();
+
+  if (!order || orderErr) {
+    await answerCallback(token, callback.id, '⚠️ الطلب غير موجود', true);
+    return;
+  }
+
+  // 3. Revert Status in DB
+  const updatePayload: Record<string, unknown> = { status: prevStatus };
+
+  const { data: updated, error: updateErr } = await jouda
+    .from('customer_orders')
+    .update(updatePayload)
+    .eq('id', orderId)
+    .select('id')
+    .single();
+
+  if (updateErr || !updated) {
+    await answerCallback(token, callback.id, '⚠️ فشل التراجع', true);
+    return;
+  }
+
+  // 4. Update Telegram Message Trail
+  if (messageId) {
+    const originalText = callback.message?.text || '';
+    const lines = originalText.split('\n');
+    lines.pop(); // Remove the last trail line
+    const newText = lines.join('\n');
+
+    // Generate original buttons for the restored status
+    const restoredButtons = appOrderButtons(orderId, prevStatus);
+
+    await editMessage(token, chatId, messageId, newText, {
+      reply_markup: restoredButtons.length > 0 ? { inline_keyboard: restoredButtons } : undefined,
+    });
+  }
+
+  await answerCallback(token, callback.id, '🔙 تم التراجع بنجاح');
 }

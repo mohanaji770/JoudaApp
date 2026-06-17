@@ -282,32 +282,26 @@ function buildTelegramMessage(orderData: any): string {
   const { orderNumber, customerName, customerPhone, customerAddress, total, items, notes, latitude, longitude } = orderData;
   const itemsList = items.map((item: any) => {
     if (item.is_package && item.sub_items && item.sub_items.length > 0) {
-      const subList = item.sub_items.map((sub: any) => `      ▫️ 🛒 ${sub.product_name} × ${sub.quantity * item.quantity}`).join('\n');
-      return `• 📦 <b>${item.product_name}</b> × ${item.quantity}\n${subList}`;
+      const subList = item.sub_items.map((sub: any) => `    ▫️ ${sub.product_name} (× ${sub.quantity * item.quantity})`).join('\n');
+      return `▪️ <b>${item.product_name}</b> (× ${item.quantity})\n${subList}`;
     }
-    return `• 🛒 ${item.product_name} × ${item.quantity}`;
+    return `▪️ ${item.product_name} (× ${item.quantity})`;
   }).join('\n');
 
-  const now = new Date();
-  let h = now.getHours(); const period = h >= 12 ? 'م' : 'ص'; h = h % 12 || 12;
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${String(now.getMinutes()).padStart(2,'0')} ${period}`;
   const notesLine = notes ? `\n📝 <b>ملاحظات:</b> <code>${notes}</code>\n` : '';
-  const mapLink = (latitude && longitude) ? `\n🗺️ <b>الموقع الجغرافي:</b> <a href="https://www.google.com/maps?q=${latitude},${longitude}">رابط خرائط جوجل</a>\n` : '';
+  const mapLink = (latitude && longitude) ? ` — <a href="https://www.google.com/maps?q=${latitude},${longitude}">خرائط جوجل</a>` : '';
 
   return `
-📥 <b>طلب جديد من التطبيق 📱</b>
-━━━━━━━━━━━━━━━━━━━
-🆔 <b>رقم الطلب:</b> <code>#${orderNumber}</code>
-👤 <b>العميل:</b> <b>${customerName}</b>
-📱 <b>الهاتف:</b> <code>${customerPhone}</code>
-📍 <b>العنوان:</b> <code>${customerAddress || 'غير محدد'}</code>${mapLink}
-━━━━━━━━━━━━━━━━━━━
-📦 <b>الأصناف المطلوبة:</b>
+🛒 <b>طلب جديد (#${orderNumber})</b>
+
+👤 <b>العميل:</b> ${customerName}
+📞 <b>الجوال:</b> <code>${customerPhone}</code>
+📍 <b>العنوان:</b> ${customerAddress || 'استلام من الفرع'}${mapLink}
+
+📦 <b>المنتجات:</b>
 ${itemsList}
-${notesLine}━━━━━━━━━━━━━━━━━━━
-💰 <b>إجمالي الطلب:</b> <b>${total.toLocaleString()}</b> ر.ي
-━━━━━━━━━━━━━━━━━━━
-⏱️ <b>التوقيت:</b> <code>${dateStr}</code>
+${notesLine}
+💰 <b>الإجمالي:</b> <b>${total.toLocaleString()}</b> ر.ي
 `.trim();
 }
 

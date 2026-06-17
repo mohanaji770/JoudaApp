@@ -7,7 +7,7 @@
 
 import { answerCallback, editMessage } from './telegram.ts';
 import { getClients } from './db.ts';
-import { env, isAdmin } from './config.ts';
+import { env, isAdmin, getInventoryUserId } from './config.ts';
 import { INV_ACTIONS, invButtons } from './workflow.ts';
 import { fmtDate } from './format.ts';
 
@@ -131,6 +131,20 @@ export async function handleInvCallback(
       .eq('quotation_id', invoiceId);
   }
 
+  // ── 6.5 Invoice Assignment (Driver Mapping) ──
+  if (['reserve', 'prepare', 'deliver'].includes(action)) {
+    const inventoryUserId = getInventoryUserId(userId);
+    if (inventoryUserId) {
+      inventory.rpc('assign_invoice_to_collector', {
+        p_invoice_id: invoiceId,
+        p_collector_id: inventoryUserId,
+        p_actor_user_id: env.systemUserId(),
+      }).then(({ error }) => {
+        if (error) console.error('Failed to assign invoice:', error);
+      });
+    }
+  }
+
   // ── 7. Acknowledge ──
   await answerCallback(
     token,
@@ -141,9 +155,9 @@ export async function handleInvCallback(
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
     const orig = callback.message?.text || '';
-    const hasHeader = orig.includes('سجل حركات الطلب');
-    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
-    const trail = `${headerBlock}\n• ${actionDef.emoji} <b>${actionDef.label}</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+    const hasHeader = orig.includes('سجل الحركات');
+    const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
+    const trail = `${headerBlock}\n${actionDef.emoji} <b>${actionDef.label}</b> (بواسطة: ${userName})`;
     const nextBtns = invButtons(invoiceId, actionDef.nextStatus);
 
     await editMessage(token, chatId, messageId, orig + trail, {
@@ -211,9 +225,9 @@ async function handleReverse(
   // Update message: remove all buttons
   if (messageId) {
     const orig = callback.message?.text || '';
-    const hasHeader = orig.includes('سجل حركات الطلب');
-    const headerBlock = hasHeader ? '' : '\n\n───────────────────\n📋 <b>سجل حركات الطلب:</b>';
-    const trail = `${headerBlock}\n• 🔄 <b>تم العكس</b> 👤 <i>${userName}</i> ⏱️ <code>${fmtDate()}</code>`;
+    const hasHeader = orig.includes('سجل الحركات');
+    const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
+    const trail = `${headerBlock}\n🔄 <b>تم العكس</b> (بواسطة: ${userName})`;
     await editMessage(token, chatId, messageId, orig + trail, {
       reply_markup: undefined,
     });

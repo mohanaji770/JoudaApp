@@ -5,12 +5,19 @@ import 'leaflet/dist/leaflet.css';
 import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle } from 'lucide-react';
 import { calculateDistance, calculateDeliveryFee } from '../utils/distanceUtils';
 
-// Fix for default Leaflet marker icon issue in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+// Custom iOS-like Map Pin
+const iosPinIcon = L.divIcon({
+  className: 'bg-transparent border-none',
+  html: `
+    <div class="relative flex items-end justify-center w-[40px] h-[50px] -ml-[20px] -mt-[45px]">
+      <div class="absolute bottom-0 w-5 h-1.5 bg-black/40 rounded-[100%] blur-[2px]"></div>
+      <div class="absolute bottom-1 w-9 h-9 bg-[#FF3B30] rounded-[50%_50%_50%_0] rotate-[-45deg] shadow-lg flex items-center justify-center border-[1.5px] border-white/20 transition-transform duration-300 hover:scale-110">
+        <div class="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+      </div>
+    </div>
+  `,
+  iconSize: [0, 0],
+  iconAnchor: [0, 0],
 });
 
 interface MapLocationPickerProps {
@@ -33,14 +40,15 @@ function MapEvents({ onLocationClick }: { onLocationClick: (lat: number, lng: nu
   return null;
 }
 
-// Custom component to trigger re-render of map size and fly to new positions
 function MapController({ position }: { position: [number, number] }) {
   const map = useMap();
   
   useEffect(() => {
-    setTimeout(() => {
+    // Wait for any entry animations to complete before invalidating size
+    const timer = setTimeout(() => {
       map.invalidateSize();
-    }, 100);
+    }, 350);
+    return () => clearTimeout(timer);
   }, [map]);
 
   useEffect(() => {
@@ -181,18 +189,19 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 relative bg-gray-100 z-0">
+        <div className="flex-1 relative bg-gray-100 z-0 min-h-[300px]">
           <MapContainer 
             center={position} 
             zoom={15} 
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '100%', width: '100%', position: 'absolute', top: 0, left: 0, bottom: 0, right: 0 }}
             zoomControl={false}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; Google Maps'
+              url="https://mt1.google.com/vt/lyrs=m&hl=ar&x={x}&y={y}&z={z}"
+              maxZoom={20}
             />
-            <Marker position={position} />
+            <Marker position={position} icon={iosPinIcon} />
             <MapEvents onLocationClick={(lat, lng) => setPosition([lat, lng])} />
             <MapController position={position} />
           </MapContainer>

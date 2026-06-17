@@ -50,3 +50,16 @@ export const STATUS_LABEL: Record<string, string> = {
 export function isAdmin(userId: string | number): boolean {
   return env.adminIds().includes(String(userId));
 }
+
+/** Get the Inventory User ID mapped to a Telegram User ID */
+export function getInventoryUserId(telegramId: string): string | null {
+  try {
+    const mapStr = Deno.env.get('TELEGRAM_DRIVER_MAP');
+    if (!mapStr) return null;
+    const map = JSON.parse(mapStr);
+    return map[telegramId] || null;
+  } catch (e) {
+    console.error('Error parsing TELEGRAM_DRIVER_MAP:', e);
+    return null;
+  }
+}
