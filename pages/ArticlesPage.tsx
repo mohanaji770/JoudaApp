@@ -46,7 +46,7 @@ export const ArticlesPage: React.FC = () => {
                 المقالات والمعرفة
               </h1>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5">
-                اكتشف أحدث المقالات والنصائح لنمط حياة صحي
+                نصائح ومعلومات تهمّك لنمط حياة صحي وخالي من الجلوتين
               </p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export const ArticlesPage: React.FC = () => {
             </div>
             <input
               type="text"
-              placeholder="ابحث في المقالات..."
+              placeholder="ابحث عن موضوع يهمك..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl py-3 pr-11 pl-4 text-[15px] font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none"
@@ -79,7 +79,7 @@ export const ArticlesPage: React.FC = () => {
             <div className="w-20 h-20 bg-brand-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
               <BookOpen className="w-10 h-10 text-brand-300 dark:text-gray-600" />
             </div>
-            <p className="text-lg font-bold text-gray-500 dark:text-gray-400">لا توجد مقالات مطابقة لبحثك</p>
+            <p className="text-lg font-bold text-gray-500 dark:text-gray-400">ما لقينا مقالات تطابق اللي تبحث عنه</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">

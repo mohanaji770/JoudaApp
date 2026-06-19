@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Package, Heart, ShoppingCart, Calendar, Repeat, Trash2, Settings, User as UserIcon, LogOut,
   Clock, MapPin, Phone, Truck, Store, AlertCircle, X, RefreshCw,
-  Check, MessageCircle, Send, CheckCircle2, Building, AlertTriangle, ShieldCheck
+  Check, MessageCircle, Send, CheckCircle2, Building, AlertTriangle, ShieldCheck,
+  Info, ChevronLeft
 } from 'lucide-react';
 import { getCompletedOrders, deleteCompletedOrder, CompletedOrder } from '../services/db';
 import { fetchLiveOrders, fetchLiveOrderItems, type LiveOrder, type LiveOrderItem } from '../services/liveOrderService';
@@ -576,6 +577,26 @@ export const OrdersPage: React.FC = () => {
                 <p className="text-[10px] text-gray-400 mt-1.5">يتم ربط رقم الجوال تلقائياً عند إتمام أول طلب.</p>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">دليل ومساعدة</h3>
+            
+            <button
+              onClick={() => navigate('/about')}
+              className="w-full flex items-center justify-between py-3 px-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-brand-50 dark:bg-brand-900/20 p-2 rounded-xl text-brand-600 dark:text-brand-400">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div className="text-right">
+                  <span className="block text-sm font-bold text-gray-900 dark:text-white">عن جودة (من نحن)</span>
+                  <span className="text-[10px] text-gray-500 block">تعرف على قصتنا، موقعنا، والأسئلة الشائعة</span>
+                </div>
+              </div>
+              <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-brand-500 group-hover:-translate-x-0.5 transition-all" />
+            </button>
           </div>
 
           <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl p-5 border border-red-100 dark:border-red-900/20">

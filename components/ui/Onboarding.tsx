@@ -14,23 +14,23 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
 
   const steps = [
     {
-      title: "لست وحدك في رحلة السيلياك",
-      desc: "قد تكون البداية صعبة: هل هذا المنتج آمن؟ ماذا أطبخ اليوم؟ لهذا صممنا تطبيق جودة ليكون رفيقك الدائم.",
+      title: "احنا معاك خطوة بخطوة",
+      desc: "نعرف إن البداية صعبة والأسئلة كثيرة: هل هذا الأكل آمن؟ وإيش أطبخ اليوم؟ لهذا صممنا \"جودة\" ليكون رفيقك اليومي ويساعدك.",
       icon: <HeartHandshake className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "افحص المنتجات بثقة",
-      desc: "وجّه كاميرا هاتفك إلى أي منتج، وسنخبرك فوراً: هل هو آمن أم يحتوي على جلوتين؟ قرارك أصبح أسهل.",
+      title: "افحص أي منتج بثواني",
+      desc: "صوّر مكونات أي منتج بكاميرا جوالك، وبسرعة بنقول لك إذا كان آمن وخالي من الجلوتين. قرارك صار أسهل بضغطة زر.",
       icon: <ScanBarcode className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "وصفات لذيذة وآمنة",
-      desc: "وصفات مجرّبة تناسب كل الأذواق، من العصيد إلى الكيك.. استمتع بأكلك بدون حرمان.",
+      title: "وصفات لذيذة وبلا حرمان",
+      desc: "تصفح مئات الوصفات المضمونة والمجربة الخالية من الجلوتين، من الأكلات الشعبية للحلويات والكيك. عيش حياتك واستمتع بأكلك المفضل.",
       icon: <ChefHat className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
-      title: "تسوق بضمان 100%",
-      desc: "كل المنتجات في متجرنا مضمونة وخالية من الجلوتين. ابدأ حياتك بلا قلق لأنك تستحق السعادة.",
+      title: "كل مقاضيك مضمونة وآمنة",
+      desc: "وفرنا لك متجر متكامل فيه كل المنتجات والمقاضي الخالية من الجلوتين بضمان وفحص دقيق. تسوق وأنت مرتاح البال وبلا أي قلق.",
       icon: <Store className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     }
   ];
@@ -100,7 +100,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
           onClick={handleNext}
           className="w-full bg-gray-900 dark:bg-brand-600 text-white h-14 rounded-2xl flex items-center justify-center transition-transform active:scale-[0.98] gap-3 font-bold text-[16px] shadow-lg shadow-gray-200 dark:shadow-none"
         >
-          <span>{step === steps.length - 1 ? 'ابدأ تجربتك' : 'التالي'}</span>
+          <span>{step === steps.length - 1 ? 'ابدأ الآن' : 'التالي'}</span>
           {step === steps.length - 1 ? <Check className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
         </button>
       </div>

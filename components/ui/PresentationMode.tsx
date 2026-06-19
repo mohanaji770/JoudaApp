@@ -136,6 +136,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ onClose }) =
   const [showLiveDemo, setShowLiveDemo] = useState(false);
   const [demoAnalyzing, setDemoAnalyzing] = useState(false);
   const [demoResult, setDemoResult] = useState<AnalysisResult | null>(null);
+  const [demoMode, setDemoMode] = useState<'camera' | 'text'>('camera');
 
   const handleDemoScan = async (base64: string) => {
     setDemoAnalyzing(true);
@@ -262,6 +263,8 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ onClose }) =
                                     isAnalyzing={demoAnalyzing} 
                                     onImageSelected={handleDemoScan} 
                                     onTextSearch={() => {}} 
+                                    mode={demoMode}
+                                    setMode={setDemoMode}
                                 />
                                 <p className="text-center text-xs text-gray-400 mt-4">
                                     * وضع المحاكاة للعرض التقديمي

@@ -79,10 +79,10 @@ export const TrendingRecipes: React.FC = () => {
             <div
               key={recipe.id}
               onClick={handleCardClick}
-              className="min-w-[260px] max-w-[260px] bg-gray-50 dark:bg-gray-800/40 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group snap-center shrink-0 flex flex-col overflow-hidden active:scale-[0.98] border border-transparent"
+              className="min-w-[260px] max-w-[260px] bg-white dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-md transition-all duration-300 cursor-pointer group snap-center shrink-0 flex flex-col overflow-hidden active:scale-[0.98]"
             >
               {/* Image */}
-              <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-t-3xl">
+              <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-t-[1.5rem]">
                 {recipe.image ? (
                   <img
                     src={recipe.image}
@@ -106,13 +106,13 @@ export const TrendingRecipes: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="p-4 flex flex-col flex-1 relative bg-white/50 dark:bg-gray-900/50">
-                <h4 className="font-bold text-[15px] text-gray-900 dark:text-white line-clamp-2 leading-snug mb-3">
+              <div className="p-4 flex flex-col flex-1 relative text-right">
+                <h4 className="font-black text-[14px] text-gray-900 dark:text-white line-clamp-2 leading-snug mb-3">
                   {recipe.title}
                 </h4>
 
                 {/* Clean Metadata Line */}
-                <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-auto pt-3 border-t border-gray-100 dark:border-gray-800/50">
+                <div className="flex items-center justify-between text-[12px] font-bold text-gray-400 dark:text-gray-500 mt-auto pt-3 border-t border-gray-100 dark:border-gray-800/50">
                   {recipe.time && (
                     <span className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5" /> {recipe.time}

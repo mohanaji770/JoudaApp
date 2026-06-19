@@ -21,10 +21,10 @@ export const CartHeader: React.FC<CartHeaderProps> = ({ totalItems, handleClose,
       </div>
       <div>
         <h2 className="text-lg font-black text-gray-800 dark:text-gray-100 leading-none">
-          {step === 'cart' ? 'سلة المشتريات' : 'بيانات التوصيل'}
+          {step === 'cart' ? 'سلتك' : 'بيانات التوصيل'}
         </h2>
         <p className="text-[10px] text-gray-400 font-bold mt-1">
-          {step === 'cart' ? 'مراجعة المنتجات والكميات' : 'الرجاء تعبئة بيانات الاستلام'}
+          {step === 'cart' ? 'راجع طلباتك وعدلها براحتك' : 'اكتب بياناتك عشان يوصلك الطلب بسرعة 🚀'}
         </p>
       </div>
     </div>

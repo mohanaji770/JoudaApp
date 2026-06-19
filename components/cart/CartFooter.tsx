@@ -40,7 +40,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       {!isFormValid && (
         <div className="flex items-center gap-2 text-[10px] text-orange-600 bg-orange-50 dark:bg-orange-950/20 p-2 rounded-lg">
           <Info className="w-3 h-3 shrink-0" />
-          <span>يرجى تعبئة الاسم والهاتف والعنوان</span>
+          <span>لا تنسى تكتب الاسم، الجوال، وتحدد موقع التوصيل</span>
         </div>
       )}
 
@@ -70,7 +70,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
             className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] text-lg"
           >
             <ShoppingBag className="w-5 h-5" />
-            <span>{submitting ? 'جاري الإرسال...' : 'تأكيد وإرسال الطلب ✅'}</span>
+            <span>{submitting ? 'جاري إرسال طلبك...' : 'أرسل الطلب الآن ✅'}</span>
           </button>
         )}
         
@@ -82,7 +82,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
               className="py-2 text-[12px] text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>أو إرسال عبر واتساب</span>
+              <span>أرسل الطلب بواتساب</span>
             </button>
 
             <span className="text-gray-300 dark:text-gray-700">|</span>

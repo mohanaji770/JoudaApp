@@ -270,17 +270,17 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
       ) : error ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-red-50 dark:border-red-900/30">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm font-medium">فشل تحميل المنتجات</p>
-          <button onClick={() => loadAllData()} className="text-brand-600 font-bold text-sm mt-2 hover:underline">إعادة المحاولة</button>
+          <p className="text-gray-500 text-sm font-medium">حصلت مشكلة في تحميل المنتجات، شيك على الإنترنت</p>
+          <button onClick={() => loadAllData()} className="text-brand-600 font-bold text-sm mt-2 hover:underline">جرب مرة ثانية</button>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700">
           <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-900 dark:text-white font-bold text-base mb-1">لا توجد نتائج</p>
+          <p className="text-gray-900 dark:text-white font-bold text-base mb-1">ما لقينا نتائج</p>
           <p className="text-gray-400 text-sm mb-4">
             {debouncedSearchQuery 
-              ? `لا توجد منتجات تطابق "${debouncedSearchQuery}"`
-              : 'لا توجد منتجات مطابقة للفلاتر المحددة'}
+              ? `ما لقينا منتجات تطابق "${debouncedSearchQuery}".. جرب كلمة ثانية!`
+              : 'ما في منتجات تطابق الفلاتر اللي اخترتها'}
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
             {debouncedSearchQuery && (
@@ -289,7 +289,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                 onClick={() => setSearchQuery('')} 
                 className="px-4 py-2 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 text-xs font-bold rounded-xl border border-brand-200 dark:border-brand-800 hover:bg-brand-100 transition-colors"
               >
-                مسح البحث
+                امسح البحث
               </button>
             )}
             {activeFiltersCount > 0 && (
@@ -298,14 +298,14 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                 onClick={resetFilters} 
                 className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-100 transition-colors"
               >
-                مسح الفلاتر ({activeFiltersCount})
+                امسح الفلاتر ({activeFiltersCount})
               </button>
             )}
           </div>
           {/* Smart suggestions */}
           {debouncedSearchQuery && currentProducts.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-xs text-gray-400 mb-3">هل تقصد:</p>
+              <p className="text-xs text-gray-400 mb-3">ممكن قصدك:</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {currentProducts
                   .filter(p => p.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase().slice(0, 2)))
@@ -335,7 +335,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-brand-500" />
                 <span className="text-xs text-gray-500">
-                  <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> نتيجة لـ "<span className="font-bold">{debouncedSearchQuery}</span>"
+                  <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> نتيجة بحث عن "<span className="font-bold">{debouncedSearchQuery}</span>"
                 </span>
               </div>
               <button 
@@ -343,7 +343,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                 onClick={() => setSearchQuery('')}
                 className="text-[10px] text-gray-400 hover:text-brand-600 font-bold transition-colors"
               >
-                مسح
+                امسح
               </button>
             </div>
           )}
@@ -384,7 +384,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                 <ChevronDown className="w-4 h-4" />
                 عرض المزيد
                 <span className="text-[10px] text-gray-400 font-normal bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                  {filteredProducts.length - visibleCount} متبقي
+                  باقي {filteredProducts.length - visibleCount} حبات
                 </span>
               </button>
             </div>
@@ -395,7 +395,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
             <div className="mt-6 text-center pb-4">
               <div className="inline-flex items-center gap-2 text-gray-400 text-xs">
                 <div className="w-8 h-px bg-gray-200 dark:bg-gray-700" />
-                <span>انتهت القائمة</span>
+                <span>وصلت لآخر المنتجات</span>
                 <div className="w-8 h-px bg-gray-200 dark:bg-gray-700" />
               </div>
             </div>

@@ -2,16 +2,17 @@ import React, { useRef, useState } from 'react';
 import { Camera, Upload, ScanSearch, Search, Type, Info, ImagePlus, X } from 'lucide-react';
 import { compressImage, fileToBase64 } from '../../utils/imageCompression';
 
+type Mode = 'camera' | 'text';
+
 interface ScannerProps {
   onImageSelected: (base64: string) => void;
   onTextSearch: (text: string) => void;
   isAnalyzing: boolean;
+  mode: Mode;
+  setMode: (mode: Mode) => void;
 }
 
-type Mode = 'camera' | 'text';
-
-export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch, isAnalyzing }) => {
-  const [mode, setMode] = useState<Mode>('camera');
+export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch, isAnalyzing, mode, setMode }) => {
   const [searchText, setSearchText] = useState('');
   const [showSearchHint, setShowSearchHint] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -177,7 +178,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="اسم المنتج..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-gray-800 transition-all text-center font-medium pl-10 pr-10 text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-gray-800 transition-all text-right font-medium pl-12 pr-12 text-sm"
                 />
                 <button
                   type="button"

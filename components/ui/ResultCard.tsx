@@ -225,7 +225,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
             className={`flex-1 py-3.5 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm text-sm ${
               isCopied 
                 ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300 cursor-default' 
-                : 'bg-warm-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700 active:scale-95'
+                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-750 active:scale-95'
             }`}
           >
             {isCopied ? (
@@ -241,21 +241,21 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
             )}
           </button>
           
-          {/* 2. Share Image - Fixed Dark Mode Color */}
+          {/* 2. Share Image - Outlined Style */}
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex-1 py-3.5 border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-white rounded-xl font-bold hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors flex items-center justify-center gap-2 shadow-sm text-sm"
+            className="flex-1 py-3.5 bg-white text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm text-sm active:scale-95"
           >
             <ImageIcon className="w-4 h-4" />
             <span>صورة</span>
           </button>
 
-          {/* 3. Reset (New Scan) */}
+          {/* 3. Reset (New Scan) - Primary Action */}
           <button
             onClick={onReset}
-            className="flex-1 py-3.5 bg-gray-900 dark:bg-gray-600 text-white rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none text-sm"
+            className="flex-1 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-black transition-colors flex items-center justify-center gap-2 shadow-md shadow-brand-100 dark:shadow-none text-sm active:scale-95"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4 animate-spin-hover" />
             <span>جديد</span>
           </button>
         </div>

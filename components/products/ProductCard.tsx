@@ -86,7 +86,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
           {product.tags?.includes('best_seller') && (
             <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-200 dark:border-amber-900/50">
-              <BadgeCheck className="w-3 h-3" /> الأكثر مبيعاً
+              <BadgeCheck className="w-3 h-3" /> الأكثر طلباً 🔥
             </span>
           )}
           {product.tags?.includes('gift') && (
@@ -129,7 +129,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {!product.inStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 backdrop-blur-[1px]">
             <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg transform -rotate-6 border border-red-400/50">
-              نفدت الكمية
+              خلصت الكمية
             </span>
           </div>
         )}
@@ -195,7 +195,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <Plus className="w-4 h-4" />
               </button>
               <span className="text-xs font-black min-w-[32px] text-center text-gray-800 dark:text-white" aria-live="polite">
-                {quantity} عدد
+                {quantity} حبة
               </span>
               <button 
                 type="button"
@@ -215,7 +215,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 }}
                 className="h-9 px-3 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 text-[11px] font-bold shrink-0"
               >
-                اطلبه
+                طلب خاص
               </button>
             ) : (
               <button 

@@ -49,10 +49,10 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
             <Check className="w-7 h-7 text-white" strokeWidth={3} />
           </div>
           <h2 className="text-lg font-black text-gray-900 dark:text-white">
-            تم تأكيد طلبك
+            طلبك وصل وجاهز للاعتماد! 🎉
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            شكراً {customerName}
+            تسلم يا {customerName}، وبنتواصل معك لتأكيد الطلب
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
         <div className="px-6 py-4">
           <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
             <div>
-              <p className="text-[10px] text-gray-400 mb-0.5">رقم الطلب</p>
+              <p className="text-[10px] text-gray-400 mb-0.5">رقم طلبك</p>
               <p className="text-base font-black text-brand-600 font-mono">{orderNumber}</p>
             </div>
             <button
@@ -77,7 +77,7 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
           </div>
 
           <p className="text-[11px] text-gray-400 text-center mt-3">
-            المجموع: <span className="font-bold text-gray-700 dark:text-gray-300">{total.toLocaleString()} ر.س</span>
+            إجمالي الحساب: <span className="font-bold text-gray-700 dark:text-gray-300">{total.toLocaleString()} ريال</span>
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
             onClick={onClose}
             className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-[0.98]"
           >
-            متابعة التسوق
+            ارجع للمتجر
           </button>
 
           <div className="flex gap-2">

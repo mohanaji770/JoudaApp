@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, LayoutGrid, ShoppingCart, Info, User } from 'lucide-react';
+import { Home, LayoutGrid, ShoppingCart, BookOpen, User } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 
 export const BottomNav: React.FC = () => {
@@ -12,8 +12,8 @@ export const BottomNav: React.FC = () => {
     { id: 'home', path: '/', label: 'الرئيسية', icon: <Home className="w-[22px] h-[22px]" /> },
     { id: 'products', path: '/products', label: 'المتجر', icon: <LayoutGrid className="w-[22px] h-[22px]" /> },
     { id: 'cart', isCart: true, label: 'السلة', icon: <ShoppingCart className="w-7 h-7 text-white" /> },
-    { id: 'orders', path: '/orders', label: 'حسابي', icon: <User className="w-[22px] h-[22px]" /> },
-    { id: 'about', path: '/about', label: 'من نحن', icon: <Info className="w-[22px] h-[22px]" /> },
+    { id: 'articles', path: '/articles', label: 'المقالات', icon: <BookOpen className="w-[22px] h-[22px]" /> },
+    { id: 'orders', path: '/orders', label: 'طلباتي', icon: <User className="w-[22px] h-[22px]" /> },
   ];
 
   return (

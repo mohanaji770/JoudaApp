@@ -13,7 +13,7 @@ export const DashboardView: React.FC = () => {
   const currentHour = new Date().getHours();
   let greeting = 'نهارك سعيد';
   let icon = '☀️';
-  
+
   if (currentHour < 12) {
     greeting = 'صباح الخير';
     icon = '☀️';
@@ -31,25 +31,25 @@ export const DashboardView: React.FC = () => {
   return (
     <div className="animate-fade-in flex flex-col">
       {/* iOS Style Minimal Hero */}
-      <div className="mt-5 mb-7 px-4">
-        <h1 className="text-[28px] font-black text-gray-900 dark:text-white mb-3 tracking-tight flex items-center gap-2">
+      <div className="mt-4 mb-4 px-4">
+        <h1 className="text-[20px] font-black text-gray-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
           <span>{greeting}، {userName}</span>
-          <span className="text-2xl">{icon}</span>
+          <span className="text-xl">{icon}</span>
         </h1>
-        <p className="text-[14px] font-bold text-gray-500 dark:text-gray-400 leading-[1.7] max-w-[90%]">
+        <p className="text-[12px] font-bold text-gray-500 dark:text-gray-400 leading-normal max-w-[90%]">
           خياراتك الصحية الموثوقة.. في مكان واحد.
         </p>
       </div>
 
       {/* Smart Lifesaver Bar (Scanner Trigger) */}
-      <div className="px-4 mb-8 animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <div className="px-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
         <button
           onClick={() => window.dispatchEvent(new Event('open-scanner'))}
-          className="w-full relative group bg-white dark:bg-gray-900 rounded-[1.25rem] p-4 flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-brand-200 dark:hover:border-brand-800 transition-all active:scale-[0.98] overflow-hidden"
+          className="w-full relative group bg-white dark:bg-gray-900 rounded-[1.25rem] p-3.5 flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-brand-200 dark:hover:border-brand-800 transition-all active:scale-[0.98] overflow-hidden"
         >
           {/* Animated Background Gradient (Subtle) */}
           <div className="absolute inset-0 bg-gradient-to-r from-brand-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
+
           {/* Icon Area */}
           <div className="w-12 h-12 rounded-[1rem] bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
             <ScanLine className="w-6 h-6 text-brand-600 dark:text-brand-400" />
@@ -58,7 +58,7 @@ export const DashboardView: React.FC = () => {
           {/* Text Area */}
           <div className="flex-1 text-right">
             <h3 className="font-black text-gray-900 dark:text-white text-[15px] mb-0.5">افحص أي منتج الآن</h3>
-            <p className="text-[11px] text-gray-500 font-bold">بالكاميرا أو البحث النصي.. وتأكد هل هو خالي من الجلوتين!</p>
+            <p className="text-[12px] text-gray-500 dark:text-gray-400 font-bold">بالكاميرا أو البحث النصي.. وتأكد هل هو خالي من الجلوتين!</p>
           </div>
 
           {/* Search Icon Hint */}
@@ -68,56 +68,44 @@ export const DashboardView: React.FC = () => {
         </button>
       </div>
 
-      {/* Minimal Categories (Bento Style) */}
-      <div className="grid grid-cols-2 gap-3 mb-8 px-4">
+      {/* Minimal Categories (Bento Style) - Horizontal Layout */}
+      <div className="grid grid-cols-2 gap-3 mb-6 px-4">
         {/* متجر جودة - الآن في اليمين */}
         <button
           onClick={() => navigate('/products')}
-          className="group relative h-28 rounded-[1.5rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between"
+          className="group relative min-h-[5rem] h-auto rounded-[1.25rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right px-2.5 py-3 sm:p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 sm:gap-3 w-full"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-10 h-10 rounded-[0.8rem] bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-               <Store className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            </div>
-            <div className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ChevronLeft className="w-3 h-3 text-gray-400" />
-            </div>
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[0.8rem] bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+            <Store className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400" />
           </div>
-          <div>
-            <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight mb-1">متجر جودة </h3>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-snug line-clamp-1">كافة المنتجات والمقاضي</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-black text-gray-900 dark:text-white text-[14px] leading-tight mb-0.5">تسوق المنتجات</h3>
+            <p className="text-[11px] sm:text-[12px] text-gray-500 dark:text-gray-400 font-medium leading-snug">اطلب الان</p>
           </div>
         </button>
 
         {/* مخبز جودة - الآن في اليسار */}
         <button
           onClick={() => navigate('/recipes')}
-          className="group relative h-28 rounded-[1.5rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between"
+          className="group relative min-h-[5rem] h-auto rounded-[1.25rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right px-2.5 py-3 sm:p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 sm:gap-3 w-full"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-10 h-10 rounded-[0.8rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-               <ChefHat className="w-5 h-5 text-orange-500 dark:text-orange-400" />
-            </div>
-            <div className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ChevronLeft className="w-3 h-3 text-gray-400" />
-            </div>
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[0.8rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300">
+            <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" />
           </div>
-          <div>
-            <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight mb-1">مخبز جودة</h3>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold leading-snug line-clamp-1">وصفات وأكلات صحية</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-black text-gray-900 dark:text-white text-[14px] leading-tight mb-0.5">قائمة الوصفات</h3>
+            <p className="text-[11px] sm:text-[12px] text-gray-500 dark:text-gray-400 font-medium leading-snug">جرّب وصفة اليوم</p>
           </div>
         </button>
       </div>
 
       <HomePackagesCarousel />
 
-
-
       <div className="mb-6">
         <TrendingRecipes />
       </div>
 
-      <div className="mb-10">
+      <div className="mb-6">
         <KnowledgeHub />
       </div>
 

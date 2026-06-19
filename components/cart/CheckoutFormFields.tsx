@@ -39,7 +39,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
       <div className="mb-5 flex items-center justify-between">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Wallet className="w-5 h-5 text-brand-600" />
-          بيانات الاستلام
+          بيانات التوصيل
         </h3>
         {isFormValid && (
           <span className="text-xs text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 font-bold px-2 py-1 rounded-full">✓ مكتمل</span>
@@ -49,9 +49,9 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
       <div className="space-y-5">
           <div>
             <label htmlFor="cart-name" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              الاسم الكريم
+              اسمك الكريم
               {isSaved('jouda_customer_name', customerName) && (
-                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+                <span className="text-[10px] text-green-500 font-bold">حفظنا الاسم ✓</span>
               )}
             </label>
             <div className="relative">
@@ -62,16 +62,16 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium transition-all shadow-sm"
-                placeholder="الاسم الثلاثي"
+                placeholder="اكتب اسمك الثلاثي"
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="cart-phone" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              رقم الجوال
+              رقم جوالك
               {isSaved('jouda_customer_phone', phone) && (
-                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+                <span className="text-[10px] text-green-500 font-bold">حفظنا الرقم ✓</span>
               )}
             </label>
             <div className="relative">
@@ -90,7 +90,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
 
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              موقع التوصيل على الخريطة
+              مكانك على الخريطة
             </label>
             <button
               type="button"
@@ -104,7 +104,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
               <div className="flex items-center gap-3">
                 <Map className={`w-5 h-5 ${customerLat && customerLng ? 'text-green-500' : 'text-brand-500'}`} />
                 <span>
-                  {customerLat && customerLng ? 'تم تحديد الموقع بدقة ✓' : 'حدد موقع التوصيل على الخريطة 📍'}
+                  {customerLat && customerLng ? 'تحدد موقعك بدقة ✓' : 'اضغط لتحديد موقعك على الخريطة 📍'}
                 </span>
               </div>
             </button>
@@ -112,9 +112,9 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
 
           <div>
             <label htmlFor="cart-address" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              توضيح الموقع (رقم العمارة / الشقة)
+              تفاصيل العنوان (رقم البيت / الدور / الشقة)
               {isSaved('jouda_customer_address', address) && (
-                <span className="text-[10px] text-green-500 font-bold">محفوظ ✓</span>
+                <span className="text-[10px] text-green-500 font-bold">حفظنا العنوان ✓</span>
               )}
             </label>
             <div className="relative">
@@ -125,7 +125,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium transition-all shadow-sm"
-                placeholder="مثال: الدور الثاني شقة 4، أو بجوار..."
+                placeholder="مثال: الدور الثاني، شقة 4، بجانب..."
               />
             </div>
           </div>
@@ -137,12 +137,12 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
               className="text-sm font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1.5 py-1"
             >
               <span className="text-lg leading-none">+</span>
-              أضف تعليمات للمندوب (اختياري)
+              حاب تضيف ملاحظة للمندوب؟ (اختياري)
             </button>
           ) : (
             <div className="animate-fade-in">
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="cart-notes" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400">تعليمات للمندوب</label>
+                <label htmlFor="cart-notes" className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400">ملاحظاتك للمندوب</label>
                 <button 
                   type="button" 
                   onClick={() => {
@@ -162,7 +162,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
                   className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-base dark:text-white font-medium resize-none transition-all shadow-sm"
-                  placeholder="أي تعليمات إضافية للمندوب..."
+                  placeholder="مثال: اتصل بي أول ما توصل، لون الباب بني..."
                 />
               </div>
             </div>

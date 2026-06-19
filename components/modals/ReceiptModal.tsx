@@ -96,7 +96,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       }
     } catch (err) {
       console.error('Error sharing receipt:', err);
-      alert('حدث خطأ أثناء إنشاء الصورة. تأكد من اتصال الإنترنت وحاول مرة أخرى.');
+      alert('حصلت مشكلة بسيطة وإحنا نجهز الفاتورة، شيك على الإنترنت وجرب مرة ثانية.');
     } finally {
       setIsGenerating(false);
     }
@@ -108,7 +108,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         
         {/* Header Actions */}
         <div className="flex justify-between items-center text-white px-2">
-          <h3 className="font-bold text-lg">معاينة الفاتورة</h3>
+          <h3 className="font-bold text-lg">فاتورتك الإلكترونية</h3>
           <button 
             onClick={onClose}
             className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors"
@@ -127,9 +127,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
                 {/* RUBBER STAMP EFFECT */}
                 <div className="absolute top-24 left-6 z-10 pointer-events-none select-none opacity-20">
-                     <div className="border-4 border-red-800 text-red-800 font-black text-lg px-4 py-2 rounded-lg -rotate-12 uppercase tracking-widest flex items-center justify-center border-double">
-                         <span>طلب إلكتروني</span>
-                     </div>
+                      <div className="border-4 border-red-800 text-red-800 font-black text-lg px-4 py-2 rounded-lg -rotate-12 uppercase tracking-widest flex items-center justify-center border-double">
+                          <span>طلب من التطبيق</span>
+                      </div>
                 </div>
 
                 {/* Header */}
@@ -158,9 +158,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         <span className="font-bold">{orderDate}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-gray-500">نوع الاستلام:</span>
+                        <span className="text-gray-500">طريقة الاستلام:</span>
                         <span className="font-bold bg-gray-100 px-2 rounded">
-                            {orderType === 'delivery' ? 'توصيل للمنزل 🚚' : 'استلام من الفرع 🏪'}
+                            {orderType === 'delivery' ? 'توصيل للبيت 🚚' : 'استلام من المحل 🏪'}
                         </span>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     <div className="flex items-start gap-2">
                         <User className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                         <div>
-                            <span className="block text-gray-400 text-[10px]">العميل</span>
+                            <span className="block text-gray-400 text-[10px]">الاسم الكريم</span>
                             <span className="font-bold">{customerName}</span>
                         </div>
                     </div>
@@ -182,7 +182,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         )}
                         <div>
                             <span className="block text-gray-400 text-[10px]">
-                                {orderType === 'delivery' ? 'عنوان التوصيل' : 'فرع الاستلام'}
+                                {orderType === 'delivery' ? 'عنوان التوصيل' : 'تستلم من'}
                             </span>
                             <span className="font-medium">{address}</span>
                         </div>
@@ -273,7 +273,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         <span>{totalItems}</span>
                     </div>
                     <div className="text-center text-[10px] text-gray-400 mt-2">
-                        * السعر النهائي يحدد عند تأكيد الطلب
+                        * بنحسب السعر النهائي ونكلمك عند تأكيد الطلب
                     </div>
                 </div>
 
@@ -282,7 +282,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     <div className="mb-6 border-t-2 border-dashed border-gray-200 pt-4 relative z-20">
                         <div className="flex items-center gap-1 text-xs font-bold mb-1">
                             <FileText className="w-3 h-3" />
-                            ملاحظات:
+                            ملاحظاتك للمندوب:
                         </div>
                         <p className="text-xs bg-yellow-50 p-2 rounded text-gray-600">{notes}</p>
                     </div>
@@ -295,8 +295,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         <Scissors className="w-4 h-4 text-gray-400 rotate-90" />
                      </div>
                      <div className="text-center">
-                        <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لاختيارك جودة</p>
-                        <p className="text-[10px] text-gray-600 mb-2">احتفظ بهذه الفاتورة واحصل على خصم 5% على طلبك القادم لكيك المناسبات</p>
+                        <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لثقتك في جودة</p>
+                        <p className="text-[10px] text-gray-600 mb-2">خلي الفاتورة معك، ولك خصم 5% على طلبك الجاي لكيك المناسبات!</p>
                         <div className="font-mono font-bold text-xs bg-white border border-gray-200 inline-block px-3 py-1 rounded text-gray-700 tracking-wider">
                             JOUDA-CAKE-5
                         </div>
@@ -305,8 +305,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
                 {/* Footer */}
                 <div className="text-center pt-2 relative z-20">
-                    <p className="font-bold text-sm mb-1">صحتكم تهمنا ❤️</p>
-                    <p className="text-[10px] text-gray-500">تطبيق عالم جودة</p>
+                    <p className="font-bold text-sm mb-1">صحتكم تهمنا وبالعافية مقدماً! ❤️</p>
+                    <p className="text-[10px] text-gray-500">عالم جودة</p>
                 </div>
 
                 {/* Sawtooth Bottom Edge Effect */}
@@ -323,12 +323,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           {isGenerating ? (
             <div className="flex items-center gap-2">
                 <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
-                <span>جاري الطباعة...</span>
+                <span>نجهز الفاتورة...</span>
             </div>
           ) : (
             <>
               <Share2 className="w-6 h-6" />
-              <span>مشاركة الفاتورة</span>
+              <span>أرسل الفاتورة</span>
             </>
           )}
         </button>

@@ -38,7 +38,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
       try {
         await navigator.share({
           title: article.title,
-          text: `اقرأ هذا المقال المفيد من مدونة جودة: ${article.title}`,
+          text: `شوف هذا المقال المفيد من مدونة جودة: ${article.title}`,
           url: window.location.href,
         });
       } catch (e) {}
@@ -104,7 +104,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
                    onClick={() => setTheme(prev => prev === 'sepia' ? 'default' : 'sepia')}
                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${theme === 'sepia' ? 'bg-[#e4d5b7] text-[#5b4636] shadow-inner' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'}`}
                  >
-                   {theme === 'sepia' ? 'الوضع الافتراضي' : 'وضع القراءة'}
+                   {theme === 'sepia' ? 'المظهر المعتاد' : 'وضع القراءة 📖'}
                  </button>
                  
                  <div className={`w-px h-5 ${theme === 'sepia' ? 'bg-[#d8ccb4]' : 'bg-gray-200 dark:bg-gray-700'}`}></div>

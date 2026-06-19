@@ -55,7 +55,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
           onBlur={handleInputBlur}
-          placeholder="ابحث باسم المنتج..."
+          placeholder="تبحث عن منتج معين؟..."
           className="w-full h-12 pl-4 pr-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900 dark:text-white placeholder-gray-400"
         />
         <Search className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -79,7 +79,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-700">
               <span className="text-xs font-bold text-gray-500 flex items-center gap-1.5">
                 <Clock className="w-3 h-3" />
-                عمليات البحث الأخيرة
+                بحثت مؤخراً عن:
               </span>
               <button
                 type="button"
@@ -116,7 +116,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         {/* Search Suggestions (when typing) */}
         {isSearchFocused && searchQuery.length >= 1 && searchQuery.length < 3 && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-40 overflow-hidden p-4">
-            <p className="text-xs text-gray-400 text-center">اكتب 3 أحرف على الأقل للبحث...</p>
+            <p className="text-xs text-gray-400 text-center">اكتب ٣ أحرف أو أكثر عشان تبحث...</p>
           </div>
         )}
       </div>

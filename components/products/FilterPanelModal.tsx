@@ -76,10 +76,10 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
             <div className="grid grid-cols-2 gap-2">
               {([
                 { value: 'default', label: 'الافتراضي' },
-                { value: 'popular', label: 'الأكثر مبيعاً' },
-                { value: 'price-asc', label: 'السعر: الأقل' },
-                { value: 'price-desc', label: 'السعر: الأعلى' },
-                { value: 'name-asc', label: 'الاسم: أ-ي' },
+                { value: 'popular', label: 'الأكثر طلباً 🔥' },
+                { value: 'price-asc', label: 'السعر: من الأرخص' },
+                { value: 'price-desc', label: 'السعر: من الأغلى' },
+                { value: 'name-asc', label: 'الاسم: أ - ي' },
               ] as { value: SortOption; label: string }[]).map((opt) => (
                 <button
                   type="button"
@@ -137,10 +137,10 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
               {/* Quick price chips */}
               <div className="flex flex-wrap gap-2 mt-3">
                 {[
-                  { label: 'أقل من 1000', max: 1000 },
-                  { label: '1000 - 3000', min: 1000, max: 3000 },
-                  { label: '3000 - 5000', min: 3000, max: 5000 },
-                  { label: 'أكثر من 5000', min: 5000 },
+                  { label: 'أقل من ١٠٠٠ ر.ي', max: 1000 },
+                  { label: '١٠٠٠ - ٣٠٠٠ ر.ي', min: 1000, max: 3000 },
+                  { label: '٣٠٠٠ - ٥٠٠٠ ر.ي', min: 3000, max: 5000 },
+                  { label: 'أكثر من ٥٠٠٠ ر.ي', min: 5000 },
                 ].map((chip) => {
                   const isActive = filters.minPrice === (chip.min || null) && filters.maxPrice === (chip.max || null);
                   return (
@@ -190,9 +190,9 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
                 </div>
                 <div className="text-right">
                   <span className={`block text-sm font-bold ${filters.inStockOnly ? 'text-green-800 dark:text-green-200' : 'text-gray-700 dark:text-gray-300'}`}>
-                    متوفر فقط
+                    المتوفر حالياً بس
                   </span>
-                  <span className="text-[10px] text-gray-400">إخفاء المنتجات غير المتوفرة</span>
+                  <span className="text-[10px] text-gray-400">ما ترويني المنتجات المخلصة</span>
                 </div>
               </div>
               <div className={`w-11 h-6 rounded-full relative transition-colors ${filters.inStockOnly ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
@@ -218,9 +218,9 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
                 </div>
                 <div className="text-right">
                   <span className={`block text-sm font-bold ${filters.favoritesOnly ? 'text-red-800 dark:text-red-200' : 'text-gray-700 dark:text-gray-300'}`}>
-                    المفضلة فقط
+                    المفضلة بس
                   </span>
-                  <span className="text-[10px] text-gray-400">عرض المنتجات المفضلة فقط</span>
+                  <span className="text-[10px] text-gray-400">عرض الأشياء اللي حبيتها بس</span>
                 </div>
               </div>
               <div className={`w-11 h-6 rounded-full relative transition-colors ${filters.favoritesOnly ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
@@ -232,7 +232,7 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
           {/* Results Count */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              <span className="font-bold text-brand-600">{filteredCount}</span> منتج مطابق
+              <span className="font-bold text-brand-600">{filteredCount}</span> منتج يطابق خياراتك
             </p>
           </div>
         </div>
@@ -244,7 +244,7 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
             onClick={() => setShowFilters(false)}
             className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98]"
           >
-            عرض النتائج ({filteredCount})
+            شوف النتائج ({filteredCount})
           </button>
         </div>
       </div>
