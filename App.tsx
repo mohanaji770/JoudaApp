@@ -8,6 +8,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { HomePage } from './pages/HomePage';
 import { ProductsPageRoute } from './pages/ProductsPageRoute';
 import { RecipesPageRoute } from './pages/RecipesPageRoute';
+import { ArticlesPageRoute } from './pages/ArticlesPageRoute';
 import { AboutPageRoute } from './pages/AboutPageRoute';
 import { OrdersPage } from './pages/OrdersPage';
 import { Onboarding } from './components/ui/Onboarding';
@@ -238,6 +239,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPageRoute />} />
           <Route path="/recipes" element={<RecipesPageRoute />} />
+          <Route path="/articles" element={<ArticlesPageRoute />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPageRoute />} />
         </Routes>

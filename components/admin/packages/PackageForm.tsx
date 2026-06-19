@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Gift, Search, Save, X, ArrowRight } from 'lucide-react';
 import { Product } from '../../../services/supabaseService';
 import { AdminProductService } from '../../../services/admin/AdminProductService';
+import { ImageUploadInput } from '../ImageUploadInput';
 
 interface PackageFormProps {
   products: Product[];
@@ -218,13 +219,11 @@ export const PackageForm: React.FC<PackageFormProps> = ({
             />
           </div>
           <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">رابط الصورة (اختياري)</label>
-            <input
-              type="text"
-              placeholder="https://..."
+            <ImageUploadInput
               value={pkgImage}
-              onChange={e => setPkgImage(e.target.value)}
-              className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
+              onChange={setPkgImage}
+              folder="packages"
+              label="صورة البكج (اختياري)"
             />
           </div>
           <div>

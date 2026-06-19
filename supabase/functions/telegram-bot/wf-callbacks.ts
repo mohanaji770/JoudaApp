@@ -20,8 +20,11 @@ export async function handleWfCallback(
 ) {
   const data = callback.data as string;
   const parts = data.split('_');
-  const action = parts[1]; // approve, reject, reserve, ...
-  const orderId = parts.slice(2).join('_'); // UUID
+  const action = parts[1]; // approve, reject, reserve, undo...
+  let orderId = parts.slice(2).join('_'); // UUID
+  if (action === 'undo') {
+    orderId = parts.slice(3).join('_'); // Extract real UUID for undo
+  }
   const userName = callback.from?.first_name || 'موظف';
   const userId = String(callback.from?.id);
   const messageId = callback.message?.message_id;
@@ -32,7 +35,7 @@ export async function handleWfCallback(
   const { data: order, error: orderErr } = await jouda
     .from('customer_orders')
     .select(
-      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, notes',
+      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, notes, latitude, longitude',
     )
     .eq('id', orderId)
     .single();
@@ -45,8 +48,7 @@ export async function handleWfCallback(
   // ── 1.5 Special action: undo ──
   if (action === 'undo') {
     const prevStatus = parts[2];
-    const targetOrderId = parts.slice(3).join('_');
-    await handleUndo(token, chatId, callback, targetOrderId, prevStatus, userName);
+    await handleUndo(token, chatId, callback, orderId, prevStatus, userName);
     return;
   }
 
@@ -136,13 +138,19 @@ export async function handleWfCallback(
   if (['reserve', 'prepare', 'deliver'].includes(action) && order.quotation_id) {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
-      inventory.rpc('assign_invoice_to_collector', {
+      const { data, error } = await inventory.rpc('assign_invoice_to_collector', {
         p_invoice_id: order.quotation_id,
         p_collector_id: inventoryUserId,
         p_actor_user_id: env.systemUserId(),
-      }).then(({ error }) => {
-        if (error) console.error('Failed to assign invoice:', error);
       });
+      if (error || (data && data.success === false)) {
+        const errMsg = error?.message || data?.error || 'Unknown error';
+        console.error('Failed to assign invoice:', errMsg);
+        await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة في المخزون: ${errMsg}`, true);
+      }
+    } else {
+      // Not mapped in TELEGRAM_DRIVER_MAP
+      await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
     }
   }
 
@@ -186,13 +194,18 @@ export async function handleWfCallback(
     const hasHeader = originalText.includes('سجل الحركات');
     const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
     const trail = `${headerBlock}\n${actionDef.emoji} <b>${actionDef.label}</b> (بواسطة: ${userName})`;
-    const nextButtons = appOrderButtons(orderId, actionDef.nextStatus);
+    const nextButtons = appOrderButtons(orderId, actionDef.nextStatus, order.latitude, order.longitude);
 
     // Append Undo button if eligible
     if (['reserve', 'prepare', 'deliver', 'paid'].includes(action)) {
-      nextButtons.push([
-        { text: '🔙 تراجع عن الحركة السابقة', callback_data: `wf_undo_${order.status}_${orderId}` }
-      ]);
+      // Must insert before the Google Maps button if it exists (which is usually the last button)
+      const undoBtn = [{ text: '🔙 تراجع عن الحركة السابقة', callback_data: `wf_undo_${order.status}_${orderId}` }];
+      if (order.latitude && order.longitude && nextButtons.length > 0) {
+        // Insert before the last button (which is the map)
+        nextButtons.splice(nextButtons.length - 1, 0, undoBtn);
+      } else {
+        nextButtons.push(undoBtn);
+      }
     }
 
     await editMessage(token, chatId, messageId, originalText + trail, {
@@ -210,7 +223,7 @@ export async function handleWfCallback(
   ) {
     const msgs: Record<string, string> = {
       preparing: 'جاري تجميع وتجهيز طلبك 📦',
-      delivered: 'تم تسليم طلبك. شكراً لتسوقك من جودة 🎉',
+      delivered: 'تم تسليم طلبك بنجاح 🎉\n\nنهتم جداً برأيك! كيف كانت تجربتك معنا؟\nنرجو منك تقييم الخدمة عبر الرد على هذه الرسالة من 1 إلى 5 نجوم ⭐\n(ملاحظاتك تساعدنا على تقديم الأفضل دائماً)',
     };
     const waText = `*جودة — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جودة`;
     const waHtml = whatsappButton(order.customer_phone, waText);
@@ -313,7 +326,7 @@ async function handleApprove(
   }
 
   // Build group message with team buttons
-  const teamButtons = appOrderButtons(order.id, 'confirmed');
+  const teamButtons = appOrderButtons(order.id, 'confirmed', order.latitude, order.longitude);
   const orderText = callback.message?.text || '';
   const groupText = orderText.includes('طلب جديد')
     ? orderText
@@ -439,11 +452,12 @@ async function handleUndo(
   const { jouda } = getClients();
   const messageId = callback.message?.message_id;
 
-  // 1. Time Limit Guard (60 seconds)
+  // 1. Time Limit Guard
   const editDate = callback.message?.edit_date || callback.message?.date || 0;
   const now = Math.floor(Date.now() / 1000);
-  if (now - editDate > 60) {
-    await answerCallback(token, callback.id, '⏳ انتهى وقت التراجع المسموح (دقيقة واحدة)', true);
+  const timeLimit = parseInt(Deno.env.get('UNDO_TIME_LIMIT_SECONDS') || '180'); // Default 3 minutes
+  if (now - editDate > timeLimit) {
+    await answerCallback(token, callback.id, `⏳ انتهى وقت التراجع المسموح (${Math.floor(timeLimit / 60)} دقائق)`, true);
     return;
   }
 

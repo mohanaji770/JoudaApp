@@ -279,7 +279,7 @@ async function voidQuotation(quotationId: string, config: Config, inventoryClien
 
 // --- 4. Telegram Notification Engine ---
 function buildTelegramMessage(orderData: any): string {
-  const { orderNumber, customerName, customerPhone, customerAddress, total, items, notes, latitude, longitude } = orderData;
+  const { orderNumber, customerName, customerPhone, customerAddress, total, deliveryFee, items, notes } = orderData;
   const itemsList = items.map((item: any) => {
     if (item.is_package && item.sub_items && item.sub_items.length > 0) {
       const subList = item.sub_items.map((sub: any) => `    ▫️ ${sub.product_name} (× ${sub.quantity * item.quantity})`).join('\n');
@@ -289,31 +289,38 @@ function buildTelegramMessage(orderData: any): string {
   }).join('\n');
 
   const notesLine = notes ? `\n📝 <b>ملاحظات:</b> <code>${notes}</code>\n` : '';
-  const mapLink = (latitude && longitude) ? ` — <a href="https://www.google.com/maps?q=${latitude},${longitude}">خرائط جوجل</a>` : '';
+  const subtotalLine = `\n💵 <b>قيمة المنتجات:</b> <b>${(total - (deliveryFee || 0)).toLocaleString()}</b> ر.ي`;
+  const deliveryLine = deliveryFee > 0 ? `\n🛵 <b>التوصيل:</b> <b>${deliveryFee.toLocaleString()}</b> ر.ي` : '';
 
   return `
 🛒 <b>طلب جديد (#${orderNumber})</b>
 
 👤 <b>العميل:</b> ${customerName}
 📞 <b>الجوال:</b> <code>${customerPhone}</code>
-📍 <b>العنوان:</b> ${customerAddress || 'استلام من الفرع'}${mapLink}
+📍 <b>العنوان:</b> ${customerAddress || 'استلام من الفرع'}
 
 📦 <b>المنتجات:</b>
 ${itemsList}
-${notesLine}
-💰 <b>الإجمالي:</b> <b>${total.toLocaleString()}</b> ر.ي
+${notesLine}${subtotalLine}${deliveryLine}
+💰 <b>الإجمالي الكلي:</b> <b>${total.toLocaleString()}</b> ر.ي
 `.trim();
 }
 
-async function dispatchTelegramNotification(message: string, orderId: string) {
+async function dispatchTelegramNotification(message: string, orderId: string, latitude?: number, longitude?: number) {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
   const chatIdsStr = Deno.env.get('TELEGRAM_ADMIN_CHAT_ID');
   if (!botToken || !chatIdsStr) return;
 
-  const inline_keyboard = [
+  const inline_keyboard: any[][] = [
     [{ text: '✅ اعتماد الطلب (إرسال للجروب)', callback_data: `wf_approve_${orderId}` }],
     [{ text: '❌ رفض وإلغاء الطلب', callback_data: `wf_reject_${orderId}` }]
   ];
+  
+  if (latitude && longitude) {
+    inline_keyboard.push([
+      { text: '📍 موقع العميل (خرائط جوجل)', url: `https://www.google.com/maps?q=${latitude},${longitude}` }
+    ]);
+  }
 
   const adminIds = chatIdsStr.split(',').map(id => id.trim()).filter(id => id && !id.startsWith('-'));
 
@@ -389,6 +396,7 @@ Deno.serve(async (req: Request) => {
         customerPhone: payload.customer_phone,
         customerAddress: payload.customer_address,
         total: payload.subtotal + (payload.delivery_fee || 0),
+        deliveryFee: payload.delivery_fee || 0,
         notes: payload.notes,
         latitude: payload.latitude,
         longitude: payload.longitude,
@@ -406,7 +414,9 @@ Deno.serve(async (req: Request) => {
       };
 
       const tgMessage = buildTelegramMessage(notificationData);
-      const notifyPromise = dispatchTelegramNotification(tgMessage, orderRecord.id).catch(e => console.error('TG Background Error:', e));
+      const notifyPromise = dispatchTelegramNotification(tgMessage, orderRecord.id, payload.latitude, payload.longitude).catch(err => {
+        console.error('Error sending Telegram notification:', err);
+      });
 
       // Non-blocking wait
       if (typeof (globalThis as any).EdgeRuntime !== 'undefined') {

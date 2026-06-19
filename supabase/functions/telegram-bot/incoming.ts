@@ -70,20 +70,18 @@ export async function handleNewInvoice(record: any) {
   const deliveryFee = record.delivery_fee || 0;
 
   const message = `\
-🧾 <b>فاتورة مبيعات جديدة — POS 🛒</b>
-━━━━━━━━━━━━━━━━━━━
-📄 <b>رقم الفاتورة:</b> <code>${record.id}</code>
-👤 <b>العميل:</b> <b>${record.customer_name_snapshot}</b>
+🛒 <b>فاتورة مبيعات جديدة (#${record.id})</b>
+
+👤 <b>العميل:</b> ${record.customer_name_snapshot}
 💳 <b>الدفع:</b> <code>${paymentLabel(record.payment_method || 'CASH')}</code>
-${record.collector_id ? `🧔 <b>المحصل:</b> <code>${collectorName}</code>\n` : ''}━━━━━━━━━━━━━━━━━━━
-📦 <b>المنتجات المشتراة (${itemCount} أصناف):</b>
+${record.collector_id ? `🧔 <b>المحصل:</b> ${collectorName}\n` : ''}
+📦 <b>المنتجات:</b>
 ${itemsList}${extraItems}
-━━━━━━━━━━━━━━━━━━━
+
 💵 <b>قيمة المبيعات:</b> <b>${companyAmount.toLocaleString()}</b> ر.ي
 🚚 <b>أجور التوصيل:</b> <b>${deliveryFee.toLocaleString()}</b> ر.ي
 💰 <b>الإجمالي الكلي:</b> <b>${(companyAmount + deliveryFee).toLocaleString()}</b> ر.ي
-━━━━━━━━━━━━━━━━━━━
-📅 <b>التوقيت:</b> <code>${fmtDate()}</code>`;
+`.trim();
 
   const keyboard = { inline_keyboard: invButtons(record.id, 'pending') };
 
@@ -99,6 +97,9 @@ ${itemsList}${extraItems}
 // ─── Reversed Invoice ───────────────────────────────────
 
 export async function handleReversedInvoice(record: any) {
+  // Temporarily disabled by user request (2026-06-18)
+  return;
+
   if (!record.is_voided) return;
 
   const token = env.botToken();
@@ -115,14 +116,13 @@ export async function handleReversedInvoice(record: any) {
   }
 
   const message = `\
-🔄 <b>عكس فاتورة مبيعات ⚠️</b>
-━━━━━━━━━━━━━━━━━━━
-📄 <b>رقم الفاتورة:</b> <code>${record.id}</code>
-👤 <b>العميل:</b> <b>${record.customer_name_snapshot || '—'}</b>
+🔄 <b>عكس فاتورة مبيعات ⚠️ (#${record.id})</b>
+
+👤 <b>العميل:</b> ${record.customer_name_snapshot || '—'}
 💰 <b>المبلغ المرتجع:</b> <b>${(record.total_amount || 0).toLocaleString()}</b> ر.ي
-━━━━━━━━━━━━━━━━━━━
+
 📌 <b>الإجراء:</b> <code>تم إعادة المخزون وإلغاء القيد المالي بنجاح</code>
-⏱️ <b>التوقيت:</b> <code>${fmtDate()}</code>`;
+`.trim();
 
   for (const gId of env.groupIds()) {
     try {

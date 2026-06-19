@@ -99,15 +99,25 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
 export function appOrderButtons(
   orderId: string,
   status: string,
-): InlineBtn[][] {
+  latitude?: number | null,
+  longitude?: number | null,
+): any[][] {
   const actions = APP_ACTIONS[status];
   if (!actions) return [];
-  return Object.entries(actions).map(([action, def]) => [
+  const buttons: any[][] = Object.entries(actions).map(([action, def]) => [
     {
       text: `${def.emoji} ${def.label}`,
       callback_data: `wf_${action}_${orderId}`,
     },
   ]);
+  
+  if (latitude && longitude) {
+    buttons.push([
+      { text: '📍 موقع العميل (خرائط جوجل)', url: `https://www.google.com/maps?q=${latitude},${longitude}` }
+    ]);
+  }
+  
+  return buttons;
 }
 
 // ─── POS Invoice Workflow (inv_*) ───────────────────────

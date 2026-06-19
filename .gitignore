@@ -44,3 +44,4 @@ PRODUCT.md
 scripts/generate-product-images.js
 app_texts.txt
 app_texts.md
+supabase/.temp/cli-latest

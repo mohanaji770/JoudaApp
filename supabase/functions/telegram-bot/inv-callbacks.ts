@@ -135,13 +135,19 @@ export async function handleInvCallback(
   if (['reserve', 'prepare', 'deliver'].includes(action)) {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
-      inventory.rpc('assign_invoice_to_collector', {
+      const { data, error } = await inventory.rpc('assign_invoice_to_collector', {
         p_invoice_id: invoiceId,
         p_collector_id: inventoryUserId,
         p_actor_user_id: env.systemUserId(),
-      }).then(({ error }) => {
-        if (error) console.error('Failed to assign invoice:', error);
       });
+      if (error || (data && data.success === false)) {
+        const errMsg = error?.message || data?.error || 'Unknown error';
+        console.error('Failed to assign invoice:', errMsg);
+        await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة في المخزون: ${errMsg}`, true);
+      }
+    } else {
+      // Not mapped in TELEGRAM_DRIVER_MAP
+      await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
     }
   }
 

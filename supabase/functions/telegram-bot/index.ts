@@ -17,11 +17,11 @@
 //   incoming.ts  → DB webhook (new/reversed invoices)
 
 import { answerCallback, sendMessage } from './telegram.ts';
-import { env } from './config.ts';
+import { env, getInventoryUserId } from './config.ts';
 import { handleWfCallback } from './wf-callbacks.ts';
 import { handleInvCallback } from './inv-callbacks.ts';
 import { handleNewInvoice, handleReversedInvoice } from './incoming.ts';
-import { handleHelp, handleOrders, handleStatus } from './commands.ts';
+import { handleHelp, handleOrders, handleStatus, handleCash, handleMyCash } from './commands.ts';
 
 // ─── Main Server ────────────────────────────────────────
 
@@ -137,8 +137,8 @@ Deno.serve(async (req: Request) => {
       return new Response('OK');
     }
 
-    // Private chats: must be admin
-    if (!env.adminIds().includes(chatId)) {
+    // Private chats: must be admin OR a mapped driver
+    if (!env.adminIds().includes(chatId) && !getInventoryUserId(chatId)) {
       if (text === '/chatid') {
         await sendMessage(
           botToken,
@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
           `معرف المحادثة:\n<code>${chatId}</code>`,
         );
       } else {
-        await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة جودة');
+        await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة فريق جودة.');
       }
       return new Response('OK');
     }
@@ -169,6 +169,14 @@ Deno.serve(async (req: Request) => {
 
       case '/status':
         await handleStatus(botToken, chatId);
+        break;
+
+      case '/cash':
+        await handleCash(botToken, chatId);
+        break;
+
+      case '/mycash':
+        await handleMyCash(botToken, chatId);
         break;
 
       default:

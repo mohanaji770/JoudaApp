@@ -366,10 +366,10 @@ export const OrdersPage: React.FC = () => {
                   {/* iOS Style Minimal Progress Line */}
                   {order.status !== 'cancelled' && order.status !== 'failed' && (() => {
                     const mapStatusToStep = (status: string): string => {
-                      if (['submitted'].includes(status)) return 'submitted';
+                      if (['submitted', 'deposited'].includes(status)) return 'submitted';
                       if (['confirmed', 'reserved'].includes(status)) return 'confirmed';
                       if (['preparing'].includes(status)) return 'preparing';
-                      if (['delivered', 'paid', 'deposited'].includes(status)) return 'delivered';
+                      if (['delivered', 'paid'].includes(status)) return 'delivered';
                       return status;
                     };
                     const mappedStatus = mapStatusToStep(order.status);

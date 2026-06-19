@@ -101,7 +101,7 @@ CREATE POLICY "service_role_read_orders" ON customer_orders
 -- Allow customers to read their own orders by phone number match
 CREATE POLICY "customer_read_own_orders" ON customer_orders
   FOR SELECT TO anon, authenticated
-  USING (customer_phone = current_setting('request.header.x-customer-phone', true));
+  USING (customer_phone = current_setting('request.headers', true)::json->>'x-customer-phone');
 
 -- Order items: restrict to service_role for direct reads
 CREATE POLICY "service_role_read_items" ON order_items
@@ -115,7 +115,7 @@ CREATE POLICY "customer_read_own_items" ON order_items
     EXISTS (
       SELECT 1 FROM customer_orders co
       WHERE co.id = order_items.order_id
-      AND co.customer_phone = current_setting('request.header.x-customer-phone', true)
+      AND co.customer_phone = current_setting('request.headers', true)::json->>'x-customer-phone'
     )
   );
 
