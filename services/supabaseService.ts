@@ -135,6 +135,8 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
       // If it is a package, resolve its bundle items
       let bundle_items: Product['bundle_items'] = undefined;
       const isPackage = p.barcode.startsWith('PKG-') || resolvedCategory === 'عروض وبكجات' || p.category === 'عروض وبكجات';
+      let packageInStock = true;
+
       if (isPackage && packageItems.length > 0) {
         const mappings = packageItems.filter((m) => m.package_barcode === p.barcode);
         bundle_items = mappings.map((m) => {
@@ -145,6 +147,24 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
             quantity: m.quantity,
           };
         });
+
+        // Dynamic stock status check for packages: if any constituent item is out of stock, package is out of stock
+        for (const m of mappings) {
+          const compProduct = data.find((bp) => bp.barcode === m.product_barcode);
+          if (!compProduct) {
+            packageInStock = false;
+            break;
+          }
+          const isCompBakery = compProduct.app_category === 'مخبوزات' || compProduct.category === 'مخبوزات';
+          const isCompForcedOut = compProduct.force_out_of_stock === true;
+          const compStockStatus = isCompForcedOut ? 'out_of_stock' : compProduct.stock_status;
+          const compInStock = isCompForcedOut ? false : (isCompBakery ? true : compStockStatus === 'available');
+
+          if (!compInStock) {
+            packageInStock = false;
+            break;
+          }
+        }
       }
 
       const isForcedOut = p.force_out_of_stock === true;
@@ -167,8 +187,10 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         unit: p.unit,
         tags: p.tags || [],
         valid_until: p.valid_until,
-        // Bakery items are always available unless explicitly forced out of stock
-        inStock: isForcedOut ? false : (isBakery ? true : finalStockStatus === 'available'),
+        // For packages, inStock is determined dynamically; bakery items are always available; others check stock_status
+        inStock: isPackage 
+          ? (isForcedOut ? false : packageInStock)
+          : (isForcedOut ? false : (isBakery ? true : finalStockStatus === 'available')),
         source: isBakery ? ('bakery' as const) : ('store' as const),
         bundle_items,
       };

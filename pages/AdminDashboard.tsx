@@ -47,9 +47,14 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      // Products
-      const fetchedProducts = await fetchProductsFromSupabase();
-      setProducts(fetchedProducts);
+      // Products: Fetch all products directly from Supabase for management, ordered by name
+      const { data: fetchedProducts, error: prodError } = await supabase
+        .from('products')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (prodError) throw prodError;
+      setProducts(fetchedProducts || []);
 
       // Recipes
       const { data: fetchedRecipes } = await supabase.from('recipes').select('*').order('created_at', { ascending: false });
@@ -73,7 +78,7 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [activeTab]);
 
   // Flash messages helper
   const showSuccess = (message: string) => {

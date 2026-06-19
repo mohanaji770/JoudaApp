@@ -33,6 +33,7 @@ export const PackageForm: React.FC<PackageFormProps> = ({
   const [validUntil, setValidUntil] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [pkgItems, setPkgItems] = useState<{ barcode: string; product_name: string; quantity: number; price?: number }[]>([]);
+  const [activeFormTab, setActiveFormTab] = useState<'info' | 'items'>('info');
   
   const [compSearch, setCompSearch] = useState('');
   const [compQuantity, setCompQuantity] = useState(1);
@@ -169,102 +170,142 @@ export const PackageForm: React.FC<PackageFormProps> = ({
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 animate-fade-in">
-      {/* Creator Form */}
-      <form onSubmit={handleSavePackage} className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 rounded-3xl space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-50 dark:border-gray-800 pb-3">
-          <h2 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-            <Gift className="w-5 h-5 text-amber-500" />
-            {editingPackage ? 'تعديل البكج' : 'إنشاء بكج توفيري جديد'}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg"
-          >
-            <span>رجوع للقائمة</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
+      
+      {/* Column 1: Info & Search Box */}
+      <div className="lg:col-span-2 space-y-4">
+        
+        {/* Main Metadata Form */}
+        <form id="package-form" onSubmit={handleSavePackage} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 rounded-3xl space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-50 dark:border-gray-800 pb-3">
+            <h2 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
+              <Gift className="w-5 h-5 text-amber-500" />
+              {editingPackage ? 'تعديل البكج' : 'إنشاء بكج توفيري جديد'}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg"
+            >
+              <span>رجوع للقائمة</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
 
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-          <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">باركود البكج (يُولد تلقائياً)</label>
-            <input
-              type="text"
-              readOnly
-              value={pkgBarcode}
-              className="w-full h-11 px-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono text-gray-500 dark:text-gray-400 cursor-not-allowed outline-none"
-            />
+          {/* Mobile Tab Switched Segmented Control */}
+          <div className="flex lg:hidden bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl mb-2">
+            <button
+              type="button"
+              onClick={() => setActiveFormTab('info')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all ${
+                activeFormTab === 'info'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              بيانات البكج
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormTab('items')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                activeFormTab === 'items'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <span>مكونات البكج</span>
+              {pkgItems.length > 0 && (
+                <span className="bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 px-1.5 py-0.5 rounded-full text-[9px] font-mono">
+                  {pkgItems.length}
+                </span>
+              )}
+            </button>
           </div>
-          <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">اسم البكج *</label>
-            <input
-              type="text"
-              placeholder="بكج الرشاقة الخالي من الغلوتين"
-              required
-              value={pkgName}
-              onChange={e => setPkgName(e.target.value)}
-              className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">سعر العرض للبكج (ريال) *</label>
-            <input
-              type="number"
-              placeholder="4500"
-              required
-              value={pkgPrice}
-              onChange={e => setPkgPrice(e.target.value)}
-              className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
-            />
-          </div>
-          <div>
-            <ImageUploadInput
-              value={pkgImage}
-              onChange={setPkgImage}
-              folder="packages"
-              label="صورة البكج (اختياري)"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] text-gray-400 font-bold mb-1.5">تاريخ ووقت انتهاء العرض (اختياري)</label>
-            <input
-              type="datetime-local"
-              value={validUntil}
-              onChange={e => setValidUntil(e.target.value)}
-              className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
-            />
-          </div>
-          <div className="flex items-center pt-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={isActive}
-                onChange={e => setIsActive(e.target.checked)}
+
+          {/* Tab 1: Info (Hidden on mobile if tab is items) */}
+          <div className={`${activeFormTab === 'info' ? 'block' : 'hidden lg:block'} space-y-4`}>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <div>
+                <label className="block text-[10px] text-gray-400 font-bold mb-1.5">اسم البكج *</label>
+                <input
+                  type="text"
+                  placeholder="بكج الرشاقة الخالي من الغلوتين"
+                  required
+                  value={pkgName}
+                  onChange={e => setPkgName(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-400 font-bold mb-1.5">سعر العرض للبكج (ريال) *</label>
+                <input
+                  type="number"
+                  placeholder="4500"
+                  required
+                  value={pkgPrice}
+                  onChange={e => setPkgPrice(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
+                />
+              </div>
+              <div>
+                <ImageUploadInput
+                  value={pkgImage}
+                  onChange={setPkgImage}
+                  folder="packages"
+                  label="صورة البكج (اختياري)"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-400 font-bold mb-1.5">تاريخ ووقت انتهاء العرض (اختياري)</label>
+                <input
+                  type="datetime-local"
+                  value={validUntil}
+                  onChange={e => setValidUntil(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white font-mono"
+                />
+              </div>
+              <div className="flex items-center pt-6">
+                <label className="relative inline-flex items-center cursor-pointer select-none" dir="ltr">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={isActive}
+                    onChange={e => setIsActive(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
+                  <span className="ml-3 text-xs font-bold text-gray-900 dark:text-gray-300">
+                    {isActive ? 'البكج مفعل ومرئي' : 'البكج متوقف ومخفي'}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] text-gray-400 font-bold mb-1.5">وصف البكج</label>
+              <textarea
+                rows={3}
+                placeholder="تفاصيل العرض والمميزات..."
+                value={pkgDesc}
+                onChange={e => setPkgDesc(e.target.value)}
+                className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none dark:text-white"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:-translate-x-1 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
-              <span className="mr-3 text-xs font-bold text-gray-900 dark:text-gray-300">
-                {isActive ? 'البكج مفعل ومرئي' : 'البكج متوقف ومخفي'}
-              </span>
-            </label>
+            </div>
+
+            {/* Wizard Next Button on Mobile */}
+            <button
+              type="button"
+              onClick={() => setActiveFormTab('items')}
+              className="w-full lg:hidden bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-[0.98] mt-4"
+            >
+              <span>التالي: اختيار المكونات</span>
+              <ArrowRight className="w-4 h-4 rotate-180" />
+            </button>
           </div>
-        </div>
+        </form>
 
-        <div>
-          <label className="block text-[10px] text-gray-400 font-bold mb-1.5">وصف البكج</label>
-          <textarea
-            rows={2}
-            placeholder="تفاصيل العرض والمميزات..."
-            value={pkgDesc}
-            onChange={e => setPkgDesc(e.target.value)}
-            className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none dark:text-white"
-          />
-        </div>
-
-        {/* Components Selector */}
-        <div className="border-t border-gray-50 dark:border-gray-800 pt-4">
-          <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-2">أضف منتجات داخل البكج</label>
+        {/* Tab 2: Components Selector (Hidden on mobile if tab is info) */}
+        <div className={`${activeFormTab === 'items' ? 'block' : 'hidden lg:block'} bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 rounded-3xl space-y-4`}>
+          <label className="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-1">أضف منتجات داخل البكج</label>
           
           <div className="flex gap-2 items-center">
             <div className="relative flex-1">
@@ -307,42 +348,12 @@ export const PackageForm: React.FC<PackageFormProps> = ({
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50"
-        >
-          <Save className="w-4.5 h-4.5" />
-          <span>حفظ البكج التوفيري</span>
-        </button>
-      </form>
+      </div>
 
-      {/* Calculator & Selected Items */}
-      <div className="space-y-4">
-        {/* Savings Box */}
-        <div className="bg-gradient-to-br from-amber-500/5 to-brand-500/5 border border-amber-100 dark:border-brand-900/30 p-4 rounded-3xl">
-          <h3 className="text-xs font-black text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-1">
-            <span>توفير البكج التقديري</span>
-            <span>⚡</span>
-          </h3>
-          
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between text-gray-500">
-              <span>سعر المكونات فرادى:</span>
-              <span className="font-bold font-mono">{packageCalculation.regularTotal} ر.ي</span>
-            </div>
-            <div className="flex justify-between text-gray-500">
-              <span>سعر البكج المحدد:</span>
-              <span className="font-bold font-mono text-brand-600">{pkgPrice || 0} ر.ي</span>
-            </div>
-            <div className="h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
-            <div className="flex justify-between text-green-600 dark:text-green-400 font-bold">
-              <span>المبلغ الموفر:</span>
-              <span className="font-black font-mono">-{packageCalculation.savings} ر.ي ({packageCalculation.savingsPercentage}%)</span>
-            </div>
-          </div>
-        </div>
-
+      {/* Column 2: Selected Items, Savings Box, and Save Button */}
+      {/* Hidden on mobile if active tab is info */}
+      <div className={`${activeFormTab === 'items' ? 'block' : 'hidden lg:block'} space-y-4`}>
+        
         {/* Selected Items List */}
         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4 rounded-3xl space-y-3">
           <h3 className="text-xs font-black text-gray-800 dark:text-gray-200">المنتجات المختارة ({pkgItems.length})</h3>
@@ -370,7 +381,44 @@ export const PackageForm: React.FC<PackageFormProps> = ({
             )}
           </div>
         </div>
+
+        {/* Savings Box */}
+        <div className="bg-gradient-to-br from-amber-500/5 to-brand-500/5 border border-amber-100 dark:border-brand-900/30 p-4 rounded-3xl">
+          <h3 className="text-xs font-black text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-1">
+            <span>توفير البكج التقديري</span>
+            <span>⚡</span>
+          </h3>
+          
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between text-gray-500">
+              <span>سعر المكونات فرادى:</span>
+              <span className="font-bold font-mono">{packageCalculation.regularTotal} ر.ي</span>
+            </div>
+            <div className="flex justify-between text-gray-500">
+              <span>سعر البكج المحدد:</span>
+              <span className="font-bold font-mono text-brand-600">{pkgPrice || 0} ر.ي</span>
+            </div>
+            <div className="h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
+            <div className="flex justify-between text-green-600 dark:text-green-400 font-bold">
+              <span>المبلغ الموفر:</span>
+              <span className="font-black font-mono">-{packageCalculation.savings} ر.ي ({packageCalculation.savingsPercentage}%)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Save Button (Form submit button placed outside of the form using HTML5 form attribute) */}
+        <button
+          type="submit"
+          form="package-form"
+          disabled={loading}
+          className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          <Save className="w-4.5 h-4.5" />
+          <span>حفظ البكج التوفيري</span>
+        </button>
+
       </div>
+      
     </div>
   );
 };
