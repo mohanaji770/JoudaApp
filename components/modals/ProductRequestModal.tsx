@@ -27,7 +27,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
     }
     
     message += `------------------\n`;
-    message += `يرجى إبلاغي عند توفره في متجر جودة. شكراً!`;
+    message += `يرجى إبلاغي عند توفره في متجر جوده. شكراً!`;
 
     const encodedMessage = encodeURIComponent(message);
     const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
@@ -56,7 +56,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
           </div>
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">طلب توفير منتج</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            لم تجد ما تبحث عنه؟ اطلبه الآن وسنسعى لتوفيره لك في متجر جودة.
+            لم تجد ما تبحث عنه؟ اطلبه الآن وسنسعى لتوفيره لك في متجر جوده.
           </p>
         </div>
 

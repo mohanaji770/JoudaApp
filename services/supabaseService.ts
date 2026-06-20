@@ -275,7 +275,7 @@ export const fetchArticlesFromSupabase = async (): Promise<Article[]> => {
       content: a.content || '',
       date: a.published_date,
       published_date: a.published_date,
-      author: a.author || 'جودة',
+      author: a.author || 'جوده',
     }));
 
     try { await cacheArticles(articles); } catch (e) { console.warn('Failed to cache articles', e); }

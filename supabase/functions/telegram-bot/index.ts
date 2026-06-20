@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
           `معرف المحادثة:\n<code>${chatId}</code>`,
         );
       } else {
-        await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة فريق جودة.');
+        await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة فريق جوده.');
       }
       return new Response('OK');
     }

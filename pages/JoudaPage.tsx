@@ -35,14 +35,14 @@ export const JoudaPage: React.FC = () => {
       name: "Ashley Muharram",
       image: "https://lh3.googleusercontent.com/a/ACg8ocJM-X5iJ1aNKpsmDDWvB1qKf9mc7dPXlS6ebeI3oLVzVTJtwQ=s120-c-rp-mo-br100",
       time: "قبل 4 أشهر",
-      text: "متجر جودة من أوائل المتاجر التي ساعدتنا كسيلياكيين، وفروا لنا أشياء كنا فعلاً نحتاجها ومابخلو علينا بأي معلومة."
+      text: "متجر جوده من أوائل المتاجر التي ساعدتنا كسيلياكيين، وفروا لنا أشياء كنا فعلاً نحتاجها ومابخلو علينا بأي معلومة."
     },
     {
       id: 2,
       name: "Really Ali Abdo",
       image: "https://lh3.googleusercontent.com/a/ACg8ocKX90ddwtzLPDL4dKLXgOAESZWXZlKgUPdvTG_x8t-VYixxeA=s120-c-rp-mo-br100",
       time: "قبل 3 أشهر",
-      text: "متجر جودة شكراً كثير لكم. وفرتم لنا الراحة والأمان في خياراتنا الغذائية."
+      text: "متجر جوده شكراً كثير لكم. وفرتم لنا الراحة والأمان في خياراتنا الغذائية."
     },
     {
       id: 3,
@@ -83,7 +83,7 @@ export const JoudaPage: React.FC = () => {
                    "عشنا نفس التجربة.. <span className="text-brand-600">وعشان كذا صنعنا الحل"</span>
                  </h2>
                  <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-loose font-medium">
-                   لما تشخّص أحد من عيلتنا بالسيلياك، عرفنا قد إيش صعب تلاقي أكل آمن ولذيذ بنفس الوقت. عشان كذا أسسنا «جودة».. لتكون مصدر ثقتك الأول للغذاء الآمن 100%. ما نبيعك مجرد منتجات، بنقدم لك نفس الأكل اللي نثق نأكله لأولادنا في بيوتنا.
+                   لما تشخّص أحد من عيلتنا بالسيلياك، عرفنا قد إيش صعب تلاقي أكل آمن ولذيذ بنفس الوقت. عشان كذا أسسنا «جوده».. لتكون مصدر ثقتك الأول للغذاء الآمن 100%. ما نبيعك مجرد منتجات، بنقدم لك نفس الأكل اللي نثق نأكله لأولادنا في بيوتنا.
                  </p>
               </div>
            </div>
@@ -197,7 +197,7 @@ export const JoudaPage: React.FC = () => {
               <a href="https://www.instagram.com/joudafood/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 flex items-center justify-center transition-colors"><Instagram className="w-5 h-5" /></a>
               <a href={STORE_CONFIG.URL} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"><Globe className="w-5 h-5" /></a>
            </div>
-           <p className="text-xs font-bold text-gray-400 dark:text-gray-500">© 2024 عالم جودة. صُنع بكل حب لتسهيل حياتك الخالية من الجلوتين.</p>
+           <p className="text-xs font-bold text-gray-400 dark:text-gray-500">© 2024 عالم جوده. صُنع بكل حب لتسهيل حياتك الخالية من الجلوتين.</p>
         </div>
 
       </div>

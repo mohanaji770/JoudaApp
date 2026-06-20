@@ -15,7 +15,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
   const steps = [
     {
       title: "احنا معاك خطوة بخطوة",
-      desc: "نعرف إن البداية صعبة والأسئلة كثيرة: هل هذا الأكل آمن؟ وإيش أطبخ اليوم؟ لهذا صممنا \"جودة\" ليكون رفيقك اليومي ويساعدك.",
+      desc: "نعرف إن البداية صعبة والأسئلة كثيرة: هل هذا الأكل آمن؟ وإيش أطبخ اليوم؟ لهذا صممنا \"جوده\" ليكون رفيقك اليومي ويساعدك.",
       icon: <HeartHandshake className="w-16 h-16 text-brand-600 dark:text-brand-400" />
     },
     {
@@ -49,7 +49,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
       {/* Top Header */}
       <div className="flex justify-between items-center p-6 w-full max-w-md mx-auto">
         <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center">
-           <span className="text-brand-600 font-black text-xs">جودة</span>
+           <span className="text-brand-600 font-black text-xs">جوده</span>
         </div>
         <button 
           onClick={onClose}

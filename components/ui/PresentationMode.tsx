@@ -73,7 +73,7 @@ const CompareSlider = () => {
            
            {/* Label top right */}
            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
-              قبل تطبيق جودة ❌
+              قبل تطبيق جوده ❌
            </div>
         </div>
 
@@ -95,7 +95,7 @@ const CompareSlider = () => {
                   <div className="p-4 bg-white text-center">
                      <p className="text-gray-500 text-xs font-medium mb-3">
                         لا داعي للقراءة والتحليل.<br/>
-                        جودة قام بالمهمة لأجلك.
+                        جوده قام بالمهمة لأجلك.
                      </p>
                      <button className="w-full bg-green-600 text-white py-2 rounded-xl text-xs font-bold shadow-lg shadow-green-200">
                         إضافة للسلة
@@ -106,7 +106,7 @@ const CompareSlider = () => {
 
            {/* Label top left */}
            <div className="absolute top-4 left-4 bg-white/20 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/30">
-              مع تطبيق جودة ✅
+              مع تطبيق جوده ✅
            </div>
         </div>
 
@@ -171,7 +171,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ onClose }) =
           </div>
           
           <div className="relative z-10">
-            <h1 className="text-6xl font-black mb-2 tracking-tight drop-shadow-sm">عالم جودة</h1>
+            <h1 className="text-6xl font-black mb-2 tracking-tight drop-shadow-sm">عالم جوده</h1>
             <p className="text-3xl font-light opacity-90 tracking-widest uppercase">Jouda World</p>
           </div>
           
@@ -203,7 +203,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ onClose }) =
                >
                   {/* Mock UI inside phone */}
                   <div className="bg-brand-600 h-20 w-full shrink-0 flex items-end justify-center pb-3 shadow-md relative z-10">
-                     <span className="text-white font-bold text-lg">عالم جودة</span>
+                     <span className="text-white font-bold text-lg">عالم جوده</span>
                   </div>
                   <div className="flex-1 bg-gray-50 p-6 flex flex-col items-center justify-center gap-4 relative">
                      <div className="absolute inset-0 bg-gray-200/50 animate-pulse"></div>

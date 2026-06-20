@@ -19,7 +19,7 @@
 
 **JoudaApp** is a modern, customer-centric Progressive Web Application (PWA) designed to provide an interactive shopping and educational experience for Jouda products. It leverages Artificial Intelligence to offer personalized recipes, product information, and smart suggestions.
 
-**تطبيق جودة** هو تطبيق ويب متطور (PWA) موجه للعملاء، تم تصميمه لتوفير تجربة تسوق وتعليم تفاعلية لمنتجات شركة "جودة". يستخدم التطبيق الذكاء الاصطناعي لتقديم وصفات مخصصة، معلومات دقيقة عن المنتجات، واقتراحات ذكية.
+**تطبيق جوده** هو تطبيق ويب متطور (PWA) موجه للعملاء، تم تصميمه لتوفير تجربة تسوق وتعليم تفاعلية لمنتجات شركة "جوده". يستخدم التطبيق الذكاء الاصطناعي لتقديم وصفات مخصصة، معلومات دقيقة عن المنتجات، واقتراحات ذكية.
 
 ---
 

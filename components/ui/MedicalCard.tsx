@@ -63,7 +63,7 @@ export const MedicalCard: React.FC<MedicalCardProps> = ({ onClose }) => {
         <div className="bg-gray-50 dark:bg-gray-800 p-4 text-center border-t border-gray-100 dark:border-gray-700">
            <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
              <CheckCircle className="w-3 h-3" />
-             تم التحقق بواسطة تطبيق جودة
+             تم التحقق بواسطة تطبيق جوده
            </p>
         </div>
       </div>

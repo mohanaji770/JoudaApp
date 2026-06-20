@@ -39,7 +39,7 @@ export async function handleInvCallback(
     await answerCallback(
       token,
       callback.id,
-      '⚠️ الفاتورة غير موجودة أو ملغية',
+      '⚠️ الفاتورة غير موجوده أو ملغية',
       true,
     );
     return;

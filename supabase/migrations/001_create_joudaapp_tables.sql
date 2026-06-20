@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS articles (
   title TEXT NOT NULL,
   content TEXT,
   image_url TEXT,
-  author TEXT DEFAULT 'جودة',
+  author TEXT DEFAULT 'جوده',
   published_date TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

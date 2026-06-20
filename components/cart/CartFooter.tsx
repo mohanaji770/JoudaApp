@@ -2,7 +2,6 @@ import React from 'react';
 import { ShoppingBag, MessageCircle, FileOutput, Info } from 'lucide-react';
 
 interface CartFooterProps {
-  grandTotal: number;
   isFormValid: boolean;
   submitting: boolean;
   submitResult: { success: boolean; message: string } | null;
@@ -15,7 +14,6 @@ interface CartFooterProps {
 }
 
 export const CartFooter: React.FC<CartFooterProps> = ({
-  grandTotal,
   isFormValid,
   submitting,
   submitResult,
@@ -27,14 +25,6 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   onNext
 }) => (
   <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 safe-area-bottom mt-auto shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-    <div className="px-5 pt-4 pb-2">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-bold text-gray-500 dark:text-gray-400">الإجمالي</span>
-        <span className="text-xl font-black text-brand-600 tabular-nums">
-          {grandTotal.toLocaleString('en-US')} ريال
-        </span>
-      </div>
-    </div>
 
     <div className="px-5 pb-4 space-y-2.5">
       {!isFormValid && (

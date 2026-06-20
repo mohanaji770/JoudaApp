@@ -225,7 +225,7 @@ export async function handleWfCallback(
       preparing: 'جاري تجميع وتجهيز طلبك 📦',
       delivered: 'تم تسليم طلبك بنجاح 🎉\n\nنهتم جداً برأيك! كيف كانت تجربتك معنا؟\nنرجو منك تقييم الخدمة عبر الرد على هذه الرسالة من 1 إلى 5 نجوم ⭐\n(ملاحظاتك تساعدنا على تقديم الأفضل دائماً)',
     };
-    const waText = `*جودة — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جودة`;
+    const waText = `*جوده — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جوده`;
     const waHtml = whatsappButton(order.customer_phone, waText);
     await sendMessage(token, chatId, waHtml, {
       disable_web_page_preview: true,
@@ -330,7 +330,7 @@ async function handleApprove(
   const orderText = callback.message?.text || '';
   const groupText = orderText.includes('طلب جديد')
     ? orderText
-    : `🛒 <b>طلب من تطبيق جودة</b>\n\n${orderText}`;
+    : `🛒 <b>طلب من تطبيق جوده</b>\n\n${orderText}`;
 
   // Send to all groups
   for (const gId of env.groupIds()) {
@@ -349,7 +349,7 @@ async function handleApprove(
     const sub = order.subtotal || 0;
     const tot = order.total || sub + delivery - disc;
 
-    let waMsg = `*جودة — تم تأكيد طلبك* 🛒\n\n`;
+    let waMsg = `*جوده — تم تأكيد طلبك* 🛒\n\n`;
     waMsg += `*رقم الطلب:* ${order.order_number}\n`;
     waMsg += `*الاسم:* ${order.customer_name}\n\n`;
     waMsg += `💰 *المبلغ:* ${sub.toLocaleString()} ر.ي`;
@@ -357,7 +357,7 @@ async function handleApprove(
     waMsg += `\n🚚 *التوصيل:* ${delivery.toLocaleString()} ر.ي`;
     waMsg += `\n💵 *الإجمالي:* ${tot.toLocaleString()} ر.ي`;
     if (order.notes) waMsg += `\n📝 *ملاحظات:* ${order.notes}`;
-    waMsg += `\n\nسنقوم بتجهيز طلبك قريباً. شكراً لاختيارك جودة`;
+    waMsg += `\n\nسنقوم بتجهيز طلبك قريباً. شكراً لاختيارك جوده`;
 
     const waHtml = whatsappButton(order.customer_phone, waMsg);
     for (const gId of env.groupIds()) {

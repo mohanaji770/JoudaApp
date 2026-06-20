@@ -15,3 +15,23 @@ export function calculateDeliveryFee(distanceKm: number, pricePerKm: number = 15
   const effectiveDistance = Math.max(1, Math.ceil(distanceKm));
   return effectiveDistance * pricePerKm;
 }
+
+// ── Delivery fee bounds ──
+export const MIN_DELIVERY_FEE = 500;
+export const MAX_DELIVERY_FEE = 1000;
+
+export interface DeliveryFeeDetails {
+  /** Raw unclamped fee based on actual distance */
+  rawFee: number;
+  /** Fee clamped between MIN and MAX bounds */
+  boundedFee: number;
+}
+
+export function calculateDeliveryFeeDetails(
+  distanceKm: number,
+  pricePerKm: number = 150
+): DeliveryFeeDetails {
+  const rawFee = calculateDeliveryFee(distanceKm, pricePerKm);
+  const boundedFee = Math.min(MAX_DELIVERY_FEE, Math.max(MIN_DELIVERY_FEE, rawFee));
+  return { rawFee, boundedFee };
+}

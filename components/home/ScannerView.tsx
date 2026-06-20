@@ -36,7 +36,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     <div className="animate-slide-up max-w-2xl mx-auto w-full">
       {/* Compact Top Header Bar */}
       <div className="flex justify-between items-center mb-2 px-1 text-right">
-        <span className="text-xs font-bold text-gray-400 dark:text-gray-500">فحص وتأكيد منتجات جودة</span>
+        <span className="text-xs font-bold text-gray-400 dark:text-gray-500">فحص وتأكيد منتجات جوده</span>
         <button
           onClick={onClose}
           className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors active:scale-95"

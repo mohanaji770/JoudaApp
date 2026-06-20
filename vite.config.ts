@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
         includeAssets: ['apple-touch-icon.png'],
         manifest: {
           id: '/', 
-          name: 'Jouda World | عالم جودة',
+          name: 'Jouda World | عالم جوده',
           short_name: 'Jouda',
           description: 'منصتك المتكاملة لحياة خالية من الجلوتين. تسوق، اطبخ، واستمتع.',
           theme_color: '#D32F2F',

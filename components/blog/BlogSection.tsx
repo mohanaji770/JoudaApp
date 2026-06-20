@@ -28,7 +28,7 @@ export const BlogSection: React.FC = () => {
             <div className="bg-sky-100 dark:bg-sky-900/30 p-1.5 rounded-lg">
               <BookOpen className="w-4 h-4 text-sky-600 dark:text-sky-400" />
             </div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">جديد مدونة جودة 📰</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">جديد مدونة جوده 📰</h3>
           </div>
         </div>
 

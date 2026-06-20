@@ -86,7 +86,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         await navigator.share({
           files: [file],
           title: `فاتورة طلب ${orderId}`,
-          text: `فاتورة طلب من تطبيق جودة - ${customerName}`,
+          text: `فاتورة طلب من تطبيق جوده - ${customerName}`,
         });
       } else {
         const link = document.createElement('a');
@@ -295,7 +295,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         <Scissors className="w-4 h-4 text-gray-400 rotate-90" />
                      </div>
                      <div className="text-center">
-                        <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لثقتك في جودة</p>
+                        <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لثقتك في جوده</p>
                         <p className="text-[10px] text-gray-600 mb-2">خلي الفاتورة معك، ولك خصم 5% على طلبك الجاي لكيك المناسبات!</p>
                         <div className="font-mono font-bold text-xs bg-white border border-gray-200 inline-block px-3 py-1 rounded text-gray-700 tracking-wider">
                             JOUDA-CAKE-5
@@ -306,7 +306,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 {/* Footer */}
                 <div className="text-center pt-2 relative z-20">
                     <p className="font-bold text-sm mb-1">صحتكم تهمنا وبالعافية مقدماً! ❤️</p>
-                    <p className="text-[10px] text-gray-500">عالم جودة</p>
+                    <p className="text-[10px] text-gray-500">عالم جوده</p>
                 </div>
 
                 {/* Sawtooth Bottom Edge Effect */}

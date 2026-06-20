@@ -132,7 +132,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
                             <Leaf className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="font-black text-lg tracking-tight text-white leading-none mb-1">جودة | Jouda</h2>
+                            <h2 className="font-black text-lg tracking-tight text-white leading-none mb-1">جوده | Jouda</h2>
                             <span className="text-[9px] font-bold text-white/80 tracking-wider uppercase block">Gluten-Free Scanner</span>
                         </div>
                     </div>
@@ -187,7 +187,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
                            <div className="bg-emerald-600 text-white p-1 rounded shadow-sm flex items-center justify-center">
                               <ScanLine className="w-3.5 h-3.5" />
                            </div>
-                           <h4 className="font-black text-sm text-gray-900">حمل تطبيق جودة</h4>
+                           <h4 className="font-black text-sm text-gray-900">حمل تطبيق جوده</h4>
                         </div>
                         <p className="text-[10px] font-bold text-gray-500 leading-tight">
                              افحص طعامك وتأكد من خلوه من الجلوتين في ثوانٍ.
@@ -196,7 +196,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
                         {result.matchedStoreItem && (
                             <div className="mt-1.5 flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-extrabold w-fit border border-emerald-100 shadow-sm">
                                 <BadgeCheck className="w-3 h-3 text-emerald-600" />
-                                متوفر في متجر جودة
+                                متوفر في متجر جوده
                             </div>
                         )}
                     </div>

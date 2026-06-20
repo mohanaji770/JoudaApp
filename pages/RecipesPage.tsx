@@ -193,7 +193,7 @@ export const RecipesPage: React.FC = () => {
     <div className="pb-24 md:pb-8 animate-fade-in">
        <div className="bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 p-6 rounded-3xl mb-6 border border-orange-100 dark:border-gray-700 flex justify-between items-end">
         <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">مطبخ جودة 👩‍🍳</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">مطبخ جوده 👩‍🍳</h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               وصفات لذيذة ومجرّبة بمنتجاتنا الخالية من الجلوتين
             </p>

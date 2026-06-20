@@ -125,8 +125,12 @@ export const CartDrawer: React.FC = () => {
                         currentSubtotal={checkout.currentSubtotal}
                         totalSavings={checkout.totalSavings}
                         currentFee={checkout.currentFee}
+                        rawFee={checkout.rawFee}
                         isFreeDelivery={checkout.isFreeDelivery}
                         distanceKm={checkout.distanceKm}
+                        deliveryZone={checkout.deliveryZone}
+                        qualifiesForFree={checkout.qualifiesForFree}
+                        grandTotal={checkout.grandTotal}
                       />
                     </>
                   ) : (
@@ -145,13 +149,22 @@ export const CartDrawer: React.FC = () => {
                         isFormValid={checkout.isFormValid}
                         isSaved={checkout.isSaved}
                         onOpenMap={() => setShowMap(true)}
+                        rawFee={checkout.rawFee}
+                        currentFee={checkout.currentFee}
+                        deliveryZone={checkout.deliveryZone}
+                        setDeliveryZone={checkout.setDeliveryZone}
+                        qualifiesForFree={checkout.qualifiesForFree}
                       />
                       <TotalsBreakdownCard
                         currentSubtotal={checkout.currentSubtotal}
                         totalSavings={checkout.totalSavings}
                         currentFee={checkout.currentFee}
+                        rawFee={checkout.rawFee}
                         isFreeDelivery={checkout.isFreeDelivery}
                         distanceKm={checkout.distanceKm}
+                        deliveryZone={checkout.deliveryZone}
+                        qualifiesForFree={checkout.qualifiesForFree}
+                        grandTotal={checkout.grandTotal}
                       />
                     </div>
                   )}
@@ -162,7 +175,6 @@ export const CartDrawer: React.FC = () => {
 
             {items.length > 0 && (
               <CartFooter
-                grandTotal={checkout.grandTotal}
                 isFormValid={checkout.isFormValid}
                 submitting={checkout.submitting}
                 submitResult={checkout.submitResult}

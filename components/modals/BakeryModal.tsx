@@ -17,7 +17,7 @@ export const BakeryModal: React.FC<BakeryModalProps> = ({ onClose }) => {
 
   const handleOrder = () => {
     const message = encodeURIComponent(
-      `مرحباً، جئتكم من تطبيق جودة 📱\nحبيت استفسر عن قائمة الحلويات والمخبوزات المتوفرة لديكم.`
+      `مرحباً، جئتكم من تطبيق جوده 📱\nحبيت استفسر عن قائمة الحلويات والمخبوزات المتوفرة لديكم.`
     );
     // Assuming the bakery has a specific number, otherwise falling back to store number or a placeholder logic
     // For now, using Store Phone as placeholder or needs to be provided. 
@@ -48,10 +48,10 @@ export const BakeryModal: React.FC<BakeryModalProps> = ({ onClose }) => {
         <div className="p-6">
           <div className="text-center mb-6">
             <h2 className="text-xl font-black text-gray-800 dark:text-gray-100 mb-1">حلو صار أحلى 🧁</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">شريك الجودة والطعم الأصيل</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">شريك الجوده والطعم الأصيل</p>
             <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-[10px] font-bold border border-green-100 dark:border-green-800">
               <CheckCircle className="w-3 h-3" />
-              نستخدم دقيق جودة 100%
+              نستخدم دقيق جوده 100%
             </div>
           </div>
 

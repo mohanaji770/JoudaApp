@@ -17,7 +17,7 @@ export async function handleHelp(token: string, chatId: string) {
   const admin = isAdmin(chatId);
   const driver = !!getInventoryUserId(chatId);
 
-  let text = `<b>🛒 بوت جودة — نظام الإدارة والعمليات</b>\n\n`;
+  let text = `<b>🛒 بوت جوده — نظام الإدارة والعمليات</b>\n\n`;
 
   if (admin) {
     text += `<b>👑 أوامر الإدارة:</b>\n`;

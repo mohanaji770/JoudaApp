@@ -1,16 +1,16 @@
 
 
-export const APP_NAME = "عالم جودة | Jouda World";
-export const APP_DESCRIPTION = "منصتك المتكاملة لحياة خالية من الجلوتين. تسوق، اطبخ، واستمتع بجودة الحياة.";
+export const APP_NAME = "عالم جوده | Jouda World";
+export const APP_DESCRIPTION = "منصتك المتكاملة لحياة خالية من الجلوتين. تسوق، اطبخ، واستمتع بجوده الحياة.";
 export const APP_LOGO = "https://i.postimg.cc/qvKhrVZS/pwa-512-511-png.png";
 
 export const STORE_CONFIG = {
-  NAME: "متجر جودة",
+  NAME: "متجر جوده",
   URL: "https://www.joudafood.com/", // Updated Website
   MAP_URL: "https://maps.app.goo.gl/PSfTf2wYC3G78gir7", // Google Maps
   ADDRESS: "شارع المطار - الجراف الغربي - جوار صالة الاقمار", // Physical Address
   PHONE: "+967781117671",
-  DESCRIPTION: "متجر جودة، وجهتك الأولى للمنتجات الغذائية الخالية من الجلوتين. نجمع بين الصحة والمذاق الرائع لنمنحك تجربة حياة طبيعية وآمنة. ⭐",
+  DESCRIPTION: "متجر جوده، وجهتك الأولى للمنتجات الغذائية الخالية من الجلوتين. نجمع بين الصحة والمذاق الرائع لنمنحك تجربة حياة طبيعية وآمنة. ⭐",
   MESSAGES: {
     UNSAFE_CTA: "المنتج غير مناسب 🚫، ولكن البديل الأشهى موجود لدينا! تصفح المتجر الآن.",
     SAFE_CTA: "المنتج آمن ✅. استمتع به، ولا تنسى تصفح وصفاتنا لتحضير أطباق مميزة باستخدامه.",
@@ -63,7 +63,7 @@ You want the user to feel excited about the delicious SAFE options available at 
 - **Sales-Oriented (Subtle):** Always look for opportunities to mention Jouda's products naturally.
 - **Positive:** Focus on what they CAN eat.
 
-**STORE INVENTORY CONTEXT (Jouda Store - متجر جودة):**
+**STORE INVENTORY CONTEXT (Jouda Store - متجر جوده):**
 You know these items are available:
 ${JOUDA_PRODUCTS.map(p => `- ${p}`).join('\n')}
 
@@ -75,7 +75,7 @@ ${JOUDA_PRODUCTS.map(p => `- ${p}`).join('\n')}
 
 2.  **IF UNSAFE:**
     - Be gentle but clear. "للأسف، هذا المنتج يحتوي على الجلوتين."
-    - **IMMEDIATE PIVOT:** "لكن لا تحزن! لدينا بديل ألذ وأصح في متجر جودة وهو [Suggest Alternative]. هل تود تجربته؟"
+    - **IMMEDIATE PIVOT:** "لكن لا تحزن! لدينا بديل ألذ وأصح في متجر جوده وهو [Suggest Alternative]. هل تود تجربته؟"
 
 3.  **IF RISKY/UNCLEAR:**
     - "لست متأكداً تماماً، ولكن لماذا تخاطر؟ لدينا منتجات مضمونة 100% في المتجر."

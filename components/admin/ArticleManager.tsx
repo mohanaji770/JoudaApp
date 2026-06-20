@@ -25,7 +25,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
   const [articleTitle, setArticleTitle] = useState('');
   const [articleContent, setArticleContent] = useState('');
   const [articleImage, setArticleImage] = useState('');
-  const [articleAuthor, setArticleAuthor] = useState('جودة');
+  const [articleAuthor, setArticleAuthor] = useState('جوده');
   const [articlePublishDate, setArticlePublishDate] = useState('');
 
   const handleSaveArticle = async (e: React.FormEvent) => {
@@ -56,7 +56,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
         setArticleTitle('');
         setArticleContent('');
         setArticleImage('');
-        setArticleAuthor('جودة');
+        setArticleAuthor('جوده');
         setArticlePublishDate('');
         loadData();
     } catch (err: any) {
@@ -82,7 +82,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
     setArticleTitle(a.title);
     setArticleContent(a.content || '');
     setArticleImage(a.image_url || a.image || '');
-    setArticleAuthor(a.author || 'جودة');
+    setArticleAuthor(a.author || 'جوده');
     setArticlePublishDate(a.published_date || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -121,7 +121,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
             <label className="block text-[10px] text-gray-400 font-bold mb-1.5">الكاتب</label>
             <input
               type="text"
-              placeholder="جودة"
+              placeholder="جوده"
               value={articleAuthor}
               onChange={e => setArticleAuthor(e.target.value)}
               className="w-full h-11 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none dark:text-white"
@@ -156,7 +156,7 @@ export const ArticleManager: React.FC<ArticleManagerProps> = ({
                 setArticleTitle('');
                 setArticleContent('');
                 setArticleImage('');
-                setArticleAuthor('جودة');
+                setArticleAuthor('جوده');
                 setArticlePublishDate('');
               }}
               className="px-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition-all"

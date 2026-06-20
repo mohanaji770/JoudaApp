@@ -32,7 +32,7 @@ export const BakeryBanner: React.FC = () => {
                     مخبز "حلو صار أحلى" 🧁
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 ml-2">
-                   مخبوزات وحلويات طازجة يومياً، خالية من الجلوتين ومصنوعة بدقيق جودة.
+                   مخبوزات وحلويات طازجة يومياً، خالية من الجلوتين ومصنوعة بدقيق جوده.
                 </p>
             </div>
 

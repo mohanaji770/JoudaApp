@@ -106,7 +106,7 @@ export const RecipesModal: React.FC<RecipesModalProps> = ({ onClose }) => {
               <ChefHat className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">وصفات جودة</h2>
+              <h2 className="text-lg font-bold">وصفات جوده</h2>
               <p className="text-brand-100 text-xs">أطباق شهية بمنتجاتنا الآمنة</p>
             </div>
           </div>

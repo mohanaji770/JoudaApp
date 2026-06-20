@@ -209,7 +209,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storeItems = items.filter(i => i.source === 'store' || !i.source);
     const bakeryItems = items.filter(i => i.source === 'bakery');
 
-    let message = `*طلب جديد من تطبيق جودة* 🛍️\n\n`;
+    let message = `*طلب جديد من تطبيق جوده* 🛍️\n\n`;
     
     if (name) message += `👤 *الاسم الكريم:* ${name}\n`;
     if (address) message += `📍 *العنوان / الاستلام:* ${address}\n`;

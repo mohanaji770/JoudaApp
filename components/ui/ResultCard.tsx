@@ -105,9 +105,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
 
   const handleTextShare = async () => {
     if (isCopied) return;
-    let shareText = `🧐 *تقرير فحص "جودة"*:\n\n${result.verdictTitle}\n\n🔍 *التحليل:* ${result.analysis}\n\n💡 *توصية جودة:* ${result.guidance}\n\n`;
+    let shareText = `🧐 *تقرير فحص "جوده"*:\n\n${result.verdictTitle}\n\n🔍 *التحليل:* ${result.analysis}\n\n💡 *توصية جوده:* ${result.guidance}\n\n`;
     if (result.matchedStoreItem) {
-      shareText += `🛍️ متوفر في متجر جودة: ${result.matchedStoreItem}\n`;
+      shareText += `🛍️ متوفر في متجر جوده: ${result.matchedStoreItem}\n`;
     }
     shareText += `تفضل بزيارة المتجر: ${STORE_CONFIG.URL}`;
     
@@ -150,7 +150,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
                   </div>
                   <div>
                       <h3 className="font-bold text-green-900 dark:text-green-100 text-base mb-1">
-                          متوفر في متجر جودة! 🎉
+                          متوفر في متجر جوده! 🎉
                       </h3>
                       <p className="text-green-800 dark:text-green-200 text-sm leading-relaxed mb-3">
                           المنتج <strong>"{result.matchedStoreItem}"</strong> متاح لدينا للطلب الفوري.
@@ -190,7 +190,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
 
         {/* Guidance */}
         <div>
-          <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">توصية جودة</h3>
+          <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">توصية جوده</h3>
           <div className={`p-4 rounded-xl text-sm font-medium ${theme.bg} ${theme.titleColor}`}>
             {result.guidance}
           </div>

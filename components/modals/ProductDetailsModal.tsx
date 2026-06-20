@@ -103,7 +103,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       try {
         await navigator.share({
           title: product.name,
-          text: `شاهد هذا المنتج من متجر جودة: ${product.name} \n ${product.description}`,
+          text: `شاهد هذا المنتج من متجر جوده: ${product.name} \n ${product.description}`,
           url: window.location.href,
         });
       } catch (e) {}
@@ -218,7 +218,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                       )}
                    </div>
                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                      {product.description || "لا يوجد وصف إضافي لهذا المنتج، ولكنه مضمون الجودة من متجرنا."}
+                      {product.description || "لا يوجد وصف إضافي لهذا المنتج، ولكنه مضمون الجوده من متجرنا."}
                    </p>
                 </div>
 

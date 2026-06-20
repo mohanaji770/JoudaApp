@@ -38,7 +38,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
       try {
         await navigator.share({
           title: article.title,
-          text: `شوف هذا المقال المفيد من مدونة جودة: ${article.title}`,
+          text: `شوف هذا المقال المفيد من مدونة جوده: ${article.title}`,
           url: window.location.href,
         });
       } catch (e) {}
@@ -90,7 +90,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
               />
             ) : (
               <div className="w-full h-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
-                 <span className="text-brand-300 font-black text-4xl opacity-50">جودة</span>
+                 <span className="text-brand-300 font-black text-4xl opacity-50">جوده</span>
               </div>
             )}
             

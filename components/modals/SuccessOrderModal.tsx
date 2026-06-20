@@ -31,7 +31,7 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
   };
 
   const handleShare = () => {
-    const message = `طلب جديد في جودة — ${orderNumber}`;
+    const message = `طلب جديد في جوده — ${orderNumber}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 

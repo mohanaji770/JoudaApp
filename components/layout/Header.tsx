@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
              <img src={APP_LOGO} alt="Jouda Logo" className="w-full h-full object-cover" />
            </div>
            <div className="flex flex-col justify-center">
-             <span className="text-xl font-black text-brand-600 leading-none tracking-tight">عالم جودة</span>
+             <span className="text-xl font-black text-brand-600 leading-none tracking-tight">عالم جوده</span>
              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wide mt-0.5">أسلوب حياة متكامل</span>
            </div>
         </div>

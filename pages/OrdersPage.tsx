@@ -19,13 +19,13 @@ interface DisplayOrder extends LiveOrder {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  submitted: { label: 'تم الإرسال', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', icon: <Send className="w-3.5 h-3.5" /> },
-  confirmed: { label: 'مؤكد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-  reserved: { label: 'محجوز', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', icon: <Package className="w-3.5 h-3.5" /> },
-  preparing: { label: 'قيد التحضير', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: <Clock className="w-3.5 h-3.5" /> },
+  submitted: { label: 'أُرسل', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', icon: <Send className="w-3.5 h-3.5" /> },
+  confirmed: { label: 'تم التأكيد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  reserved: { label: 'تم التأكيد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  preparing: { label: 'قيد التجهيز', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: <Clock className="w-3.5 h-3.5" /> },
   delivered: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
-  paid: { label: 'تم الدفع', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', icon: <Check className="w-3.5 h-3.5" /> },
-  deposited: { label: 'تم الايداع', color: '#4f46e5', bg: 'rgba(79,70,229,0.08)', icon: <Building className="w-3.5 h-3.5" /> },
+  paid: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
+  deposited: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
   cancelled: { label: 'ملغي', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <X className="w-3.5 h-3.5" /> },
   failed: { label: 'فشل', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <AlertCircle className="w-3.5 h-3.5" /> },
 };
@@ -40,7 +40,7 @@ export const OrdersPage: React.FC = () => {
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'orders' | 'favorites' | 'settings'>('orders');
-  const storedName = localStorage.getItem('jouda_customer_name') || 'صديق جودة';
+  const storedName = localStorage.getItem('jouda_customer_name') || 'صديق جوده';
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, LiveOrderItem[]>>({});
   const [repeatingOrder, setRepeatingOrder] = useState<string | null>(null);
@@ -300,181 +300,183 @@ export const OrdersPage: React.FC = () => {
               return 'bg-red-500/10';
             };
 
+            // Color helper based on status for card accent and borders
+            const getStatusColorClass = (status: string) => {
+              switch (status) {
+                case 'submitted': return 'border-blue-500 text-blue-600 bg-blue-50/50 dark:bg-blue-950/20';
+                case 'confirmed':
+                case 'reserved': return 'border-purple-500 text-purple-600 bg-purple-50/50 dark:bg-purple-950/20';
+                case 'preparing': return 'border-amber-500 text-amber-600 bg-amber-50/50 dark:bg-amber-950/20';
+                case 'delivered':
+                case 'paid':
+                case 'deposited': return 'border-emerald-500 text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20';
+                default: return 'border-red-500 text-red-600 bg-red-50/50 dark:bg-red-950/20';
+              }
+            };
+
+            const borderClass = getStatusColorClass(order.status).split(' ')[0];
+
             return (
               <div 
                 key={order.id} 
-                className={`bg-white dark:bg-gray-800 rounded-3xl border-0 overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.015)] transition-all duration-300 relative group/card ${
-                  isActiveOrder ? 'shadow-md shadow-brand-500/5 ring-1 ring-brand-500/10' : ''
-                }`}
+                className={`bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border-r-4 ${borderClass} border border-y-gray-100 border-l-gray-100 dark:border-y-gray-700/60 dark:border-l-gray-700/60 transition-all duration-300 hover:shadow-md relative group/card`}
               >
-                {/* Dynamic Ambient Light Blur Glow Circle inside card */}
-                <div className={`absolute -top-16 -left-16 w-36 h-36 rounded-full blur-2xl transition-transform duration-500 group-hover/card:scale-110 ${getGlowColor(order.status)}`} />
-
-                <div className="p-6 relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="space-y-1">
-                      {/* Category-like label */}
-                      <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest block">
-                        {order.order_type === 'delivery' ? 'توصيل للمنزل' : 'استلام من الفرع'}
-                        {order.isLocal && ' • طلب محلي'}
-                      </span>
-                      
-                      {/* Order Title (App Store game style) */}
-                      <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight leading-none mb-1">
-                        {order.order_number || '—'}
-                      </h3>
-                      
-                      <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 font-medium">
-                        <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gray-400" />{formatDate(order.created_at)}</span>
+                <div className="p-5 relative z-10">
+                  {/* Top Header Grid */}
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      {/* Order Number & Source info */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base font-black text-gray-900 dark:text-white tracking-tight">
+                          طلب #{order.order_number?.split('-').pop() || '—'}
+                        </h3>
+                        {order.isLocal && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400">
+                            محلي
+                          </span>
+                        )}
                       </div>
+                      
+                      {/* Date */}
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(order.created_at)}
+                      </p>
                     </div>
 
-                    {/* App Store Style GET button for status */}
-                    <div className="flex flex-col items-end gap-2">
+                    {/* Status Badge */}
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span 
                         style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
-                        className="px-4 py-1.5 rounded-full font-black text-xs inline-flex items-center justify-center tracking-wide shadow-[0_2px_10px_rgba(0,0,0,0.01)] shrink-0 min-w-[85px] text-center"
+                        className="px-3 py-1 rounded-full font-bold text-xs inline-flex items-center justify-center tracking-wide min-w-[75px] text-center"
                       >
                         {statusInfo.label}
                       </span>
-                      
-                      {/* Pulsing indicator for active orders */}
                       {isActiveOrder && (
-                        <span className="flex items-center gap-1.5 text-[9px] font-bold text-brand-600 dark:text-brand-400 animate-pulse bg-brand-50/50 dark:bg-brand-950/20 px-2 py-0.5 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-600 dark:bg-brand-400 block"></span>
-                          مباشر
+                        <span className="flex items-center gap-1 text-[9px] font-bold text-brand-600 dark:text-brand-400 animate-pulse bg-brand-50/50 dark:bg-brand-950/20 px-2 py-0.5 rounded-full">
+                          <span className="w-1 h-1 rounded-full bg-brand-600 dark:bg-brand-400"></span>
+                          نشط الآن
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Order metadata tags */}
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {order.customer_address && (
-                      <span className="flex items-center gap-1 text-[11px] bg-gray-50 dark:bg-gray-700/50 px-2.5 py-1 rounded-xl text-gray-500 dark:text-gray-400 font-bold">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                        {order.customer_address}
-                      </span>
-                    )}
-                    {order.isLocal && (
-                      <span className="flex items-center gap-1 text-[11px] bg-gray-50 dark:bg-gray-700/50 px-2.5 py-1 rounded-xl text-gray-500 dark:text-gray-400 font-bold">
-                        <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleDeleteLocal(order.id); }} />
-                        مسح محلي
-                      </span>
-                    )}
-                  </div>
+                  {/* Metadata & Actions tags */}
+                  {order.customer_address && (
+                    <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl p-2.5 mb-4 border border-gray-50 dark:border-gray-750">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold truncate">
+                          {order.customer_address}
+                        </span>
+                      </div>
+                      {order.isLocal && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteLocal(order.id); }}
+                          className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all shrink-0"
+                          title="مسح من السجل"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
 
-                  {/* iOS Style Minimal Progress Line */}
+                  {/* Minimal Compact Progress Bar */}
                   {order.status !== 'cancelled' && order.status !== 'failed' && (() => {
                     const mapStatusToStep = (status: string): string => {
-                      if (['submitted', 'deposited'].includes(status)) return 'submitted';
+                      if (['submitted'].includes(status)) return 'submitted';
                       if (['confirmed', 'reserved'].includes(status)) return 'confirmed';
                       if (['preparing'].includes(status)) return 'preparing';
-                      if (['delivered', 'paid'].includes(status)) return 'delivered';
+                      if (['delivered', 'paid', 'deposited'].includes(status)) return 'delivered';
                       return status;
                     };
                     const mappedStatus = mapStatusToStep(order.status);
+                    const steps = ['submitted', 'confirmed', 'preparing', 'delivered'];
+                    const currentIdx = steps.indexOf(mappedStatus);
+                    
                     return (
-                      <div className="relative mb-6 pt-2 px-1">
-                        {/* Background track */}
-                        <div className="absolute top-4 left-4 right-4 h-1 bg-gray-100 dark:bg-gray-700/60 z-0 rounded-full" />
-                        
-                        {/* Active progress */}
-                        <div 
-                          className="absolute top-4 right-4 h-1 bg-emerald-500 dark:bg-emerald-400 z-0 transition-all duration-500 rounded-full"
-                          style={{
-                            width: mappedStatus === 'delivered' ? 'calc(100% - 2rem)' :
-                                   mappedStatus === 'preparing' ? 'calc(66% - 1.3rem)' :
-                                   mappedStatus === 'confirmed' ? 'calc(33% - 0.6rem)' : '0%'
-                          }}
-                        />
-
-                        {/* Interactive Steps */}
-                        <div className="flex items-center justify-between relative z-10">
-                          {['submitted', 'confirmed', 'preparing', 'delivered'].map((step) => {
-                            const stepOrder = ['submitted', 'confirmed', 'preparing', 'delivered'];
-                            const currentIdx = stepOrder.indexOf(mappedStatus);
-                            const stepIdx = stepOrder.indexOf(step);
-                            const isCompleted = stepIdx <= currentIdx;
-                            const isCurrent = stepIdx === currentIdx;
-                            const stepLabels: Record<string, string> = {
-                              submitted: 'الإرسال',
-                              confirmed: 'تأكيد',
-                              preparing: 'التحضير',
-                              delivered: 'التسليم',
-                            };
-                            return (
-                              <div key={step} className="flex flex-col items-center">
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ring-4 ring-white dark:ring-gray-800 ${
-                                  isCurrent ? 'bg-brand-600 text-white scale-110 shadow-md shadow-brand-500/20' :
-                                  isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-transparent'
-                                }`}>
-                                  {isCompleted && (
-                                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                                  )}
-                                </div>
-                                <span className={`text-[10px] font-bold mt-1.5 text-center ${
-                                  isCurrent ? 'text-brand-600 dark:text-brand-400 font-black' :
-                                  isCompleted ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'
-                                }`}>
-                                  {stepLabels[step]}
-                                </span>
-                              </div>
-                            );
-                          })}
+                      <div className="mb-4 pt-1">
+                        {/* Progress Tracker Bar */}
+                        <div className="relative h-1.5 bg-gray-100 dark:bg-gray-700/60 rounded-full overflow-hidden mb-2">
+                          <div 
+                            className="absolute right-0 top-0 h-full bg-gradient-to-l from-emerald-400 to-green-500 dark:from-emerald-500 dark:to-green-600 transition-all duration-500 rounded-full"
+                            style={{
+                              width: `${((currentIdx + 1) / steps.length) * 100}%`
+                            }}
+                          />
+                        </div>
+                        {/* Labels */}
+                        <div className="flex justify-between text-[9px] font-extrabold text-gray-400 dark:text-gray-500 px-0.5">
+                          <span className={currentIdx >= 0 ? 'text-gray-800 dark:text-gray-200' : ''}>أُرسل</span>
+                          <span className={currentIdx >= 1 ? 'text-gray-800 dark:text-gray-200' : ''}>تم التأكيد</span>
+                          <span className={currentIdx >= 2 ? 'text-gray-800 dark:text-gray-200' : ''}>قيد التجهيز</span>
+                          <span className={currentIdx >= 3 ? 'text-gray-800 dark:text-gray-200' : ''}>تم التسليم</span>
                         </div>
                       </div>
                     );
                   })()}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-gray-750">
+                  {/* Summary & Toggle */}
+                  <div className="flex items-center justify-between pt-3.5 border-t border-gray-50 dark:border-gray-700/50">
                     <span className="text-sm font-black text-gray-900 dark:text-white">
-                      المجموع: {formatPrice(order.total)} ر.ي
+                      المجموع: <span className="font-mono">{formatPrice(order.total)}</span> ر.ي
                     </span>
                     <button 
                       onClick={() => toggleExpand(order.id)} 
-                      className="text-xs font-black text-brand-600 hover:text-brand-700 transition-colors"
+                      className="text-xs font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors flex items-center gap-1"
                     >
-                      {isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                      <span>{isExpanded ? 'إخفاء الأصناف' : 'عرض الأصناف'}</span>
+                      <span className="text-[10px] bg-brand-50 dark:bg-brand-950/30 px-1.5 py-0.5 rounded-md font-bold">
+                        {items.length || 0}
+                      </span>
                     </button>
                   </div>
                 </div>
 
                 {isExpanded && (
-                  <div className="border-t border-gray-100 dark:border-gray-700 p-5 bg-gray-50 dark:bg-gray-700/30 space-y-4 relative z-10">
+                  <div className="border-t border-gray-100 dark:border-gray-700/60 p-4 bg-gray-50 dark:bg-gray-900/30 space-y-4 relative z-10">
                     {items.length > 0 ? (
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {items.map(item => (
-                          <div key={item.id} className="flex items-center justify-between py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                            <div className="flex items-center gap-3">
-                              <span className="w-6 h-6 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-600 text-xs font-bold flex items-center justify-center">{item.quantity}</span>
-                              <span className="text-sm text-gray-900 dark:text-white font-medium">{item.product_name}</span>
+                          <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800/40 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-5.5 h-5.5 shrink-0 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold flex items-center justify-center">
+                                {item.quantity}x
+                              </span>
+                              <span className="text-xs text-gray-800 dark:text-gray-200 font-bold truncate">
+                                {item.product_name}
+                              </span>
                             </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{formatPrice(item.total_price)}</span>
+                            <span className="text-xs font-mono text-gray-500 dark:text-gray-400 shrink-0">
+                              {formatPrice(item.unit_price)}
+                            </span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-400 text-center py-4">جاري تحميل التفاصيل...</p>
+                      <p className="text-xs text-gray-400 text-center py-3">جاري تحميل الأصناف...</p>
                     )}
 
                     {order.notes && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.005)]">
-                        <span className="font-bold">ملاحظات:</span> {order.notes}
-                      </p>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-850 p-3 rounded-xl border border-gray-50 dark:border-gray-800/30">
+                        <span className="font-extrabold text-gray-800 dark:text-gray-200 block mb-0.5">ملاحظات العميل:</span> 
+                        {order.notes}
+                      </div>
                     )}
 
-                    <div className="pt-2 space-y-2">
+                    {/* Bottom CTA Actions */}
+                    <div className="pt-1.5 space-y-2">
                       {order.status === 'delivered' && (
                         <button
                           onClick={() => handleRepeatOrder(order)}
                           disabled={repeatingOrder === order.id}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-600 text-white rounded-2xl text-sm font-bold hover:bg-brand-700 transition-colors disabled:opacity-70 shadow-sm active:scale-[0.98]"
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 text-white rounded-xl text-xs font-bold hover:bg-brand-700 transition-all disabled:opacity-70 shadow-sm active:scale-[0.98]"
                         >
                           {repeatingOrder === order.id ? (
-                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />جاري الإضافة...</>
+                            <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />جاري التكرار...</>
                           ) : (
-                            <><Repeat className="w-4 h-4" />تكرار الطلب</>
+                            <><Repeat className="w-3.5 h-3.5" />إعادة طلب هذه الأصناف</>
                           )}
                         </button>
                       )}
@@ -483,15 +485,15 @@ export const OrdersPage: React.FC = () => {
                         <button
                           onClick={() => {
                             const statusLabel = STATUS_MAP[order.status]?.label || order.status;
-                            const message = `مرحباً متجر جودة، أود الاستفسار عن طلبي رقم: *${order.order_number}* 📦\nالحالة الحالية: ${statusLabel}`;
+                            const message = `مرحباً متجر جوده، أود الاستفسار عن طلبي رقم: *${order.order_number}* 📦\nالحالة الحالية: ${statusLabel}`;
                             const encoded = encodeURIComponent(message);
                             const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
                             window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
                           }}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 bg-whatsapp hover:bg-whatsapp-hover text-white rounded-2xl text-sm font-bold transition-all shadow-md active:scale-[0.98]"
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
                         >
-                          <MessageCircle className="w-5 h-5" />
-                          تواصل بخصوص الطلب عبر واتساب
+                          <MessageCircle className="w-4 h-4" />
+                          تواصل واستفسر عبر واتساب
                         </button>
                       )}
                     </div>
@@ -499,6 +501,7 @@ export const OrdersPage: React.FC = () => {
                 )}
               </div>
             );
+
           })}
         </div>
       )}
@@ -579,25 +582,6 @@ export const OrdersPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">دليل ومساعدة</h3>
-            
-            <button
-              onClick={() => navigate('/about')}
-              className="w-full flex items-center justify-between py-3 px-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-brand-50 dark:bg-brand-900/20 p-2 rounded-xl text-brand-600 dark:text-brand-400">
-                  <Info className="w-4 h-4" />
-                </div>
-                <div className="text-right">
-                  <span className="block text-sm font-bold text-gray-900 dark:text-white">عن جودة (من نحن)</span>
-                  <span className="text-[10px] text-gray-500 block">تعرف على قصتنا، موقعنا، والأسئلة الشائعة</span>
-                </div>
-              </div>
-              <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-brand-500 group-hover:-translate-x-0.5 transition-all" />
-            </button>
-          </div>
 
           <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl p-5 border border-red-100 dark:border-red-900/20">
              <button 

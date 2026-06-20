@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { calculateDistance, calculateDeliveryFee } from '../utils/distanceUtils';
+import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
 
 export const useCheckout = (
   items: any[], 
@@ -20,6 +20,10 @@ export const useCheckout = (
   
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
+  
+  const [deliveryZone, setDeliveryZone] = useState<'sanaa' | 'provinces'>(
+    () => (localStorage.getItem('jouda_delivery_zone') as 'sanaa' | 'provinces') || 'sanaa'
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -77,26 +81,59 @@ export const useCheckout = (
     }, 0);
   }, [items, cachedProducts]);
 
-  const { currentFee, isFreeDelivery, distanceKm } = useMemo(() => {
+  const SANAA_FREE_LIMIT = 20000;
+  const PROVINCES_FREE_LIMIT = 40000;
+
+  const { currentFee, rawFee, isFreeDelivery, distanceKm, qualifiesForFree } = useMemo(() => {
+    const qualifies = 
+      (deliveryZone === 'sanaa' && currentSubtotal >= SANAA_FREE_LIMIT) ||
+      (deliveryZone === 'provinces' && currentSubtotal >= PROVINCES_FREE_LIMIT);
+
+    if (qualifies) {
+      let raw = 0;
+      let dist = 0;
+      if (deliveryZone === 'sanaa' && customerLat && customerLng) {
+        dist = calculateDistance(storeLat, storeLng, customerLat, customerLng);
+        if (dist <= 20) {
+          const { rawFee: rawF } = calculateDeliveryFeeDetails(dist, pricePerKm);
+          raw = rawF;
+        }
+      }
+      return {
+        currentFee: 0,
+        rawFee: raw,
+        isFreeDelivery: true,
+        distanceKm: dist,
+        qualifiesForFree: true
+      };
+    }
+
+    if (deliveryZone === 'provinces') {
+      return { currentFee: 0, rawFee: 0, isFreeDelivery: true, distanceKm: 0, qualifiesForFree: false };
+    }
     if (customerLat && customerLng) {
       const dist = calculateDistance(storeLat, storeLng, customerLat, customerLng);
       const isFar = dist > 20;
-      const fee = isFar ? 0 : calculateDeliveryFee(dist, pricePerKm);
+      if (isFar) {
+        return { currentFee: 0, rawFee: 0, isFreeDelivery: true, distanceKm: dist, qualifiesForFree: false };
+      }
+      const { rawFee: raw, boundedFee } = calculateDeliveryFeeDetails(dist, pricePerKm);
       return {
-        currentFee: fee,
-        isFreeDelivery: fee === 0,
-        distanceKm: dist
+        currentFee: boundedFee,
+        rawFee: raw,
+        isFreeDelivery: false,
+        distanceKm: dist,
+        qualifiesForFree: false
       };
     }
-    return {
-      currentFee: 0,
-      isFreeDelivery: true,
-      distanceKm: 0
-    };
-  }, [customerLat, customerLng, storeLat, storeLng, pricePerKm]);
+    return { currentFee: 0, rawFee: 0, isFreeDelivery: true, distanceKm: 0, qualifiesForFree: false };
+  }, [customerLat, customerLng, storeLat, storeLng, pricePerKm, deliveryZone, currentSubtotal]);
 
   const grandTotal = currentSubtotal + currentFee;
-  const isFormValid = customerName.trim() !== '' && phone.trim() !== '' && address.trim() !== '' && customerLat !== null && customerLng !== null;
+  const isFormValid = customerName.trim() !== '' && 
+    phone.trim() !== '' && 
+    address.trim() !== '' && 
+    (deliveryZone === 'provinces' || (customerLat !== null && customerLng !== null));
 
   const isSaved = (key: string, val: string) => !!val && localStorage.getItem(key) === val;
 
@@ -111,7 +148,11 @@ export const useCheckout = (
 
   const handleSubmitOrder = async (onSuccess: () => void) => {
     if (!isFormValid) {
-      alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، عنوان التوصيل، وتحديد موقعك على الخريطة');
+      if (deliveryZone === 'sanaa') {
+        alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، عنوان التوصيل، وتحديد موقعك على الخريطة');
+      } else {
+        alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، وكتابة تفاصيل عنوان الشحن للمحافظة');
+      }
       return;
     }
 
@@ -119,19 +160,19 @@ export const useCheckout = (
     setSubmitResult(null);
 
     try {
-      const isFar = distanceKm > 20;
+      const isShipping = deliveryZone === 'provinces';
       
       const result = await submitOrderToSystem({
         customer_name: customerName.trim(),
         customer_phone: phone.trim(),
         customer_address: address,
-        order_type: isFar ? 'shipping' : 'delivery',
+        order_type: isShipping ? 'shipping' : (distanceKm > 20 ? 'shipping' : 'delivery'),
         payment_method: 'CASH',
         notes: notes || undefined,
         subtotal: currentSubtotal,
-        delivery_fee: isFar ? 0 : currentFee,
-        latitude: customerLat,
-        longitude: customerLng
+        delivery_fee: isShipping ? 0 : (distanceKm > 20 ? 0 : currentFee),
+        latitude: isShipping ? null : customerLat,
+        longitude: isShipping ? null : customerLng
       });
 
       if (result.success) {
@@ -139,6 +180,7 @@ export const useCheckout = (
         localStorage.setItem('jouda_customer_phone', phone.trim());
         localStorage.setItem('jouda_customer_name', customerName.trim());
         localStorage.setItem('jouda_customer_address', address.trim());
+        localStorage.setItem('jouda_delivery_zone', deliveryZone);
 
         setLastOrderDetails({
           orderNumber: result.order_number || result.quotation_id || '',
@@ -175,6 +217,7 @@ export const useCheckout = (
     phone, setPhone,
     customerLat, setCustomerLat,
     customerLng, setCustomerLng,
+    deliveryZone, setDeliveryZone,
     storeLat, storeLng, pricePerKm,
     submitting,
     submitResult,
@@ -183,8 +226,12 @@ export const useCheckout = (
     currentSubtotal,
     totalSavings,
     currentFee,
+    rawFee,
     isFreeDelivery,
     distanceKm,
+    qualifiesForFree,
+    sanaaFreeLimit: SANAA_FREE_LIMIT,
+    provincesFreeLimit: PROVINCES_FREE_LIMIT,
     grandTotal,
     isFormValid,
     isSaved,

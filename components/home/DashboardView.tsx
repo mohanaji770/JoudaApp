@@ -70,7 +70,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Minimal Categories (Bento Style) - Horizontal Layout */}
       <div className="grid grid-cols-2 gap-3 mb-6 px-4">
-        {/* متجر جودة - الآن في اليمين */}
+        {/* متجر جوده - الآن في اليمين */}
         <button
           onClick={() => navigate('/products')}
           className="group relative min-h-[5rem] h-auto rounded-[1.25rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right px-2.5 py-3 sm:p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 sm:gap-3 w-full"
@@ -84,7 +84,7 @@ export const DashboardView: React.FC = () => {
           </div>
         </button>
 
-        {/* مخبز جودة - الآن في اليسار */}
+        {/* مخبز جوده - الآن في اليسار */}
         <button
           onClick={() => navigate('/recipes')}
           className="group relative min-h-[5rem] h-auto rounded-[1.25rem] bg-white dark:bg-gray-900 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-gray-800 text-right px-2.5 py-3 sm:p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center gap-2 sm:gap-3 w-full"

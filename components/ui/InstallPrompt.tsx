@@ -58,7 +58,7 @@ export const InstallPrompt: React.FC = () => {
             <Smartphone className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm truncate">حمل تطبيق جودة</h3>
+            <h3 className="font-bold text-sm truncate">حمل تطبيق جوده</h3>
             <p className="text-[10px] text-gray-300 truncate">تجربة أسرع ومزايا أكثر في جيبك</p>
           </div>
         </div>
