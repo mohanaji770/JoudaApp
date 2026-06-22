@@ -1,39 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomePackagesCarousel } from './HomePackagesCarousel';
 import { TrendingRecipes } from '../blog/TrendingRecipes';
 import { KnowledgeHub } from '../../pages/KnowledgeHub';
-import { ProductRequestModal } from '../modals/ProductRequestModal';
-import { ScanLine, ChefHat, Store, ChevronLeft } from 'lucide-react';
+import { ScanLine, ChefHat, Store } from 'lucide-react';
+
+const OPEN_SCANNER_EVENT = 'open-scanner';
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return ['صباح الخير', '☀️'];
+  if (hour < 16) return ['نهارك سعيد', '🌤️'];
+  return ['مساء الخير', '🌙'];
+};
 
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
-  const [showProductRequest, setShowProductRequest] = useState(false);
 
-  const currentHour = new Date().getHours();
-  let greeting = 'نهارك سعيد';
-  let icon = '☀️';
-
-  if (currentHour < 12) {
-    greeting = 'صباح الخير';
-    icon = '☀️';
-  } else if (currentHour < 16) {
-    greeting = 'نهارك سعيد';
-    icon = '🌤️';
-  } else {
-    greeting = 'مساء الخير';
-    icon = '🌙';
-  }
-
+  const [greeting, icon] = getGreeting();
   const storedName = localStorage.getItem('jouda_customer_name');
-  const userName = storedName ? `، ${storedName.split(' ')[0]}` : '';
+  const userName = storedName?.split(' ')[0] ?? '';
 
   return (
     <div className="animate-fade-in flex flex-col">
       {/* iOS Style Minimal Hero */}
       <div className="mt-4 mb-4 px-4">
         <h1 className="text-[20px] font-black text-gray-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
-          <span>{greeting}، {userName}</span>
+          <span>{greeting}{userName && `، ${userName}`}</span>
           <span className="text-xl">{icon}</span>
         </h1>
         <p className="text-[12px] font-bold text-gray-500 dark:text-gray-400 leading-normal max-w-[90%]">
@@ -44,7 +37,7 @@ export const DashboardView: React.FC = () => {
       {/* Smart Lifesaver Bar (Scanner Trigger) */}
       <div className="px-4 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
         <button
-          onClick={() => window.dispatchEvent(new Event('open-scanner'))}
+          onClick={() => window.dispatchEvent(new Event(OPEN_SCANNER_EVENT))}
           className="w-full relative group bg-white dark:bg-gray-900 rounded-[1.25rem] p-3.5 flex items-center gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-100 dark:border-gray-800 hover:border-brand-200 dark:hover:border-brand-800 transition-all active:scale-[0.98] overflow-hidden"
         >
           {/* Animated Background Gradient (Subtle) */}
@@ -103,10 +96,6 @@ export const DashboardView: React.FC = () => {
       <div className="mb-6">
         <KnowledgeHub />
       </div>
-
-      {showProductRequest && (
-        <ProductRequestModal onClose={() => setShowProductRequest(false)} />
-      )}
     </div>
   );
 };
