@@ -174,17 +174,30 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
           {/* Floating Surprise Card (Only shown for Sana'a when fee > MAX and no absolute free delivery) */}
           {showSurpriseCard && (
             <div className="surprise-card-container animate-surprise-card">
-              <div className="relative overflow-hidden rounded-xl border border-emerald-250 dark:border-emerald-700/30 bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-950/20 dark:to-green-950/10 p-3 shadow-sm">
-                <div className="relative flex items-start gap-2.5">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-sm">
-                    <Sparkles className="w-4 h-4 text-white" />
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 dark:border-emerald-500/10 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 dark:from-emerald-950/25 dark:to-emerald-950/5 pr-5 pl-4 py-4 shadow-sm backdrop-blur-md">
+                {/* Vertical brand accent strip on the right edge */}
+                <div className="absolute right-0 top-0 bottom-0 w-1 bg-emerald-500 dark:bg-emerald-400 rounded-r-2xl"></div>
+                
+                <div className="relative flex items-start gap-3.5">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 animate-float-icon">
+                    <Sparkles className="w-4.5 h-4.5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-emerald-800 dark:text-emerald-300 mb-0.5">
-                      🎉 مفاجأة من جوده!
+                    <p className="text-xs font-black text-emerald-800 dark:text-emerald-300 mb-1 flex items-center gap-1.5">
+                      <span>🎉 مفاجأة من جوده!</span>
                     </p>
-                    <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed font-medium">
-                      لأن مشوارك بعيد وطلبت من التطبيق، جوده تتحمل الفارق لتوصيل طلبك بـ {currentFee.toLocaleString('en-US')} ريال فقط (وفرت {savings.toLocaleString('en-US')} ريال) 💚
+                    <p className="text-[11px] text-emerald-700/90 dark:text-emerald-400/90 leading-relaxed font-bold">
+                      لأن مشوارك بعيد وطلبت من التطبيق، جوده تتحمل الفارق لتوصيل طلبك بـ{' '}
+                      <span className="inline-flex items-center gap-0.5 font-black text-emerald-950 dark:text-white bg-white/70 dark:bg-gray-800/80 px-1.5 py-0.5 rounded-md border border-emerald-500/10 shadow-sm font-mono leading-none">
+                        {currentFee.toLocaleString('en-US')}
+                        <span className="saudi-riyal mr-0.5">{"\u00ea"}</span>
+                      </span>{' '}
+                      فقط (وفرت{' '}
+                      <span className="inline-flex items-center gap-0.5 font-black text-emerald-950 dark:text-white bg-white/70 dark:bg-gray-800/80 px-1.5 py-0.5 rounded-md border border-emerald-500/10 shadow-sm font-mono leading-none">
+                        {savings.toLocaleString('en-US')}
+                        <span className="saudi-riyal mr-0.5">{"\u00ea"}</span>
+                      </span>
+                      ) 💚
                     </p>
                   </div>
                 </div>

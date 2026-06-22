@@ -163,19 +163,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="text-brand-600 dark:text-brand-400 text-sm font-black truncate leading-tight">
-                    {product.price} ر.ي
+                    {product.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
                   </p>
                   <span className="text-[8px] font-black text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/20 px-1 py-0.5 rounded border border-green-100 dark:border-green-900/30">
                     وفر {savings.discountPercentage}%
                   </span>
                 </div>
                 <span className="text-[10px] text-gray-400 line-through leading-none mt-0.5">
-                  {savings.originalTotal} ر.ي
+                  {savings.originalTotal}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
                 </span>
               </div>
             ) : (
               <p className="text-brand-600 dark:text-brand-400 text-base font-black truncate">
-                {product.price ? `${product.price} ر.ي` : '---'}
+                {product.price ? <>{product.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span></> : '---'}
               </p>
             )}
           </div>

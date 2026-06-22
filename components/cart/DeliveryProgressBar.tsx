@@ -25,7 +25,7 @@ export const DeliveryProgressBar: React.FC<DeliveryProgressBarProps> = ({
         }`}>
           {isFreeDelivery 
             ? 'مبروك! التوصيل مجاني 🎉' 
-            : `باقي ${deliveryRemaining.toLocaleString('en-US')} ريال للتوصيل المجاني`
+            : <>باقي {deliveryRemaining.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span> للتوصيل المجاني</>
           }
         </span>
       </div>

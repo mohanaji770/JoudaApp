@@ -97,7 +97,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
               </div>
               <div>
                 <p className="text-[10px] text-gray-500 font-bold mb-0.5">السعر الأساسي</p>
-                <p className="text-sm font-black text-gray-900 dark:text-white">{product.price} ريال</p>
+                <p className="text-sm font-black text-gray-900 dark:text-white">{product.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span></p>
               </div>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-3 flex items-center gap-3 shadow-sm">

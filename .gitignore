@@ -45,3 +45,6 @@ scripts/generate-product-images.js
 app_texts.txt
 app_texts.md
 supabase/.temp/cli-latest
+dev-dist/registerSW.js
+.gitignore
+dev-dist/workbox-15ec2ecc.js

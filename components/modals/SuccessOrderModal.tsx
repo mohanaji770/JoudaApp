@@ -77,7 +77,7 @@ export const SuccessOrderModal: React.FC<SuccessOrderModalProps> = ({
           </div>
 
           <p className="text-[11px] text-gray-400 text-center mt-3">
-            إجمالي الحساب: <span className="font-bold text-gray-700 dark:text-gray-300">{total.toLocaleString()} ريال</span>
+            إجمالي الحساب: <span className="font-bold text-gray-700 dark:text-gray-300">{total.toLocaleString()}<span className="saudi-riyal mr-1">{"\u00ea"}</span></span>
           </p>
         </div>
 

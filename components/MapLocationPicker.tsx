@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle } from 'lucide-react';
-import { calculateDistance, calculateDeliveryFee } from '../utils/distanceUtils';
+import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
 
 // Custom iOS-like Map Pin
 const iosPinIcon = L.divIcon({
@@ -130,7 +130,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
   const distanceKm = calculateDistance(storeLat, storeLng, position[0], position[1]);
   const isFar = distanceKm > 20;
   // If > 20km, it's considered shipping to provinces, we set fee to 0 initially or mark it
-  const fee = isFar ? 0 : calculateDeliveryFee(distanceKm, pricePerKm);
+  const fee = isFar ? 0 : calculateDeliveryFeeDetails(distanceKm, pricePerKm).boundedFee;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -211,7 +211,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">المسافة تقريباً: <span className="font-bold text-gray-900 dark:text-white">{distanceKm.toFixed(1)} كم</span></span>
             {!isFar && (
-              <span className="text-gray-600 dark:text-gray-400">سعر التوصيل: <span className="font-bold text-brand-600 dark:text-brand-400">{fee === 0 ? 'مجاناً' : `${fee} ر.ي`}</span></span>
+              <span className="text-gray-600 dark:text-gray-400">سعر التوصيل: <span className="font-bold text-brand-600 dark:text-brand-400">{fee === 0 ? 'مجاناً' : <>{fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span></>}</span></span>
             )}
           </div>
           
@@ -238,7 +238,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
             <Check className="w-5 h-5" />
             {isFar 
               ? 'تأكيد كطلب محافظات (شحن)' 
-              : fee === 0 ? 'تأكيد الموقع' : `تأكيد الموقع (التوصيل: ${fee} ريال)`}
+              : fee === 0 ? 'تأكيد الموقع' : <>تأكيد الموقع (التوصيل: {fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span>)</>}
           </button>
         </div>
       </div>

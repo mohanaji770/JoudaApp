@@ -198,12 +198,12 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                    {/* Clean Price Display */}
                    <div className="flex items-baseline gap-3 mb-6">
                       <div className="text-3xl font-black text-brand-600 dark:text-brand-400 tracking-tight">
-                         {product.price || '---'} <span className="text-lg text-gray-500 font-bold">ر.ي</span>
+                          {product.price || '---'}<span className="saudi-riyal mr-1 text-lg text-gray-500 font-bold">{"\u00ea"}</span>
                       </div>
                       {savingsInfo && (
                         <div className="flex items-center gap-2">
                           <span className="text-base text-gray-400 line-through font-mono">
-                            {savingsInfo.originalTotal} ر.ي
+                            {savingsInfo.originalTotal}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
                           </span>
                         </div>
                       )}
@@ -239,7 +239,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                            <span className="text-gray-700 dark:text-gray-300 font-medium">{item.quantity} × {item.product_name}</span>
                          </div>
                          {item.price && (
-                            <span className="text-xs text-gray-400 font-mono shrink-0 pr-4">{item.price} ر.ي</span>
+                             <span className="text-xs text-gray-400 font-mono shrink-0 pr-4">{item.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span></span>
                          )}
                        </li>
                      ))}
@@ -251,16 +251,22 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                        <div className="space-y-2 text-sm">
                          <div className="flex justify-between text-gray-500 dark:text-gray-400">
                            <span>قيمة المنتجات مفردة</span>
-                           <span className="font-mono">{savingsInfo.originalTotal} ر.ي</span>
+                           <span className="font-mono">
+                              {savingsInfo.originalTotal}
+                              <span className="saudi-riyal mr-1">{"\u00ea"}</span>
+                           </span>
                          </div>
                          <div className="flex justify-between text-gray-500 dark:text-gray-400">
                            <span>سعر الباكج</span>
-                           <span className="font-mono">{product.price} ر.ي</span>
+                           <span className="font-mono">
+                              {product.price}
+                              <span className="saudi-riyal mr-1">{"\u00ea"}</span>
+                           </span>
                          </div>
                          <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between font-bold">
                            <span className="text-green-600 dark:text-green-400 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> وفرت في جيبك</span>
                            <span className="text-green-600 dark:text-green-400 font-mono">
-                             {savingsInfo.discountAmount} ر.ي (وفر {savingsInfo.discountPercentage}%)
+                             {savingsInfo.discountAmount}<span className="saudi-riyal mr-1">{"\u00ea"}</span> (وفر {savingsInfo.discountPercentage}%)
                            </span>
                          </div>
                        </div>

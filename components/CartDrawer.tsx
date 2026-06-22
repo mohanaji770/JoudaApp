@@ -110,7 +110,6 @@ export const CartDrawer: React.FC = () => {
               ) : (
                 <>
                   {step === 'cart' ? (
-                    <>
                       <CartItemsList
                         items={items}
                         cachedProducts={cachedProducts}
@@ -120,19 +119,6 @@ export const CartDrawer: React.FC = () => {
                         handleDecrease={handleDecrease}
                         handleRemove={handleRemove}
                       />
-
-                      <TotalsBreakdownCard
-                        currentSubtotal={checkout.currentSubtotal}
-                        totalSavings={checkout.totalSavings}
-                        currentFee={checkout.currentFee}
-                        rawFee={checkout.rawFee}
-                        isFreeDelivery={checkout.isFreeDelivery}
-                        distanceKm={checkout.distanceKm}
-                        deliveryZone={checkout.deliveryZone}
-                        qualifiesForFree={checkout.qualifiesForFree}
-                        grandTotal={checkout.grandTotal}
-                      />
-                    </>
                   ) : (
                     <div className="animate-fade-in space-y-6">
                       <CheckoutFormFields

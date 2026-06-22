@@ -87,7 +87,7 @@ export const PackageList: React.FC<PackageListProps> = ({
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">{pkg.name}</h3>
-                <p className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-1">{pkg.price} ر.ي</p>
+                <p className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-1">{pkg.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span></p>
                 <p className="text-[10px] text-gray-400 font-mono mt-0.5">{pkg.barcode}</p>
               </div>
             </div>

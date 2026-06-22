@@ -75,7 +75,7 @@ export const HomePackagesCarousel: React.FC = () => {
                   
                   <div className="flex items-baseline gap-2 mt-auto">
                     <span className="text-brand-600 dark:text-brand-400 font-black text-base font-mono">
-                      {pkg.price} <span className="text-[10px] font-bold">ر.ي</span>
+                      {pkg.price}<span className="saudi-riyal mr-1 text-[10px]">{"\u00ea"}</span>
                     </span>
                     {savings && (
                       <span className="text-[11px] text-gray-400 line-through font-mono">

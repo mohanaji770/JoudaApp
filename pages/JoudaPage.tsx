@@ -177,17 +177,6 @@ export const JoudaPage: React.FC = () => {
               </div>
               <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-green-500" />
            </a>
-
-           <a href={STORE_CONFIG.MAP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full text-blue-600 dark:text-blue-400">
-                 <MapPin className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                 <span className="block text-sm font-bold text-gray-900 dark:text-white">شرفنا في مقرنا</span>
-                 <span className="text-xs text-gray-500 truncate block">{STORE_CONFIG.ADDRESS} (نسعد بلقائك!)</span>
-              </div>
-              <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500" />
-           </a>
         </div>
 
         {/* Footer */}

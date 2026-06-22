@@ -74,17 +74,17 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
           
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-xs font-black text-gray-900 dark:text-white">
-              {item.price ? `${parseFloat(item.price) * item.quantity} ريال` : 'السعر لاحقاً'}
+              {item.price ? <>{parseFloat(item.price) * item.quantity}<span className="saudi-riyal mr-1">{"\u00ea"}</span></> : 'السعر لاحقاً'}
             </span>
             {savings > 0 && (
               <span className="text-[9px] font-black text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 px-2 py-0.5 rounded-md border border-green-100 dark:border-green-900/30">
-                وفرت {savings.toLocaleString('en-US')} ريال! 🎉
+                وفرت {savings.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>! 🎉
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 items-center mr-2 self-start shrink-0">
+        <div className="flex items-center gap-2 mr-2 self-center shrink-0">
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-100 dark:border-gray-700">
             <button 
               onClick={() => handleDecrease(item.id)}
@@ -102,11 +102,13 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
               <Plus className="w-4 h-4" />
             </button>
           </div>
+
           <button 
             onClick={() => handleRemove(item.id)}
-            className="w-full h-8 flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg hover:bg-red-100 transition-colors text-[10px] font-bold gap-1"
+            className="w-10 h-10 flex items-center justify-center bg-red-50 dark:bg-red-950/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition-colors active:scale-95"
+            title="حذف"
           >
-            <Trash2 className="w-3 h-3" /> حذف
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

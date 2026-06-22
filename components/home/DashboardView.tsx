@@ -4,7 +4,7 @@ import { HomePackagesCarousel } from './HomePackagesCarousel';
 import { TrendingRecipes } from '../blog/TrendingRecipes';
 import { KnowledgeHub } from '../../pages/KnowledgeHub';
 import { ProductRequestModal } from '../modals/ProductRequestModal';
-import { Search, ScanLine, ChefHat, Store, ChevronLeft } from 'lucide-react';
+import { ScanLine, ChefHat, Store, ChevronLeft } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
   const navigate = useNavigate();
@@ -59,11 +59,6 @@ export const DashboardView: React.FC = () => {
           <div className="flex-1 text-right">
             <h3 className="font-black text-gray-900 dark:text-white text-[15px] mb-0.5">افحص أي منتج الآن</h3>
             <p className="text-[12px] text-gray-500 dark:text-gray-400 font-bold">بالكاميرا أو البحث النصي.. وتأكد هل هو خالي من الجلوتين!</p>
-          </div>
-
-          {/* Search Icon Hint */}
-          <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0 group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30 transition-colors">
-            <Search className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
           </div>
         </button>
       </div>

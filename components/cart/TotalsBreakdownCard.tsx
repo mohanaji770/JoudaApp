@@ -38,14 +38,18 @@ export const TotalsBreakdownCard: React.FC<TotalsBreakdownCardProps> = ({
       {/* 1. Subtotal */}
       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 font-bold">
         <span>المجموع الفرعي</span>
-        <span className="tabular-nums font-mono">{currentSubtotal.toLocaleString('en-US')} ريال</span>
+        <span className="tabular-nums font-mono">
+          {currentSubtotal.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+        </span>
       </div>
 
       {/* 2. Package Savings */}
       {totalSavings > 0 && (
         <div className="flex justify-between text-xs font-bold text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-950/10 p-2 rounded-xl border border-green-100/40 dark:border-green-900/20">
           <span>🎁 التوفير من العروض والباكجات</span>
-          <span className="font-mono tabular-nums">-{totalSavings.toLocaleString('en-US')} ريال</span>
+          <span className="font-mono tabular-nums">
+            -{totalSavings.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+          </span>
         </div>
       )}
 
@@ -67,11 +71,17 @@ export const TotalsBreakdownCard: React.FC<TotalsBreakdownCardProps> = ({
             <span className="text-brand-600">مجاناً</span>
           ) : rawFee > currentFee ? (
             <span className="flex items-center gap-1.5">
-              <span className="line-through text-gray-400 dark:text-gray-500 text-[11px] tabular-nums">{rawFee.toLocaleString('en-US')}</span>
-              <span className="tabular-nums font-mono">{currentFee.toLocaleString('en-US')} ريال</span>
+              <span className="line-through text-gray-400 dark:text-gray-500 text-[11px] tabular-nums">
+                {rawFee.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+              </span>
+              <span className="tabular-nums font-mono">
+                {currentFee.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+              </span>
             </span>
           ) : (
-            <span className="tabular-nums font-mono">{currentFee.toLocaleString('en-US')} ريال</span>
+            <span className="tabular-nums font-mono">
+              {currentFee.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+            </span>
           )}
         </span>
       </div>
@@ -85,7 +95,9 @@ export const TotalsBreakdownCard: React.FC<TotalsBreakdownCardProps> = ({
               ? (deliveryZone === 'sanaa' ? 'تجاوزت 20,000! توصيل مجاني' : 'تجاوزت 40,000! شحن مجاني')
               : 'جوده تتحمل فرق التوصيل عنك!'}
           </span>
-          <span className="font-mono tabular-nums">-{deliverySavings.toLocaleString('en-US')} ريال</span>
+          <span className="font-mono tabular-nums">
+            -{deliverySavings.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
+          </span>
         </div>
       )}
 
@@ -96,7 +108,7 @@ export const TotalsBreakdownCard: React.FC<TotalsBreakdownCardProps> = ({
       <div className="flex justify-between items-center text-sm font-black text-gray-900 dark:text-white">
         <span>الإجمالي النهائي</span>
         <span className="text-base text-brand-600 dark:text-brand-400 tabular-nums font-black">
-          {grandTotal.toLocaleString('en-US')} ريال
+          {grandTotal.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
         </span>
       </div>
     </section>

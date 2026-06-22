@@ -137,16 +137,16 @@ export const FilterPanelModal: React.FC<FilterPanelModalProps> = ({
               {/* Quick price chips */}
               <div className="flex flex-wrap gap-2 mt-3">
                 {[
-                  { label: 'أقل من ١٠٠٠ ر.ي', max: 1000 },
-                  { label: '١٠٠٠ - ٣٠٠٠ ر.ي', min: 1000, max: 3000 },
-                  { label: '٣٠٠٠ - ٥٠٠٠ ر.ي', min: 3000, max: 5000 },
-                  { label: 'أكثر من ٥٠٠٠ ر.ي', min: 5000 },
+                  { id: 'under-1000', label: <>أقل من ١٠٠٠ <span className="saudi-riyal">{"\u00ea"}</span></>, max: 1000 },
+                  { id: '1000-3000', label: <>١٠٠٠ - ٣٠٠٠ <span className="saudi-riyal">{"\u00ea"}</span></>, min: 1000, max: 3000 },
+                  { id: '3000-5000', label: <>٣٠٠٠ - ٥٠٠٠ <span className="saudi-riyal">{"\u00ea"}</span></>, min: 3000, max: 5000 },
+                  { id: 'over-5000', label: <>أكثر من ٥٠٠٠ <span className="saudi-riyal">{"\u00ea"}</span></>, min: 5000 },
                 ].map((chip) => {
                   const isActive = filters.minPrice === (chip.min || null) && filters.maxPrice === (chip.max || null);
                   return (
                     <button
                       type="button"
-                      key={chip.label}
+                      key={chip.id}
                       onClick={() => {
                         if (isActive) {
                           setFilters(f => ({ ...f, minPrice: null, maxPrice: null }));

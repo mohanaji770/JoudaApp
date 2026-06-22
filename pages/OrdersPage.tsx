@@ -420,7 +420,7 @@ export const OrdersPage: React.FC = () => {
                   {/* Summary & Toggle */}
                   <div className="flex items-center justify-between pt-3.5 border-t border-gray-50 dark:border-gray-700/50">
                     <span className="text-sm font-black text-gray-900 dark:text-white">
-                      المجموع: <span className="font-mono">{formatPrice(order.total)}</span> ر.ي
+                      المجموع: <span className="font-mono">{formatPrice(order.total)}</span><span className="saudi-riyal mr-1">{"\u00ea"}</span>
                     </span>
                     <button 
                       onClick={() => toggleExpand(order.id)} 

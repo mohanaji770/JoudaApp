@@ -45,3 +45,18 @@ body {
   height: 0px;
   background: transparent;
 }
+
+@font-face {
+  font-family: 'SaudiRiyalSymbol';
+  src: url('/saudiriyalsymbol.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.saudi-riyal {
+  font-family: 'SaudiRiyalSymbol', sans-serif !important;
+  font-size: 1.05em;
+  display: inline-block;
+  line-height: 1;
+}

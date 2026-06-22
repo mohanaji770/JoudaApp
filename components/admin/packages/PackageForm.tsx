@@ -329,7 +329,7 @@ export const PackageForm: React.FC<PackageFormProps> = ({
                       className="w-full px-3 py-2.5 text-right text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
                     >
                       <span className="font-bold dark:text-white">{p.name}</span>
-                      <span className="text-[10px] text-gray-400 font-mono">({p.price} ر.ي)</span>
+                      <span className="text-[10px] text-gray-400 font-mono">({p.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span>)</span>
                     </button>
                   ))}
                 </div>
@@ -364,7 +364,7 @@ export const PackageForm: React.FC<PackageFormProps> = ({
                 <div className="min-w-0 flex-1 pl-2">
                   <p className="font-bold text-xs text-gray-800 dark:text-gray-200 truncate">{item.product_name}</p>
                   <p className="text-[10px] text-gray-400 font-bold font-mono mt-0.5">
-                    {item.quantity} عدد × {item.price || 0} ر.ي
+                    {item.quantity} عدد × {item.price || 0}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
                   </p>
                 </div>
                 <button
@@ -392,16 +392,16 @@ export const PackageForm: React.FC<PackageFormProps> = ({
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-gray-500">
               <span>سعر المكونات فرادى:</span>
-              <span className="font-bold font-mono">{packageCalculation.regularTotal} ر.ي</span>
+              <span className="font-bold font-mono">{packageCalculation.regularTotal}<span className="saudi-riyal mr-1">{"\u00ea"}</span></span>
             </div>
             <div className="flex justify-between text-gray-500">
               <span>سعر البكج المحدد:</span>
-              <span className="font-bold font-mono text-brand-600">{pkgPrice || 0} ر.ي</span>
+              <span className="font-bold font-mono text-brand-600">{pkgPrice || 0}<span className="saudi-riyal mr-1">{"\u00ea"}</span></span>
             </div>
             <div className="h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
             <div className="flex justify-between text-green-600 dark:text-green-400 font-bold">
               <span>المبلغ الموفر:</span>
-              <span className="font-black font-mono">-{packageCalculation.savings} ر.ي ({packageCalculation.savingsPercentage}%)</span>
+              <span className="font-black font-mono">-{packageCalculation.savings}<span className="saudi-riyal mr-1">{"\u00ea"}</span> ({packageCalculation.savingsPercentage}%)</span>
             </div>
           </div>
         </div>

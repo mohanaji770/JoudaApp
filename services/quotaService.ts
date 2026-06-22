@@ -1,6 +1,6 @@
 
 const QUOTA_KEY = 'jouda_daily_scan_quota_v1';
-const MAX_DAILY_SCANS = 10; // Set the daily limit here
+const MAX_DAILY_SCANS = 3; // Set the daily limit here
 
 interface QuotaData {
   date: string;
@@ -40,7 +40,7 @@ export const incrementDailyQuota = (): void => {
   const today = getTodayDate();
 
   let newCount = 1;
-  
+
   if (data.date === today) {
     newCount = data.count + 1;
   }
@@ -58,11 +58,11 @@ export const incrementDailyQuota = (): void => {
 export const getRemainingScans = (): number => {
   const data = getQuotaData();
   const today = getTodayDate();
-  
+
   if (data.date !== today) {
     return MAX_DAILY_SCANS;
   }
-  
+
   return Math.max(0, MAX_DAILY_SCANS - data.count);
 };
 

@@ -39,7 +39,7 @@ export const ProductCard: React.FC<{ product: Product; onClick: () => void }> = 
 
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
             <span className="text-[10px] md:text-xs text-brand-600 dark:text-brand-400 font-black px-1.5 rounded whitespace-nowrap bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/50">
-              {product.price} ريال
+              {product.price}<span className="saudi-riyal mr-1">{"\u00ea"}</span>
             </span>
             <span className="text-[9px] text-gray-500 font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded truncate max-w-[90px] whitespace-nowrap">
               {product.category}
