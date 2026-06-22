@@ -12,6 +12,16 @@ export const InstallPrompt: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    const handleShowIOSGuide = () => {
+      setPromptType('ios');
+      setShowBanner(true);
+    };
+
+    window.addEventListener('show-ios-install-guide', handleShowIOSGuide);
+    return () => window.removeEventListener('show-ios-install-guide', handleShowIOSGuide);
+  }, []);
+
+  useEffect(() => {
     // 1. Check if already running in standalone mode (PWA installed)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     if (isStandalone) return;
