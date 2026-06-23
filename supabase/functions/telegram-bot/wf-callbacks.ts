@@ -35,7 +35,7 @@ export async function handleWfCallback(
   const { data: order, error: orderErr } = await jouda
     .from('customer_orders')
     .select(
-      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, notes, latitude, longitude',
+      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, payment_method, notes, latitude, longitude',
     )
     .eq('id', orderId)
     .single();
@@ -112,17 +112,13 @@ export async function handleWfCallback(
     }
   }
 
-  // ── 5.5 Deposit → mark invoice as settled in POS ──
+  // ── 5.5 Deposit → settle invoice via RPC (creates settlement_batch + wallet entry) ──
   if (action === 'deposit' && order.quotation_id) {
-    const { error: settleErr } = await inventory
-      .from('invoices')
-      .update({
-        is_settled: true,
-        settled_at: new Date().toISOString(),
-        settled_by: env.systemUserId(),
-      })
-      .eq('id', order.quotation_id);
-    
+    const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
+      p_invoice_id: order.quotation_id,
+      p_actor_user_id: env.systemUserId(),
+      p_idempotency_key: crypto.randomUUID(),
+    });
     if (settleErr) {
       await answerCallback(
         token,
@@ -132,10 +128,21 @@ export async function handleWfCallback(
       );
       return;
     }
+    const settleData = settleResult as any;
+    if (settleData && settleData.success === false) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل تسجيل التوريد: ${settleData.error || 'خطأ غير معروف'}`,
+        true,
+      );
+      return;
+    }
   }
 
-  // ── 5.6 Invoice Assignment (Driver Mapping) ──
-  if (['reserve', 'prepare', 'deliver'].includes(action) && order.quotation_id) {
+  // ── 5.6 Invoice Assignment (Driver Mapping) — reserve only ──
+  // Only assign collector at the 'reserve' step. Prepare/deliver can be done by anyone.
+  if (action === 'reserve' && order.quotation_id) {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
       const { data, error } = await inventory.rpc('assign_invoice_to_collector', {
@@ -147,10 +154,27 @@ export async function handleWfCallback(
         const errMsg = error?.message || data?.error || 'Unknown error';
         console.error('Failed to assign invoice:', errMsg);
         await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة في المخزون: ${errMsg}`, true);
+      } else {
+        // 2. Create COLLECTION entry (since convert_quotation skipped it)
+        const companyAmount = Math.max((order.subtotal || 0) - (order.discount || 0), 0);
+        if (companyAmount > 0 && order.payment_method === 'CASH') {
+          await inventory.from('wallet_ledger').insert({
+            user_id: inventoryUserId,
+            invoice_id: order.quotation_id,
+            entry_type: 'COLLECTION',
+            direction: 'IN',
+            amount: companyAmount,
+            status: 'POSTED',
+            idempotency_key: `wl_tg_${order.quotation_id}`,
+            note: 'تحصيل من طلب تطبيق',
+            created_by: env.systemUserId(),
+          });
+        }
       }
     } else {
-      // Not mapped in TELEGRAM_DRIVER_MAP
-      await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
+      // Not mapped in TELEGRAM_DRIVER_MAP — block reserve since we need a collector
+      await answerCallback(token, callback.id, `⚠️ لا يمكنك حجز الطلب: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
+      return;
     }
   }
 
@@ -197,7 +221,7 @@ export async function handleWfCallback(
     const nextButtons = appOrderButtons(orderId, actionDef.nextStatus, order.latitude, order.longitude);
 
     // Append Undo button if eligible
-    if (['reserve', 'prepare', 'deliver', 'paid'].includes(action)) {
+    if (['reserve', 'prepare', 'deliver'].includes(action)) {
       // Must insert before the Google Maps button if it exists (which is usually the last button)
       const undoBtn = [{ text: '🔙 تراجع عن الحركة السابقة', callback_data: `wf_undo_${order.status}_${orderId}` }];
       if (order.latitude && order.longitude && nextButtons.length > 0) {
@@ -464,7 +488,7 @@ async function handleUndo(
   // 2. Fetch order to verify
   const { data: order, error: orderErr } = await jouda
     .from('customer_orders')
-    .select('id, status')
+    .select('id, status, quotation_id')
     .eq('id', orderId)
     .single();
 
@@ -486,6 +510,19 @@ async function handleUndo(
   if (updateErr || !updated) {
     await answerCallback(token, callback.id, '⚠️ فشل التراجع', true);
     return;
+  }
+
+  // If undoing 'reserve' (reverting to 'confirmed'), clear collector and COLLECTION entry
+  if (prevStatus === 'confirmed' && order.quotation_id) {
+    const suid = env.systemUserId();
+    await inventory.from('invoices').update({
+      collector_id: null
+    }).eq('id', order.quotation_id);
+    
+    await inventory.from('wallet_ledger').delete()
+      .eq('invoice_id', order.quotation_id)
+      .eq('entry_type', 'COLLECTION')
+      .eq('direction', 'IN');
   }
 
   // 4. Update Telegram Message Trail

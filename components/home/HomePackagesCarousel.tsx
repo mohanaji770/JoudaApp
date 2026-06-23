@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Product, fetchProductsFromSupabase } from '../../services/supabaseService';
 import { getCachedProducts } from '../../services/db';
 import { ProductDetailsModal } from '../modals/ProductDetailsModal';
@@ -8,6 +8,10 @@ export const HomePackagesCarousel: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProductDetails, setSelectedProductDetails] = useState<Product | null>(null);
+  
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const lastInteractionTime = useRef<number>(0);
 
   useEffect(() => {
     const loadPackages = async () => {
@@ -33,6 +37,55 @@ export const HomePackagesCarousel: React.FC = () => {
     p => p.barcode.startsWith('PKG-') || p.category === 'عروض وبكجات'
   );
 
+  // Auto-play logic
+  useEffect(() => {
+    if (featuredPackages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      // If user interacted in the last 8 seconds, skip auto-scrolling
+      if (now - lastInteractionTime.current < 8000) {
+        return;
+      }
+
+      const nextIndex = (activeIndex + 1) % featuredPackages.length;
+      setActiveIndex(nextIndex);
+
+      const container = scrollRef.current;
+      if (container && container.children[nextIndex]) {
+        container.children[nextIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeIndex, featuredPackages.length]);
+
+  const registerInteraction = () => {
+    lastInteractionTime.current = Date.now();
+  };
+
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // Get absolute scroll position (to support cross-browser RTL)
+    const scrollLeft = Math.abs(container.scrollLeft);
+    
+    // Width of card is 280px, gap is 14px (gap-3.5)
+    const cardWidth = 280;
+    const gap = 14;
+    const stepWidth = cardWidth + gap;
+
+    const index = Math.round(scrollLeft / stepWidth);
+    if (index >= 0 && index < featuredPackages.length && index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
+
   if (loading && featuredPackages.length === 0) {
     return <div className="mx-4 mb-6 h-[130px] bg-gray-100 dark:bg-gray-800 rounded-[1.5rem] animate-pulse" />;
   }
@@ -48,6 +101,10 @@ export const HomePackagesCarousel: React.FC = () => {
         </h3>
 
         <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          onTouchStart={registerInteraction}
+          onMouseDown={registerInteraction}
           className="flex gap-3.5 overflow-x-auto pb-4 pt-1 px-1 -mx-1 scrollbar-hide snap-x snap-mandatory scroll-smooth"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
@@ -101,6 +158,35 @@ export const HomePackagesCarousel: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Dots Indicator */}
+        {featuredPackages.length > 1 && (
+          <div className="flex justify-center items-center gap-1.5 mt-2">
+            {featuredPackages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  registerInteraction();
+                  setActiveIndex(idx);
+                  const container = scrollRef.current;
+                  if (container && container.children[idx]) {
+                    container.children[idx].scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'nearest',
+                      inline: 'center'
+                    });
+                  }
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
+                  idx === activeIndex
+                    ? 'w-4 bg-brand-600 dark:bg-brand-500'
+                    : 'w-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+                aria-label={`الذهاب إلى الشريحة ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedProductDetails && (
@@ -112,3 +198,4 @@ export const HomePackagesCarousel: React.FC = () => {
     </>
   );
 };
+

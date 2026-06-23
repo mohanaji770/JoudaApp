@@ -58,15 +58,37 @@ Deno.serve(async (req: Request) => {
     } else {
       // Non-Telegram (DB webhook / Cron) → require WEBHOOK_SECRET
       const secret = env.webhookSecret();
-      if (!secret) {
-        return new Response('WEBHOOK_SECRET not configured', { status: 500 });
-      }
       const provided =
         req.headers.get('x-webhook-secret') ||
         req.headers.get('authorization')?.replace('Bearer ', '') ||
         '';
+      
+      console.log(`[Diagnostic] Webhook auth check:`);
+      console.log(`- Expected secret configured: ${!!secret} (length: ${secret?.length || 0})`);
+      console.log(`- Provided secret present: ${!!provided} (length: ${provided?.length || 0})`);
+      if (secret && provided) {
+        const secretStr = String(secret);
+        const providedStr = String(provided);
+        console.log(`- Expected start/end: ${secretStr.substring(0, 2)}...${secretStr.substring(secretStr.length - 2)}`);
+        console.log(`- Provided start/end: ${providedStr.substring(0, 2)}...${providedStr.substring(providedStr.length - 2)}`);
+      }
+
+      if (!secret) {
+        return new Response('WEBHOOK_SECRET not configured', { status: 500 });
+      }
       if (provided !== secret) {
-        return new Response('Unauthorized', { status: 401 });
+        const secretStr = String(secret);
+        const providedStr = String(provided);
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            expected_length: secretStr.length,
+            provided_length: providedStr.length,
+            expected_start_end: `${secretStr.substring(0, 2)}...${secretStr.substring(secretStr.length - 2)}`,
+            provided_start_end: providedStr.length > 2 ? `${providedStr.substring(0, 2)}...${providedStr.substring(providedStr.length - 2)}` : providedStr,
+          }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
       }
     }
 

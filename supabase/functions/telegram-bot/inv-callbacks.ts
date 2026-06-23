@@ -94,6 +94,34 @@ export async function handleInvCallback(
     return;
   }
 
+  // ── 4.5 Deposit → settle invoice via RPC (creates settlement_batch + wallet entry) ──
+  if (action === 'deposit') {
+    const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
+      p_invoice_id: invoiceId,
+      p_actor_user_id: env.systemUserId(),
+      p_idempotency_key: crypto.randomUUID(),
+    });
+    if (settleErr) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل التوريد: ${settleErr.message}`,
+        true,
+      );
+      return;
+    }
+    const settleData = settleResult as any;
+    if (settleData && settleData.success === false) {
+      await answerCallback(
+        token,
+        callback.id,
+        `فشل التوريد: ${settleData.error || 'خطأ غير معروف'}`,
+        true,
+      );
+      return;
+    }
+  }
+
   // ── 5. Normal action: update workflow_status (optimistic lock) ──
   const { error: updateErr } = await inventory
     .from('invoices')
@@ -131,8 +159,9 @@ export async function handleInvCallback(
       .eq('quotation_id', invoiceId);
   }
 
-  // ── 6.5 Invoice Assignment (Driver Mapping) ──
-  if (['reserve', 'prepare', 'deliver'].includes(action)) {
+  // ── 6.5 Invoice Assignment (Driver Mapping) — reserve only ──
+  // Only assign collector at the 'reserve' step. Prepare/deliver can be done by anyone.
+  if (action === 'reserve') {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
       const { data, error } = await inventory.rpc('assign_invoice_to_collector', {
@@ -146,8 +175,9 @@ export async function handleInvCallback(
         await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة في المخزون: ${errMsg}`, true);
       }
     } else {
-      // Not mapped in TELEGRAM_DRIVER_MAP
-      await answerCallback(token, callback.id, `⚠️ لم يتم إسناد الفاتورة: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
+      // Not mapped in TELEGRAM_DRIVER_MAP — block reserve since we need a collector
+      await answerCallback(token, callback.id, `⚠️ لا يمكنك حجز الفاتورة: حسابك (${userId}) غير مربوط بالمخزون في TELEGRAM_DRIVER_MAP`, true);
+      return;
     }
   }
 

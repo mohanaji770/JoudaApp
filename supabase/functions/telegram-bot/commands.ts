@@ -160,7 +160,7 @@ export async function handleCash(token: string, chatId: string) {
   // 1. Fetch un-settled invoices from Inventory
   const { data: invoices, error } = await inventory
     .from('invoices')
-    .select('id, collector_id, total_amount, delivery_fee, workflow_status, payment_method, users!invoices_collector_id_fkey(name)')
+    .select('id, collector_id, total_amount, subtotal, discount, delivery_fee, workflow_status, payment_method, users!invoices_collector_id_fkey(name)')
     .eq('is_voided', false)
     .eq('is_settled', false)
     .not('collector_id', 'is', null);
@@ -204,7 +204,8 @@ export async function handleCash(token: string, chatId: string) {
     // Let's stick to 'paid' for collected cash.
     if (['paid'].includes(effectiveStatus)) {
        if (inv.payment_method === 'CASH') {
-          const cashAmount = Math.max((inv.total_amount || 0) - (inv.delivery_fee || 0), 0);
+          const subtotal = inv.subtotal ?? (inv.total_amount - (inv.delivery_fee || 0));
+          const cashAmount = Math.max(subtotal - (inv.discount || 0), 0);
           driverStats[dId].collected += cashAmount;
           totalCashInMarket += cashAmount;
        }
@@ -251,7 +252,7 @@ export async function handleMyCash(token: string, chatId: string) {
 
   const { data: invoices, error } = await inventory
     .from('invoices')
-    .select('id, total_amount, delivery_fee, workflow_status, payment_method')
+    .select('id, total_amount, subtotal, discount, delivery_fee, workflow_status, payment_method')
     .eq('collector_id', driverId)
     .eq('is_voided', false)
     .eq('is_settled', false);
@@ -283,7 +284,8 @@ export async function handleMyCash(token: string, chatId: string) {
 
     if (['paid'].includes(effectiveStatus)) {
        if (inv.payment_method === 'CASH') {
-          collected += Math.max((inv.total_amount || 0) - (inv.delivery_fee || 0), 0);
+          const subtotal = inv.subtotal ?? (inv.total_amount - (inv.delivery_fee || 0));
+          collected += Math.max(subtotal - (inv.discount || 0), 0);
        }
        collectedCount++;
     } else {
