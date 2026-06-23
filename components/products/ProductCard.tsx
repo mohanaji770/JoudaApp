@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeCheck } from 'lucide-react';
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
+import heartAnimation from '../../public/system-regular-48-favorite-heart-morph-select.json';
 import { Product } from '../../services/supabaseService';
 
 interface ProductCardProps {
@@ -58,6 +60,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isAdded = justAdded === product.name;
   const liked = isFavorite(product.id);
   const isPackage = product.barcode.startsWith('PKG-') || product.category === 'عروض وبكجات';
+
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      if (liked) {
+        lottieRef.current?.goToAndStop(30, true);
+      } else {
+        lottieRef.current?.goToAndStop(0, true);
+      }
+      return;
+    }
+
+    if (liked) {
+      lottieRef.current?.playSegments([0, 30], true);
+    } else {
+      lottieRef.current?.playSegments([30, 0], true);
+    }
+  }, [liked]);
 
   return (
     <div 
@@ -141,13 +164,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               e.stopPropagation(); 
               toggleFavorite(product.id); 
             }}
-            className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm border border-gray-100/50 dark:border-gray-700/50 transition-all active:scale-90 ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm border border-gray-100/50 dark:border-gray-700/50 transition-all active:scale-95 ${
               liked 
-                ? 'bg-red-50 dark:bg-red-500/20 text-red-500' 
-                : 'bg-white/90 dark:bg-gray-800/90 text-gray-400 dark:text-gray-400 hover:text-red-400'
+                ? 'bg-red-50 dark:bg-red-500/20' 
+                : 'bg-white/90 dark:bg-gray-800/90 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
+            aria-label="إضافة إلى المفضلة"
           >
-            <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+            <div className="w-[24px] h-[24px] flex items-center justify-center overflow-hidden">
+              <Lottie 
+                lottieRef={lottieRef}
+                animationData={heartAnimation}
+                loop={false}
+                autoplay={false}
+                style={{ width: '48px', height: '48px' }}
+              />
+            </div>
           </button>
         </div>
       </div>
