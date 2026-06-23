@@ -5,7 +5,7 @@ import { X, ShoppingBag, Heart, ChefHat, Clock, Share2, Check, ArrowRight, Spark
 import { Product, Recipe } from '../../services/supabaseService';
 import { useCart } from '../../contexts/CartContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
-import { useScrollLock } from '../../hooks/index';
+import { useScrollLock, useBackButton } from '../../hooks/index';
 import { ProductRequestModal } from './ProductRequestModal';
 import { getCachedProducts } from '../../services/db';
 
@@ -25,6 +25,9 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   const { addToCart, getItemQuantity, decreaseQuantityByName, setIsCartOpen } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+
+  // Handle hardware back button
+  useBackButton(true, onClose);
 
   const [resolvedBundleItems, setResolvedBundleItems] = useState<{
     barcode: string;

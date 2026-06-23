@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { ReceiptModal } from './modals/ReceiptModal';
 import { SuccessOrderModal } from './modals/SuccessOrderModal';
-import { useScrollLock } from '../hooks';
+import { useScrollLock, useBackButton } from '../hooks';
 import { getCachedProducts } from '../services/db';
 import { useCheckout } from '../hooks/useCheckout';
 
@@ -61,6 +61,28 @@ export const CartDrawer: React.FC = () => {
 
   // Lock scroll when cart is open
   useScrollLock(isCartOpen || checkout.showSuccessModal);
+
+  // Handle android hardware back button for success modal
+  useBackButton(checkout.showSuccessModal, () => {
+    checkout.setShowSuccessModal(false);
+    setIsCartOpen(false);
+    checkout.resetForm();
+  });
+
+  // Handle android hardware back button for map picker
+  useBackButton(showMap, () => {
+    setShowMap(false);
+  });
+
+  // Handle android hardware back button for receipt modal
+  useBackButton(showReceipt, () => {
+    setShowReceipt(false);
+  });
+
+  // Handle android hardware back button for the cart drawer itself
+  useBackButton(isCartOpen, () => {
+    setIsCartOpen(false);
+  });
 
   // ── Handlers ──
   const handleClose = () => {

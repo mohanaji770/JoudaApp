@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useScanHistory } from '../hooks/useScanHistory';
 import { useAnalyzer } from '../hooks/useAnalyzer';
+import { useBackButton } from '../hooks';
 import { DashboardView } from '../components/home/DashboardView';
 import { ScannerView } from '../components/home/ScannerView';
 import { AnalysisResult } from '../types';
@@ -30,6 +31,15 @@ export const HomePage: React.FC = () => {
     setError,
     setErrorMessage
   } = useAnalyzer(handleAnalysisSuccess);
+
+  // Handle android back button for scanner view
+  useBackButton(showScanner || !!result, () => {
+    if (isAnalyzing) {
+      // Ignore back button click during active analysis
+      return;
+    }
+    handleCloseScanner();
+  });
 
   const handleHistorySelect = (item: AnalysisResult) => {
     setResult(item);

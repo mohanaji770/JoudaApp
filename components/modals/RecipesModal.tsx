@@ -87,9 +87,14 @@ interface RecipesModalProps {
   onClose: () => void;
 }
 
+import { useBackButton } from '../../hooks';
+
 export const RecipesModal: React.FC<RecipesModalProps> = ({ onClose }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { addToCart } = useCart();
+
+  // Handle hardware back button
+  useBackButton(true, onClose);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);

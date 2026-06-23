@@ -133,20 +133,9 @@ async function processPackagesAndExpiry(payload: OrderPayload, joudaClient: Supa
     : { data: [] };
 
   const resolveExpiryDate = async (barcode: string): Promise<string | null> => {
-    const isTracked = invProducts?.find(p => p.barcode === barcode)?.track_expiry;
-    if (!isTracked) return null;
-
-    const batch = activeBatches?.find(b => b.product_barcode === barcode && b.remaining_qty > 0);
-    if (batch) return batch.expiry_date;
-
-    try {
-      const { data: hist } = await inventoryClient.from('inventory_movements').select('expiry_date').eq('product_barcode', barcode).eq('action_type', 'IN').not('expiry_date', 'is', null).order('expiry_date', { ascending: false }).limit(1);
-      if (hist && hist.length > 0) return hist[0].expiry_date;
-    } catch {}
-
-    const fallback = new Date();
-    fallback.setMonth(fallback.getMonth() + 6);
-    return fallback.toISOString().split('T')[0];
+    // Quotations don't need a specific expiry date.
+    // FIFO allocation happens atomically at convert_quotation_to_invoice time.
+    return null;
   };
 
   const rpcItems: RpcItem[] = [];
@@ -373,6 +362,33 @@ Deno.serve(async (req: Request) => {
 
     // 5. Business Logic: Packages & Expiry
     const { rpcItems, packageDiscount, packageMappings, baseProducts } = await processPackagesAndExpiry(payload, joudaClient, inventoryClient, config.onlineWarehouseId);
+    
+    // 5.5 Early Stock Validation (Prevent out-of-stock orders from entering as DRAFT)
+    const requiredQtyMap = new Map<string, number>();
+    for (const rpcItem of rpcItems) {
+      const current = requiredQtyMap.get(rpcItem.product_barcode) || 0;
+      requiredQtyMap.set(rpcItem.product_barcode, current + rpcItem.quantity);
+    }
+
+    const allBaseBarcodes = Array.from(requiredQtyMap.keys());
+    if (allBaseBarcodes.length > 0) {
+      const { data: stockData } = await inventoryClient
+        .from('product_stock_summary')
+        .select('product_barcode, current_stock')
+        .in('product_barcode', allBaseBarcodes)
+        .eq('warehouse_id', config.onlineWarehouseId);
+
+      for (const [barcode, needed] of requiredQtyMap.entries()) {
+        const available = stockData?.find(s => s.product_barcode === barcode)?.current_stock || 0;
+        if (needed > available) {
+          const pName = baseProducts?.find(p => p.barcode === barcode)?.name || barcode;
+          return jsonResponse({ 
+            success: false, 
+            message: `عذراً، المنتج "${pName}" غير متوفر بالكمية المطلوبة (المتاح: ${available})` 
+          }, 400);
+        }
+      }
+    }
     
     // 6. Create Quotation in Inventory
     const { quotationId, success: rpcSuccess } = await createInventoryQuotation(payload, rpcItems, packageDiscount, config, inventoryClient, invoiceId, idempotencyKey, orderNumber);

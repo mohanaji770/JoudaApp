@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { X, Calendar, User, Share2 } from 'lucide-react';
 import { Article } from '../../services/supabaseService';
-import { useScrollLock } from '../../hooks/index';
+import { useScrollLock, useBackButton } from '../../hooks/index';
 
 interface ArticleModalProps {
   article: Article;
@@ -13,6 +13,9 @@ interface ArticleModalProps {
 }
 
 export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) => {
+  // Handle android back button
+  useBackButton(true, onClose);
+
   // Lock body scroll when modal is open
   useScrollLock(true);
 

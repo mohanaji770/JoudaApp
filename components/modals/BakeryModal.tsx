@@ -3,11 +3,16 @@ import React from 'react';
 import { X, MessageCircle, Star, ChefHat, CheckCircle } from 'lucide-react';
 import { STORE_CONFIG } from '../../constants';
 
+import { useBackButton } from '../../hooks';
+
 interface BakeryModalProps {
   onClose: () => void;
 }
 
 export const BakeryModal: React.FC<BakeryModalProps> = ({ onClose }) => {
+  // Handle android back button
+  useBackButton(true, onClose);
+
   const items = [
     { name: 'توست طازج', desc: 'طري ومثالي للسندويشات', icon: '🍞' },
     { name: 'سينابون', desc: 'هش ولذيذ بالقرفة', icon: '🥯' },

@@ -13,7 +13,9 @@ import { AboutPageRoute } from './pages/AboutPageRoute';
 import { OrdersPage } from './pages/OrdersPage';
 import { Onboarding } from './components/ui/Onboarding';
 import { OfflineIndicator } from './components/layout/OfflineIndicator';
-import { useScrollToTop, useLocalStorage } from './hooks';
+import { useScrollToTop, useLocalStorage, handleBackButton } from './hooks';
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { SyncProvider } from './contexts/SyncContext';
 import { supabase } from './services/supabaseClient';
 import { AdminLayout } from './components/admin/AdminLayout';
@@ -75,6 +77,7 @@ const AppContent: React.FC = () => {
   
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [showExitToast, setShowExitToast] = useState(false);
 
   // Check auth session
   useEffect(() => {
@@ -165,6 +168,57 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  // Handle Capacitor Android Hardware Back Button
+  useEffect(() => {
+    let lastTime = 0;
+    let toastTimeout: NodeJS.Timeout;
+
+    const handleBackButtonCap = async () => {
+      // 1. Check if any overlay/modal handled the event (LIFO stack)
+      const handled = handleBackButton();
+      if (handled) {
+        return;
+      }
+
+      // 2. If no modal is open, check current path
+      if (location.pathname !== '/') {
+        // Go back in history (which reacts within the SPA router)
+        navigate(-1);
+      } else {
+        // We are on the homepage. Double tap to exit.
+        const now = Date.now();
+        if (now - lastTime < 2000) {
+          CapApp.exitApp();
+        } else {
+          lastTime = now;
+          setShowExitToast(true);
+          clearTimeout(toastTimeout);
+          toastTimeout = setTimeout(() => {
+            setShowExitToast(false);
+          }, 2000);
+        }
+      }
+    };
+
+    const setupListener = async () => {
+      if (!Capacitor.isNativePlatform()) {
+        return null;
+      }
+      const listener = await CapApp.addListener('backButton', handleBackButtonCap);
+      return listener;
+    };
+
+    const listenerPromise = setupListener();
+
+    return () => {
+      clearTimeout(toastTimeout);
+      listenerPromise.then(l => {
+        if (l) l.remove();
+      });
+    };
+  }, [location.pathname, navigate]);
+
+
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
   };
@@ -246,7 +300,14 @@ const AppContent: React.FC = () => {
       </Layout>
       
       {showOnboarding && <Onboarding onClose={handleCloseOnboarding} />}
+
+      {showExitToast && (
+        <div aria-live="assertive" className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 backdrop-blur text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl z-[200] flex items-center gap-2 animate-slide-up-fade text-sm font-black w-max max-w-[90%]">
+          <span>اضغط مرة أخرى للخروج من التطبيق</span>
+        </div>
+      )}
     </>
+
   );
 };
 

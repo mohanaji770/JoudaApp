@@ -16,3 +16,6 @@ export {
   useCachedFAQ,
   useStorageInfo,
 } from './useIndexedDB';
+
+export { useBackButton, handleBackButton } from './useBackButton';
+

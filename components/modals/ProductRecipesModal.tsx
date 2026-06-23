@@ -3,6 +3,8 @@ import React from 'react';
 import { X, ChefHat, Clock, ArrowRight } from 'lucide-react';
 import { Recipe } from '../../services/supabaseService';
 
+import { useBackButton } from '../../hooks';
+
 interface ProductRecipesModalProps {
   productName: string;
   recipes: Recipe[];
@@ -10,6 +12,9 @@ interface ProductRecipesModalProps {
 }
 
 export const ProductRecipesModal: React.FC<ProductRecipesModalProps> = ({ productName, recipes, onClose }) => {
+  // Handle android back button
+  useBackButton(true, onClose);
+
   return (
     <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-900 w-full max-w-lg h-[70vh] sm:h-auto sm:max-h-[80vh] rounded-t-3xl sm:rounded-3xl shadow-2xl relative flex flex-col animate-slide-up-mobile sm:animate-scale-in border border-gray-200 dark:border-gray-800">

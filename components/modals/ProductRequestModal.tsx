@@ -4,12 +4,17 @@ import { createPortal } from 'react-dom';
 import { X, MessageCircle, PackageSearch, FileText, ShoppingBag } from 'lucide-react';
 import { STORE_CONFIG } from '../../constants';
 
+import { useBackButton } from '../../hooks';
+
 interface ProductRequestModalProps {
   onClose: () => void;
   initialProductName?: string;
 }
 
 export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClose, initialProductName = '' }) => {
+  // Handle android back button
+  useBackButton(true, onClose);
+
   const [productName, setProductName] = useState(initialProductName);
   const [notes, setNotes] = useState('');
   const [isSending, setIsSending] = useState(false);

@@ -3,12 +3,17 @@ import { toBlob } from 'html-to-image';
 import { X, Share2, CheckCircle, AlertTriangle, XCircle, Leaf, ScanLine, BadgeCheck } from 'lucide-react';
 import { AnalysisResult, VerdictType } from '../../types';
 
+import { useBackButton } from '../../hooks';
+
 interface ShareModalProps {
   result: AnalysisResult;
   onClose: () => void;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
+  // Handle android back button
+  useBackButton(true, onClose);
+
   const captureRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 

@@ -110,6 +110,31 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // 6a. Fetch packages and calculate stock based on components
+    const { data: packageItems } = await joudaClient
+      .from('package_items')
+      .select('package_barcode, product_barcode, quantity');
+
+    const pkgMinStock = new Map<string, number>();
+    for (const pi of packageItems || []) {
+      const compStock = stockMap.get(pi.product_barcode) ?? 0;
+      const compQty = pi.quantity;
+      const maxPackages = Math.floor(compStock / compQty);
+      
+      const current = pkgMinStock.get(pi.package_barcode) ?? Infinity;
+      if (maxPackages < current) {
+        pkgMinStock.set(pi.package_barcode, maxPackages);
+      }
+    }
+
+    // Update productsToUpsert for packages
+    for (const p of productsToUpsert) {
+      if (p.barcode.startsWith('PKG-')) {
+        const stock = pkgMinStock.get(p.barcode) ?? 0;
+        p.stock_status = stock > 0 ? 'available' : 'out_of_stock';
+      }
+    }
+
     const { error: upsertError } = await joudaClient
       .from('products')
       .upsert(productsToUpsert, { onConflict: 'barcode' });
