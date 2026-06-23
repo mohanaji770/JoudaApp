@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Jouda</string>
+    <string name="title_activity_main">Jouda</string>
+    <string name="package_name">com.jouda.app</string>
+    <string name="custom_url_scheme">com.jouda.app</string>
+</resources>

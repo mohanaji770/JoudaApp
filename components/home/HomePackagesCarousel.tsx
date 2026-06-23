@@ -52,11 +52,15 @@ export const HomePackagesCarousel: React.FC = () => {
       setActiveIndex(nextIndex);
 
       const container = scrollRef.current;
-      if (container && container.children[nextIndex]) {
-        container.children[nextIndex].scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
+      if (container) {
+        const cardWidth = 280;
+        const gap = 14;
+        const stepWidth = cardWidth + gap;
+        const targetLeft = -(stepWidth * nextIndex);
+
+        container.scrollTo({
+          left: targetLeft,
+          behavior: 'smooth'
         });
       }
     }, 4000);
@@ -169,11 +173,15 @@ export const HomePackagesCarousel: React.FC = () => {
                   registerInteraction();
                   setActiveIndex(idx);
                   const container = scrollRef.current;
-                  if (container && container.children[idx]) {
-                    container.children[idx].scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'nearest',
-                      inline: 'center'
+                  if (container) {
+                    const cardWidth = 280;
+                    const gap = 14;
+                    const stepWidth = cardWidth + gap;
+                    const targetLeft = -(stepWidth * idx);
+
+                    container.scrollTo({
+                      left: targetLeft,
+                      behavior: 'smooth'
                     });
                   }
                 }}

@@ -126,7 +126,7 @@ serve(async (req: Request) => {
       : "لا توجد منتجات مسجلة حالياً";
 
     const ai = new GoogleGenAI({ apiKey });
-    const modelId = "gemini-2.5-flash";
+    const modelId = "gemini-1.5-flash";
     const config = {
       systemInstruction: getSystemPrompt(productListString),
       responseMimeType: "application/json",

@@ -22,7 +22,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   onClose,
   onOpenRecipe
 }) => {
-  const { addToCart, getItemQuantity, decreaseQuantityByName } = useCart();
+  const { addToCart, getItemQuantity, decreaseQuantityByName, setIsCartOpen } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [requestModalOpen, setRequestModalOpen] = useState(false);
 
@@ -314,19 +314,42 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
            <div className="p-4 sm:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 safe-area-bottom mt-auto">
               <div className="flex gap-3">
                  {quantity > 0 ? (
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl p-2 flex items-center justify-between">
+                    <div className="flex flex-col gap-3 w-full">
+                       {/* First Row: Quantity controls + View Cart */}
+                       <div className="flex gap-3 items-center">
+                          <div className="w-[130px] bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5 flex items-center justify-between shrink-0">
+                             <button 
+                                onClick={() => decreaseQuantityByName(product.name)}
+                                className="w-9 h-9 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center text-lg font-bold hover:bg-gray-50 transition-colors"
+                             >
+                                -
+                             </button>
+                             <span className="text-base font-black px-1">{quantity}</span>
+                             <button 
+                                onClick={() => addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString())}
+                                className="w-9 h-9 bg-brand-600 text-white rounded-xl shadow-sm flex items-center justify-center text-lg font-bold hover:bg-brand-700 transition-colors"
+                             >
+                                +
+                             </button>
+                          </div>
+                          <button 
+                             onClick={() => {
+                               onClose();
+                               setIsCartOpen(true);
+                             }}
+                             className="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-3.5 px-4 rounded-2xl font-bold shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2 animate-fade-in"
+                          >
+                             <ShoppingBag className="w-5 h-5 animate-bounce" />
+                             <span>عرض السلة</span>
+                          </button>
+                       </div>
+                       
+                       {/* Second Row: Continue Shopping */}
                        <button 
-                          onClick={() => decreaseQuantityByName(product.name)}
-                          className="w-12 h-12 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-gray-50 transition-colors"
+                          onClick={onClose}
+                          className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 py-3.5 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 animate-fade-in"
                        >
-                          -
-                       </button>
-                       <span className="text-xl font-bold">{quantity}</span>
-                       <button 
-                          onClick={() => addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString())}
-                          className="w-12 h-12 bg-brand-600 text-white rounded-xl shadow-sm flex items-center justify-center text-xl font-bold hover:bg-brand-700 transition-colors"
-                       >
-                          +
+                          <span>استكمال الشراء</span>
                        </button>
                     </div>
                  ) : (

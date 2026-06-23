@@ -165,15 +165,12 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
           return 0;
         case 'default':
         default:
-          // Available first, then favorites, then popular
+          // Available first, then popular, then by name
           if (a.inStock !== false && b.inStock === false) return -1;
           if (a.inStock === false && b.inStock !== false) return 1;
-          const aFav = isFavorite(a.id) ? 1 : 0;
-          const bFav = isFavorite(b.id) ? 1 : 0;
-          if (aFav !== bFav) return bFav - aFav;
           if (a.popular && !b.popular) return -1;
           if (!a.popular && b.popular) return 1;
-          return 0;
+          return a.name.localeCompare(b.name, 'ar');
       }
     });
 
@@ -384,7 +381,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ initialViewMode = 's
                 <ChevronDown className="w-4 h-4" />
                 عرض المزيد
                 <span className="text-[10px] text-gray-400 font-normal bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                  باقي {filteredProducts.length - visibleCount} حبات
+                  باقي {filteredProducts.length - visibleCount} منتج
                 </span>
               </button>
             </div>

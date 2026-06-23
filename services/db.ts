@@ -178,7 +178,8 @@ export async function cacheProducts(products: Product[]): Promise<void> {
 export async function getCachedProducts(): Promise<Product[]> {
   const db = await getDB();
   const products = await db.getAll('products');
-  return products.map(({ _cachedAt, ...product }) => product as Product);
+  const mapped = products.map(({ _cachedAt, ...product }) => product as Product);
+  return mapped.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
 export async function getCachedProductsByCategory(category: string): Promise<Product[]> {
