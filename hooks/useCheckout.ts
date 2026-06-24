@@ -131,7 +131,7 @@ export const useCheckout = (
 
   const grandTotal = currentSubtotal + currentFee;
   const isFormValid = customerName.trim() !== '' && 
-    phone.trim() !== '' && 
+    phone.trim().length >= 9 && 
     address.trim() !== '' && 
     (deliveryZone === 'provinces' || (customerLat !== null && customerLng !== null));
 

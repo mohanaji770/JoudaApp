@@ -116,17 +116,23 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                   رقم الجوال
                 </label>
                 <div className="relative">
-                  <MessageCircle className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  <MessageCircle className={`w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 ${phone.length > 0 && phone.length < 9 ? 'text-red-400' : 'text-gray-400'}`} />
                   <input 
                     id="cart-phone"
                     type="tel" 
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-sm dark:text-white font-medium transition-all shadow-sm text-left"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      if (val.length <= 15) setPhone(val);
+                    }}
+                    className={`w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-4 text-sm dark:text-white font-medium transition-all shadow-sm text-left ${phone.length > 0 && phone.length < 9 ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : 'border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-brand-500/10'}`}
                     placeholder="77XXXXXXX"
                     dir="ltr"
                   />
                 </div>
+                {phone.length > 0 && phone.length < 9 && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1">📱 الرقم ناقص، لازم يكون 9 أرقام</p>
+                )}
               </div>
 
               {/* Map picker */}
@@ -157,17 +163,23 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                 رقم الجوال
               </label>
               <div className="relative">
-                <MessageCircle className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                <MessageCircle className={`w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 ${phone.length > 0 && phone.length < 9 ? 'text-red-400' : 'text-gray-400'}`} />
                 <input 
                   id="cart-phone"
                   type="tel" 
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pr-11 pl-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-sm dark:text-white font-medium transition-all shadow-sm text-left"
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val.length <= 15) setPhone(val);
+                  }}
+                  className={`w-full pr-11 pl-4 py-3 bg-gray-50 dark:bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-4 text-sm dark:text-white font-medium transition-all shadow-sm text-left ${phone.length > 0 && phone.length < 9 ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : 'border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-brand-500/10'}`}
                   placeholder="77XXXXXXX"
                   dir="ltr"
                 />
               </div>
+              {phone.length > 0 && phone.length < 9 && (
+                <p className="text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1">📱 الرقم ناقص، لازم يكون 9 أرقام</p>
+              )}
             </div>
           )}
 
