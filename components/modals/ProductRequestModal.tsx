@@ -59,15 +59,15 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
           <div className="w-16 h-16 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-brand-100 dark:border-brand-900/30">
             <PackageSearch className="w-8 h-8 text-brand-600 dark:text-brand-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">طلب توفير منتج</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">وفروا لي هالمنتج!</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            لم تجد ما تبحث عنه؟ اطلبه الآن وسنسعى لتوفيره لك في متجر جوده.
+            اكتب لنا اسم المنتج اللي تدور عليه، وبنوفر لك إياه بأسرع وقت.
           </p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="request-product" className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 mr-1">اسم المنتج *</label>
+            <label htmlFor="request-product" className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 mr-1">ايش اسم المنتج؟ *</label>
             <div className="relative">
               <ShoppingBag className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
               <input 
@@ -81,14 +81,14 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
                   }
                 }}
                 className="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white placeholder-gray-400"
-                placeholder="مثال: دقيق لوز، بسكويت شار..."
+                placeholder="مثال: كورنفلكس كريستال بالشوكولاته..."
                 autoFocus
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="request-notes" className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 mr-1">ملاحظات إضافية (اختياري)</label>
+            <label htmlFor="request-notes" className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 mr-1">تفاصيل أكثر (اختياري)</label>
             <div className="relative">
               <FileText className="w-5 h-5 text-gray-400 absolute right-3 top-3.5" />
               <textarea 
@@ -97,7 +97,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 className="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm dark:text-white resize-none placeholder-gray-400"
-                placeholder="أي تفاصيل عن الماركة أو الحجم..."
+                placeholder="مثل: الحجم، ماركة معينة، أو نكهة محددة..."
               />
             </div>
           </div>
@@ -108,7 +108,7 @@ export const ProductRequestModal: React.FC<ProductRequestModalProps> = ({ onClos
             className="w-full bg-whatsapp hover:bg-whatsapp-hover disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-100 dark:shadow-none transition-all active:scale-[0.98] mt-2"
           >
             <MessageCircle className="w-5 h-5" />
-            <span>{isSending ? 'جاري تحضير الطلب...' : 'إرسال الطلب عبر واتساب'}</span>
+            <span>{isSending ? 'لحظات...' : 'اطلب توفيره واتساب'}</span>
           </button>
         </div>
 

@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Moon, Sun, HelpCircle, Shield, LogOut, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { Moon, Sun, HelpCircle, Shield, LogOut, Download, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { APP_LOGO } from '../../constants';
+import { SuggestionModal } from '../modals/SuggestionModal';
 
 interface HeaderProps {
   isDarkMode?: boolean;
@@ -14,12 +15,13 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
-  const [clickCount, setClickCount] = React.useState(0);
-  const [lastClickTime, setLastClickTime] = React.useState(0);
+  const [clickCount, setClickCount] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
 
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
-  const [isStandalone, setIsStandalone] = React.useState(false);
-  const [isIOS, setIsIOS] = React.useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   React.useEffect(() => {
     // Check if standalone
@@ -137,6 +139,16 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
             </button>
           )}
 
+          {/* Suggestion Button */}
+          <button 
+            onClick={() => setIsSuggestionModalOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+            title="شاركنا اقتراحك"
+            aria-label="شاركنا اقتراحك"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+
           {/* Help Button */}
           {onHelpClick && (
             <button 
@@ -162,6 +174,10 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
         </div>
         
       </div>
+
+      {isSuggestionModalOpen && (
+        <SuggestionModal onClose={() => setIsSuggestionModalOpen(false)} />
+      )}
     </header>
   );
 };
