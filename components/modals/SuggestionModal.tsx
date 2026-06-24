@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, MessageCircle, Lightbulb, FileText } from 'lucide-react';
+import { X, MessageCircle, Lightbulb, FileText, Star } from 'lucide-react';
 import { STORE_CONFIG } from '../../constants';
 import { useBackButton } from '../../hooks';
 
@@ -15,13 +15,24 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({ onClose }) => 
 
   const [messageType, setMessageType] = useState<MessageType>('اقتراح');
   const [message, setMessage] = useState('');
+  const [rating, setRating] = useState<number>(0);
   const [isSending, setIsSending] = useState(false);
 
   const handleSendRequest = () => {
-    if (!message.trim() || isSending) return;
+    if ((!message.trim() && rating === 0) || isSending) return;
     setIsSending(true);
 
-    const text = `*${messageType} جديد من متجر جوده* 💡\n\n${message}\n\nالصفحة الحالية:\n${window.location.href}`;
+    let text = `*💡 ${messageType} جديد من متجر جوده*\n\n`;
+    
+    if (rating > 0) {
+      text += `⭐ التقييم: ${rating}/5\n\n`;
+    }
+    
+    text += `📝 الرسالة:\n${message.trim() || 'لم يكتب رسالة'}`;
+
+    // Add device info
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    text += `\n\n---\n📱 الجهاز: ${isMobile ? 'Mobile' : 'Desktop'}`;
 
     const encodedMessage = encodeURIComponent(text);
     const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
@@ -77,6 +88,23 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({ onClose }) => 
           </div>
 
           <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 mr-1">تقييمك للمتجر (اختياري):</label>
+            <div className="flex items-center gap-2 justify-center bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`p-1 transition-transform hover:scale-110 active:scale-95 ${
+                    rating >= star ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+                  }`}
+                >
+                  <Star className="w-8 h-8" fill={rating >= star ? 'currentColor' : 'none'} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <div className="relative">
               <FileText className="w-5 h-5 text-gray-400 absolute right-3 top-3.5" />
               <textarea 
@@ -92,7 +120,7 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({ onClose }) => 
 
           <button
             onClick={handleSendRequest}
-            disabled={!message.trim() || isSending}
+            disabled={(!message.trim() && rating === 0) || isSending}
             className="w-full bg-whatsapp hover:bg-whatsapp-hover disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-100 dark:shadow-none transition-all active:scale-[0.98] mt-2"
           >
             <MessageCircle className="w-5 h-5" />
