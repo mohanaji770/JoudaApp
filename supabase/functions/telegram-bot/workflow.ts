@@ -13,6 +13,10 @@ export interface ActionDef {
   emoji: string;
   /** If true, only admins can perform this action */
   adminOnly?: boolean;
+  /** If true, requires user confirmation before execution */
+  requiresConfirmation?: boolean;
+  /** The message shown in the confirmation prompt */
+  confirmMessage?: string;
 }
 
 type InlineBtn = { text: string; callback_data: string };
@@ -40,6 +44,8 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'رفض الطلب',
       emoji: '❌',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من رفض هذا الطلب؟',
     },
   },
   confirmed: {
@@ -52,6 +58,8 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       nextStatus: 'cancelled',
       label: 'إلغاء الطلب',
       emoji: '❌',
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من إلغاء هذا الطلب؟',
     },
   },
   reserved: {
@@ -64,6 +72,8 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       nextStatus: 'cancelled',
       label: 'إلغاء الطلب',
       emoji: '❌',
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من إلغاء هذا الطلب؟',
     },
   },
   preparing: {
@@ -76,6 +86,8 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       nextStatus: 'cancelled',
       label: 'إلغاء الطلب',
       emoji: '❌',
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من إلغاء هذا الطلب؟',
     },
   },
   delivered: {
@@ -84,6 +96,14 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'تم استلام المبلغ',
       emoji: '💰',
     },
+    reverse: {
+      nextStatus: 'cancelled',
+      label: 'عكس (مدير)',
+      emoji: '🔄',
+      adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من إلغاء هذا الطلب المُسلّم؟',
+    },
   },
   paid: {
     deposit: {
@@ -91,6 +111,26 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'تم الإيداع',
       emoji: '🏦',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من توريد مبلغ هذا الطلب؟',
+    },
+    reverse: {
+      nextStatus: 'cancelled',
+      label: 'عكس (مدير)',
+      emoji: '🔄',
+      adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من إلغاء هذا الطلب المُسدّد؟',
+    },
+  },
+  deposited: {
+    reverse: {
+      nextStatus: 'cancelled',
+      label: 'عكس (مدير)',
+      emoji: '🔄',
+      adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذا الطلب المُورّد؟',
     },
   },
 };
@@ -146,6 +186,8 @@ export const INV_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'عكس (مدير)',
       emoji: '🔄',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذه الفاتورة المحجوزة؟',
     },
   },
   prepare: {
@@ -159,6 +201,8 @@ export const INV_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'عكس (مدير)',
       emoji: '🔄',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذه الفاتورة قيد التجهيز؟',
     },
   },
   deliver: {
@@ -172,6 +216,8 @@ export const INV_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'عكس (مدير)',
       emoji: '🔄',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذه الفاتورة المُسلّمة؟',
     },
   },
   paid: {
@@ -180,12 +226,16 @@ export const INV_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'إيداع (مدير)',
       emoji: '🏦',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من توريد مبلغ هذه الفاتورة؟',
     },
     reverse: {
       nextStatus: 'reversed',
       label: 'عكس (مدير)',
       emoji: '🔄',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذه الفاتورة المُسدّدة؟',
     },
   },
   deposit: {
@@ -194,6 +244,8 @@ export const INV_ACTIONS: Record<string, Record<string, ActionDef>> = {
       label: 'عكس (مدير)',
       emoji: '🔄',
       adminOnly: true,
+      requiresConfirmation: true,
+      confirmMessage: 'هل أنت متأكد من عكس هذه الفاتورة المُورّدة؟',
     },
   },
 };
@@ -212,3 +264,24 @@ export function invButtons(
     },
   ]);
 }
+
+// ─── Status Mappings ────────────────────────────────────
+
+/** Map JoudaApp status to Inventory workflow_status */
+export const APP_TO_INV_STATUS_MAP: Record<string, string> = {
+  reserved: 'reserve',
+  preparing: 'prepare',
+  delivered: 'deliver',
+  paid: 'paid',
+  deposited: 'deposit',
+};
+
+/** Map Inventory action to JoudaApp status */
+export const INV_ACTION_TO_APP_STATUS_MAP: Record<string, string> = {
+  reserve: 'reserved',
+  prepare: 'preparing',
+  deliver: 'delivered',
+  paid: 'paid',
+  deposit: 'deposited',
+  reverse: 'cancelled',
+};

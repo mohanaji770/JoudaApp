@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Wrench, Clock, Shield } from 'lucide-react';
 import { Layout } from './components/layout/Layout';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
-import { AdminLogin } from './pages/AdminLogin';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { HomePage } from './pages/HomePage';
-import { ProductsPageRoute } from './pages/ProductsPageRoute';
-import { RecipesPageRoute } from './pages/RecipesPageRoute';
-import { ArticlesPageRoute } from './pages/ArticlesPageRoute';
-import { AboutPageRoute } from './pages/AboutPageRoute';
-import { OrdersPage } from './pages/OrdersPage';
+
+const AdminLogin = lazy(() => import('./pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const ProductsPageRoute = lazy(() => import('./pages/ProductsPageRoute').then(m => ({ default: m.ProductsPageRoute })));
+const RecipesPageRoute = lazy(() => import('./pages/RecipesPageRoute').then(m => ({ default: m.RecipesPageRoute })));
+const ArticlesPageRoute = lazy(() => import('./pages/ArticlesPageRoute').then(m => ({ default: m.ArticlesPageRoute })));
+const AboutPageRoute = lazy(() => import('./pages/AboutPageRoute').then(m => ({ default: m.AboutPageRoute })));
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
 import { Onboarding } from './components/ui/Onboarding';
 import { OfflineIndicator } from './components/layout/OfflineIndicator';
 import { useScrollToTop, useLocalStorage, handleBackButton } from './hooks';
@@ -253,14 +254,20 @@ const AppContent: React.FC = () => {
     }
 
     if (location.pathname === '/admin/login') {
-      return !isAdmin ? <AdminLogin /> : <AdminDashboard />;
+      return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" /></div>}>
+          {!isAdmin ? <AdminLogin /> : <AdminDashboard />}
+        </Suspense>
+      );
     }
 
     return (
       <AdminLayout onLogout={handleAdminLogout}>
-        <Routes>
-          <Route path="/*" element={<AdminDashboard />} />
-        </Routes>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" /></div>}>
+          <Routes>
+            <Route path="/*" element={<AdminDashboard />} />
+          </Routes>
+        </Suspense>
       </AdminLayout>
     );
   }
@@ -289,14 +296,16 @@ const AppContent: React.FC = () => {
           if (!isAdmin) navigate('/admin/login');
         }}
       >
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPageRoute />} />
-          <Route path="/recipes" element={<RecipesPageRoute />} />
-          <Route path="/articles" element={<ArticlesPageRoute />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/about" element={<AboutPageRoute />} />
-        </Routes>
+        <Suspense fallback={<div className="flex h-full min-h-[50vh] items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" /></div>}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductsPageRoute />} />
+            <Route path="/recipes" element={<RecipesPageRoute />} />
+            <Route path="/articles" element={<ArticlesPageRoute />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/about" element={<AboutPageRoute />} />
+          </Routes>
+        </Suspense>
       </Layout>
       
       {showOnboarding && <Onboarding onClose={handleCloseOnboarding} />}

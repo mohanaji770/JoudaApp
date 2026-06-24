@@ -8,8 +8,9 @@
 import { answerCallback, editMessage, sendMessage } from './telegram.ts';
 import { getClients } from './db.ts';
 import { env, isAdmin, getInventoryUserId } from './config.ts';
-import { APP_ACTIONS, appOrderButtons } from './workflow.ts';
+import { APP_ACTIONS, appOrderButtons, APP_TO_INV_STATUS_MAP } from './workflow.ts';
 import { fmtDate, whatsappButton } from './format.ts';
+import { parseCallbackData, handleAbort, requireConfirmation } from './confirmations.ts';
 
 // ─── Main Handler ───────────────────────────────────────
 
@@ -18,13 +19,7 @@ export async function handleWfCallback(
   chatId: string,
   callback: any,
 ) {
-  const data = callback.data as string;
-  const parts = data.split('_');
-  const action = parts[1]; // approve, reject, reserve, undo...
-  let orderId = parts.slice(2).join('_'); // UUID
-  if (action === 'undo') {
-    orderId = parts.slice(3).join('_'); // Extract real UUID for undo
-  }
+  const { action, id: orderId, isConfirmed, isAbort, isUndo } = parseCallbackData(callback.data);
   const userName = callback.from?.first_name || 'موظف';
   const userId = String(callback.from?.id);
   const messageId = callback.message?.message_id;
@@ -46,9 +41,16 @@ export async function handleWfCallback(
   }
 
   // ── 1.5 Special action: undo ──
-  if (action === 'undo') {
-    const prevStatus = parts[2];
+  if (isUndo) {
+    const prevStatus = (callback.data as string).split('_')[2];
     await handleUndo(token, chatId, callback, orderId, prevStatus, userName);
+    return;
+  }
+
+  // ── 1.6 Special action: abort (cancel confirmation) ──
+  if (isAbort) {
+    const restoredButtons = appOrderButtons(orderId, order.status, order.latitude, order.longitude);
+    await handleAbort(token, chatId, callback.id, messageId, callback.message?.text || '', restoredButtons);
     return;
   }
 
@@ -77,6 +79,12 @@ export async function handleWfCallback(
     return;
   }
 
+  // ── 3.5 Check Confirmation ──
+  if (actionDef.requiresConfirmation && !isConfirmed) {
+    await requireConfirmation(token, chatId, callback.id, messageId, callback.message?.text || '', action, orderId, actionDef, 'wf');
+    return;
+  }
+
   // ── 4. Special actions: approve & reject ──
   if (action === 'approve') {
     await handleApprove(token, chatId, callback, order, userName);
@@ -99,7 +107,7 @@ export async function handleWfCallback(
       p_invoice_id: order.quotation_id,
       p_actor_user_id: suid,
       p_reason: 'إلغاء طلب تطبيق من تليجرام',
-      p_idempotency_key: crypto.randomUUID(),
+      p_idempotency_key: `rev_${order.quotation_id}`,
     });
     if (reverseErr) {
       await answerCallback(
@@ -117,7 +125,7 @@ export async function handleWfCallback(
     const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
       p_invoice_id: order.quotation_id,
       p_actor_user_id: env.systemUserId(),
-      p_idempotency_key: crypto.randomUUID(),
+      p_idempotency_key: `settle_${order.quotation_id}`,
     });
     if (settleErr) {
       await answerCallback(
@@ -205,6 +213,13 @@ export async function handleWfCallback(
     return;
   }
 
+  // ── 6.5 Sync status to Inventory workflow_status ──
+  if (order.quotation_id && actionDef.nextStatus !== 'cancelled') {
+    if (APP_TO_INV_STATUS_MAP[actionDef.nextStatus]) {
+      await inventory.from('invoices').update({ workflow_status: APP_TO_INV_STATUS_MAP[actionDef.nextStatus] }).eq('id', order.quotation_id);
+    }
+  }
+
   // ── 7. Acknowledge ──
   await answerCallback(
     token,
@@ -242,11 +257,10 @@ export async function handleWfCallback(
 
   // ── 9. WhatsApp notification for key statuses ──
   if (
-    ['preparing', 'delivered'].includes(actionDef.nextStatus) &&
+    ['delivered'].includes(actionDef.nextStatus) &&
     order.customer_phone
   ) {
     const msgs: Record<string, string> = {
-      preparing: 'جاري تجميع وتجهيز طلبك 📦',
       delivered: 'تم تسليم طلبك بنجاح 🎉\n\nنهتم جداً برأيك! كيف كانت تجربتك معنا؟\nنرجو منك تقييم الخدمة عبر الرد على هذه الرسالة من 1 إلى 5 نجوم ⭐\n(ملاحظاتك تساعدنا على تقديم الأفضل دائماً)',
     };
     const waText = `*جوده — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جوده`;
@@ -305,7 +319,7 @@ async function handleApprove(
       return;
     }
     
-    // Capture the new invoice ID if the POS generated one
+    // Capture the new invoice ID (whether freshly generated or recovered via idempotency)
     if (typeof result === 'string' && result.startsWith('INV-')) {
       newQuotationId = result;
     } else if (result && typeof result === 'object' && result.invoice_id) {
@@ -366,7 +380,8 @@ async function handleApprove(
     });
   }
 
-  // WhatsApp notification for customer
+  // WhatsApp notification for customer (Temporarily Disabled)
+  /*
   if (order.customer_phone) {
     const disc = order.discount || 0;
     const delivery = order.delivery_fee || 0;
@@ -390,6 +405,7 @@ async function handleApprove(
       });
     }
   }
+  */
 
   await answerCallback(
     token,
@@ -473,7 +489,7 @@ async function handleUndo(
   prevStatus: string,
   userName: string,
 ) {
-  const { jouda } = getClients();
+  const { jouda, inventory } = getClients();
   const messageId = callback.message?.message_id;
 
   // 1. Time Limit Guard
@@ -510,6 +526,17 @@ async function handleUndo(
   if (updateErr || !updated) {
     await answerCallback(token, callback.id, '⚠️ فشل التراجع', true);
     return;
+  }
+
+  // 3.5 Sync Undo to Inventory workflow_status
+  if (order.quotation_id && prevStatus !== 'cancelled') {
+    // If we reverted to a status that exists in Inventory
+    if (APP_TO_INV_STATUS_MAP[prevStatus]) {
+      await inventory.from('invoices').update({ workflow_status: APP_TO_INV_STATUS_MAP[prevStatus] }).eq('id', order.quotation_id);
+    } else if (prevStatus === 'confirmed') {
+      // 'confirmed' in JoudaApp means it hasn't entered the inventory workflow (pending reserve)
+      await inventory.from('invoices').update({ workflow_status: 'pending' }).eq('id', order.quotation_id);
+    }
   }
 
   // If undoing 'reserve' (reverting to 'confirmed'), clear collector and COLLECTION entry

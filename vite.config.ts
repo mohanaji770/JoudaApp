@@ -12,6 +12,18 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'supabase-vendor': ['@supabase/supabase-js'],
+            'map-vendor': ['leaflet', 'react-leaflet'],
+            'ui-vendor': ['lucide-react', 'lottie-react']
+          }
+        }
+      }
+    },
     plugins: [
       react(),
       VitePWA({

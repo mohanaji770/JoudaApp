@@ -8,8 +8,9 @@
 import { answerCallback, editMessage } from './telegram.ts';
 import { getClients } from './db.ts';
 import { env, isAdmin, getInventoryUserId } from './config.ts';
-import { INV_ACTIONS, invButtons } from './workflow.ts';
+import { INV_ACTIONS, invButtons, INV_ACTION_TO_APP_STATUS_MAP } from './workflow.ts';
 import { fmtDate } from './format.ts';
+import { parseCallbackData, handleAbort, requireConfirmation } from './confirmations.ts';
 
 // ─── Main Handler ───────────────────────────────────────
 
@@ -18,10 +19,7 @@ export async function handleInvCallback(
   chatId: string,
   callback: any,
 ) {
-  const data = callback.data as string;
-  const parts = data.split('_');
-  const action = parts[1]; // reserve, prepare, deliver, ...
-  const invoiceId = parts.slice(2).join('_'); // ID (may contain hyphens)
+  const { action, id: invoiceId, isConfirmed, isAbort } = parseCallbackData(callback.data);
   const userName = callback.from?.first_name || 'موظف';
   const userId = String(callback.from?.id);
   const messageId = callback.message?.message_id;
@@ -57,6 +55,13 @@ export async function handleInvCallback(
 
   const currentWf = invoice.workflow_status || 'pending';
 
+  // ── 1.5 Special action: abort (cancel confirmation) ──
+  if (isAbort) {
+    const restoredButtons = invButtons(invoiceId, currentWf);
+    await handleAbort(token, chatId, callback.id, messageId, callback.message?.text || '', restoredButtons);
+    return;
+  }
+
   // ── 2. Validate action against state machine ──
   const currentActions = INV_ACTIONS[currentWf];
   if (!currentActions || !currentActions[action]) {
@@ -82,6 +87,12 @@ export async function handleInvCallback(
     return;
   }
 
+  // ── 3.5 Check Confirmation ──
+  if (actionDef.requiresConfirmation && !isConfirmed) {
+    await requireConfirmation(token, chatId, callback.id, messageId, callback.message?.text || '', action, invoiceId, actionDef, 'inv');
+    return;
+  }
+
   // ── 4. Handle reverse (special: calls RPC) ──
   if (action === 'reverse') {
     await handleReverse(
@@ -99,7 +110,7 @@ export async function handleInvCallback(
     const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
       p_invoice_id: invoiceId,
       p_actor_user_id: env.systemUserId(),
-      p_idempotency_key: crypto.randomUUID(),
+      p_idempotency_key: `settle_${invoiceId}`,
     });
     if (settleErr) {
       await answerCallback(
@@ -143,19 +154,10 @@ export async function handleInvCallback(
     return;
   }
 
-  // ── 6. Sync status to JoudaApp ──
-  const joudaStatusMap: Record<string, string> = {
-    reserve: 'confirmed',
-    prepare: 'preparing',
-    deliver: 'delivered',
-    paid: 'paid',
-    deposit: 'deposited',
-  };
-
-  if (joudaStatusMap[action]) {
+  if (INV_ACTION_TO_APP_STATUS_MAP[action]) {
     await jouda
       .from('customer_orders')
-      .update({ status: joudaStatusMap[action] })
+      .update({ status: INV_ACTION_TO_APP_STATUS_MAP[action] })
       .eq('quotation_id', invoiceId);
   }
 
@@ -222,7 +224,7 @@ async function handleReverse(
     p_invoice_id: invoiceId,
     p_actor_user_id: suid,
     p_reason: 'عكس من تليجرام',
-    p_idempotency_key: crypto.randomUUID(),
+    p_idempotency_key: `rev_${invoiceId}`,
   });
 
   if (error) {

@@ -131,6 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               src={product.image} 
               alt={product.name} 
               loading="lazy" 
+              decoding="async"
               className="w-full h-full object-contain relative z-10 opacity-0 transition-all duration-700 group-hover:scale-105" 
               onLoad={(e) => {
                 e.currentTarget.style.opacity = '1';

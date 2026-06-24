@@ -266,6 +266,7 @@ export const RecipeOfTheDay: React.FC = () => {
             src={recipe.image}
             alt={recipe.title}
             loading="lazy"
+            decoding="async"
             draggable={false}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
           />

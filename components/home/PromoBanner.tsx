@@ -166,6 +166,7 @@ export const PromoBanner: React.FC = () => {
               key={b.id}
               src={b.image_url}
               alt={b.title || 'إعلان'}
+              decoding="async"
               style={{
                 position: 'absolute',
                 inset: 0,
