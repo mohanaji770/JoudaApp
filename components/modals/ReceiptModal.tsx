@@ -120,7 +120,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         {/* RECEIPT PREVIEW AREA */}
         <div className="relative shadow-2xl mx-auto w-full" ref={receiptRef}>
             {/* Paper Texture Background */}
-            <div className="bg-receipt px-6 py-8 relative overflow-hidden text-gray-800 font-mono text-sm leading-relaxed">
+            <div className="bg-receipt px-6 py-8 relative overflow-hidden text-gray-800 font-sans font-medium text-[13px] leading-relaxed">
                 
                 {/* Sawtooth Top Edge Effect */}
                 <div className="absolute top-0 left-0 right-0 h-2 bg-[radial-gradient(circle,transparent_50%,#fffdf8_50%)] bg-[length:16px_16px] rotate-180 -mt-2"></div>
@@ -212,14 +212,14 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                                             <div key={`package-${idx}`} className="space-y-1">
                                                 <div className="flex justify-between text-xs items-start font-bold">
                                                     <span className="flex-1 ml-2 text-gray-900">{item.name}</span>
-                                                    <span className="font-bold font-mono">x{item.quantity}</span>
+                                                    <span className="font-bold">x{item.quantity}</span>
                                                 </div>
                                                 {bundleItems.length > 0 && (
                                                     <div className="pr-3 border-r border-dashed border-gray-300 space-y-0.5 text-gray-500 text-[10px]">
                                                         {bundleItems.map((bItem: any, bIdx: number) => (
                                                             <div key={bIdx} className="flex justify-between items-center">
                                                                 <span>- {bItem.product_name}</span>
-                                                                <span className="font-mono">x{bItem.quantity * item.quantity}</span>
+                                                                <span className="">x{bItem.quantity * item.quantity}</span>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -297,7 +297,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                      <div className="text-center">
                         <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لثقتك في جوده</p>
                         <p className="text-[10px] text-gray-600 mb-2">خلي الفاتورة معك، ولك خصم 5% على طلبك الجاي لكيك المناسبات!</p>
-                        <div className="font-mono font-bold text-xs bg-white border border-gray-200 inline-block px-3 py-1 rounded text-gray-700 tracking-wider">
+                        <div className="font-bold text-xs bg-white border border-gray-200 inline-block px-3 py-1 rounded text-gray-700 tracking-wider">
                             JOUDA-CAKE-5
                         </div>
                      </div>

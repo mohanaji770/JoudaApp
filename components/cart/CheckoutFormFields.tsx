@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { Wallet, User, MessageCircle, MapPin, FileText, Map, Sparkles, Building, Truck } from 'lucide-react';
 import { MAX_DELIVERY_FEE } from '../../utils/distanceUtils';
 
+const arabicToEnglishNumbers = (str: string) => {
+  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return str.replace(/[٠-٩]/g, (w) => arabicNumbers.indexOf(w).toString());
+};
+
 interface CheckoutFormFieldsProps {
   customerName: string;
   setCustomerName: (v: string) => void;
@@ -122,7 +127,8 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                     type="tel" 
                     value={phone}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
+                      const englishNums = arabicToEnglishNumbers(e.target.value);
+                      const val = englishNums.replace(/\D/g, '');
                       if (val.length <= 15) setPhone(val);
                     }}
                     className={`w-full pr-10 pl-3 py-3 bg-gray-50 dark:bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-4 text-sm dark:text-white font-medium transition-all shadow-sm text-left ${phone.length > 0 && phone.length < 9 ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : 'border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-brand-500/10'}`}
@@ -169,7 +175,8 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                   type="tel" 
                   value={phone}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '');
+                    const englishNums = arabicToEnglishNumbers(e.target.value);
+                    const val = englishNums.replace(/\D/g, '');
                     if (val.length <= 15) setPhone(val);
                   }}
                   className={`w-full pr-11 pl-4 py-3 bg-gray-50 dark:bg-gray-800/50 border rounded-xl focus:outline-none focus:ring-4 text-sm dark:text-white font-medium transition-all shadow-sm text-left ${phone.length > 0 && phone.length < 9 ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : 'border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-brand-500 focus:ring-brand-500/10'}`}

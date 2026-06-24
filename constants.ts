@@ -2,7 +2,7 @@
 
 export const APP_NAME = "عالم جوده | Jouda World";
 export const APP_DESCRIPTION = "منصتك المتكاملة لحياة خالية من الجلوتين. تسوق، اطبخ، واستمتع بجوده الحياة.";
-export const APP_LOGO = "https://i.postimg.cc/qvKhrVZS/pwa-512-511-png.png";
+export const APP_LOGO = "/pwa-512x512.png";
 
 export const STORE_CONFIG = {
   NAME: "متجر جوده",

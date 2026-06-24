@@ -4,7 +4,7 @@ import {
   Package, Heart, ShoppingCart, Calendar, Repeat, Trash2, Settings, User as UserIcon, LogOut,
   Clock, MapPin, Phone, Truck, Store, AlertCircle, X, RefreshCw,
   Check, MessageCircle, Send, CheckCircle2, Building, AlertTriangle, ShieldCheck,
-  Info, ChevronLeft
+  Info, ChevronLeft, FileText
 } from 'lucide-react';
 import { getCompletedOrders, deleteCompletedOrder, CompletedOrder } from '../services/db';
 import { fetchLiveOrders, fetchLiveOrderItems, type LiveOrder, type LiveOrderItem } from '../services/liveOrderService';
@@ -13,6 +13,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { getCachedProducts } from '../services/db';
 import { Product } from '../services/supabaseService';
 import { STORE_CONFIG } from '../constants';
+import { ReceiptModal } from '../components/modals/ReceiptModal';
 
 interface DisplayOrder extends LiveOrder {
   isLocal?: boolean;
@@ -46,6 +47,7 @@ export const OrdersPage: React.FC = () => {
   const [repeatingOrder, setRepeatingOrder] = useState<string | null>(null);
   const [savedPhone, setSavedPhone] = useState<string>('');
   const [addingFavoriteId, setAddingFavoriteId] = useState<string | null>(null);
+  const [viewingReceiptForOrder, setViewingReceiptForOrder] = useState<DisplayOrder | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -480,6 +482,15 @@ export const OrdersPage: React.FC = () => {
                           )}
                         </button>
                       )}
+                      
+                      {/* Receipt Button */}
+                      <button
+                        onClick={() => setViewingReceiptForOrder(order)}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        عرض الفاتورة
+                      </button>
 
                       {order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'failed' && (
                         <button
@@ -598,6 +609,23 @@ export const OrdersPage: React.FC = () => {
              </button>
           </div>
         </div>
+      )}
+      {viewingReceiptForOrder && orderItems[viewingReceiptForOrder.id] && (
+        <ReceiptModal
+          items={orderItems[viewingReceiptForOrder.id].map(item => ({
+            id: item.id,
+            name: item.product_name,
+            barcode: item.product_barcode,
+            quantity: item.quantity,
+            price: item.unit_price.toString(),
+            source: 'store',
+          }))}
+          customerName={viewingReceiptForOrder.customer_name}
+          address={viewingReceiptForOrder.customer_address || ''}
+          notes={viewingReceiptForOrder.notes || ''}
+          orderType={viewingReceiptForOrder.order_type === 'pickup' ? 'pickup' : 'delivery'}
+          onClose={() => setViewingReceiptForOrder(null)}
+        />
       )}
     </div>
   );
