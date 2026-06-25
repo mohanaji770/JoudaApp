@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle, LocateFixed } from 'lucide-react';
 import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
 
 // Custom iOS-like Map Pin
@@ -132,22 +133,27 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
   const handleLocateMe = async () => {
     setIsLocating(true);
     try {
-      const permission = await Geolocation.checkPermissions();
-      if (permission.location === 'denied' || permission.location === 'prompt') {
-        const req = await Geolocation.requestPermissions();
-        if (req.location === 'denied') {
-           throw new Error('Permission denied');
+      // Request permissions only on native platforms (Android/iOS)
+      // Web handles permissions automatically during getCurrentPosition
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.checkPermissions();
+        if (permission.location === 'denied' || permission.location === 'prompt') {
+          const req = await Geolocation.requestPermissions();
+          if (req.location === 'denied') {
+             throw new Error('Permission denied');
+          }
         }
       }
+
       const coordinates = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
         timeout: 10000,
       });
       setPosition([coordinates.coords.latitude, coordinates.coords.longitude]);
-      setSearchQuery('موقعي الحالي');
+      setSearchQuery('📍 تم تحديد موقعك الحالي');
     } catch (error) {
       console.error('Error getting location:', error);
-      alert('لم نتمكن من تحديد موقعك. يرجى التأكد من تفعيل الـ GPS وصلاحيات الموقع.');
+      alert('ما قدرنا نحدد موقعك! 📍\n\nشيك على الـ GPS وصلاحيات تطبيقك أو متصفحك وجرب ثاني.');
     } finally {
       setIsLocating(false);
     }
@@ -165,9 +171,9 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <MapPin className="w-5 h-5 text-brand-600" />
-              حدد موقع التوصيل
+              وين نوصل طلبك؟
             </h3>
-            <p className="text-xs text-gray-500 mt-1">قم بالبحث أو تحريك الخريطة لتحديد موقعك بدقة</p>
+            <p className="text-xs text-gray-500 mt-1">حرك الخريطة أو ابحث عن منطقتك عشان نوصلك أسرع! 🛵</p>
           </div>
           <button 
             onClick={onClose}
@@ -185,7 +191,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
               value={searchQuery}
               onChange={onSearchInputChange}
               onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
-              placeholder="ابحث عن منطقتك في اليمن (مثال: حدة، صنعاء)"
+              placeholder="ابحث عن منطقتك (مثال: حدة، صنعاء)"
               className="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 text-sm dark:text-white transition-all shadow-sm"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -245,9 +251,9 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
 
         <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 space-y-3 relative z-10">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">المسافة تقريباً: <span className="font-bold text-gray-900 dark:text-white">{distanceKm.toFixed(1)} كم</span></span>
+            <span className="text-gray-600 dark:text-gray-400">المسافة: <span className="font-bold text-gray-900 dark:text-white">{distanceKm.toFixed(1)} كم</span></span>
             {!isFar && (
-              <span className="text-gray-600 dark:text-gray-400">سعر التوصيل: <span className="font-bold text-brand-600 dark:text-brand-400">{fee === 0 ? 'مجاناً' : <>{fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span></>}</span></span>
+              <span className="text-gray-600 dark:text-gray-400">التوصيل: <span className="font-bold text-brand-600 dark:text-brand-400">{fee === 0 ? 'مجاناً 🎉' : <>{fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span></>}</span></span>
             )}
           </div>
           
@@ -255,10 +261,10 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
               <p className="text-amber-800 dark:text-amber-400 text-sm font-bold flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                الموقع أبعد من 20 كم (خارج نطاق التوصيل المباشر)
+                موقعك بعيد شوية! (خارج نطاق التوصيل السريع)
               </p>
               <p className="text-amber-700 dark:text-amber-500 text-xs leading-relaxed">
-                سيتم تحويل طلبك كـ "طلب محافظات أو شحن". سيقوم فريقنا بالتواصل معك لتحديد تكلفة وطريقة الشحن لاحقاً.
+                بنعتبر طلبك "شحن محافظات"، وفريقنا بيتواصل معك عشان نرتب تفاصيل التكلفة والشحن.. ولا يهمك!
               </p>
             </div>
           ) : null}
@@ -273,8 +279,8 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
           >
             <Check className="w-5 h-5" />
             {isFar 
-              ? 'تأكيد كطلب محافظات (شحن)' 
-              : fee === 0 ? 'تأكيد الموقع' : <>تأكيد الموقع (التوصيل: {fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span>)</>}
+              ? 'أكد الطلب (شحن محافظات)' 
+              : fee === 0 ? 'اعتمد الموقع ✔️' : <>اعتمد الموقع (التوصيل: {fee}<span className="saudi-riyal mr-1">{"\u00ea"}</span>)</>}
           </button>
         </div>
       </div>
