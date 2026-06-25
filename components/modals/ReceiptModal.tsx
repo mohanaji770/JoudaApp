@@ -1,5 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { getCachedProducts } from '../../services/db';
 import { toBlob } from 'html-to-image';
 import { X, Share2, MapPin, User, FileText, ShoppingBag, Store, Scissors } from 'lucide-react';
@@ -90,7 +91,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="w-full max-w-sm flex flex-col gap-4 my-auto">
         
@@ -271,6 +272,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         </button>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
