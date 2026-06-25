@@ -20,6 +20,7 @@ import { Capacitor } from '@capacitor/core';
 import { SyncProvider } from './contexts/SyncContext';
 import { supabase } from './services/supabaseClient';
 import { AdminLayout } from './components/admin/AdminLayout';
+import { ReloadPrompt } from './components/common/ReloadPrompt';
 
 const ONBOARDING_KEY = 'jouda_onboarding_seen_v1';
 
@@ -284,6 +285,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
+      <ReloadPrompt />
       <OfflineIndicator />
 
       <Layout 
