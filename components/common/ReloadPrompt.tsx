@@ -8,8 +8,19 @@ export const ReloadPrompt: React.FC = () => {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      // Optional: you can log when the SW is registered
-      // console.log('SW Registered: ' + r)
+      if (r) {
+        // فحص التحديثات كل ساعة بصمت
+        setInterval(() => {
+          r.update();
+        }, 60 * 60 * 1000);
+
+        // فحص التحديثات كلما عاد العميل للتطبيق من الخلفية
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            r.update();
+          }
+        });
+      }
     },
     onRegisterError(error) {
       console.error('SW registration error', error);
@@ -35,11 +46,11 @@ export const ReloadPrompt: React.FC = () => {
         </div>
         
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-          تحديث جديد جاهز! ✨
+          تحديث سريع جاهز! ✨
         </h2>
         
         <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-          نزلنا لك نسخة جديدة من المتجر بأداء أسرع وميزات أحلى. حدثها الآن لتجربة أرهب!
+          تحديث جديد نزل عشان تشوف أحدث المنتجات والأسعار. بضغطة زر و ثانية واحدة فقط!
         </p>
 
         <div className="flex flex-col gap-3">
@@ -48,7 +59,7 @@ export const ReloadPrompt: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-colors shadow-lg shadow-blue-200 dark:shadow-none active:scale-[0.98]"
           >
             <RefreshCw className="w-5 h-5" />
-            <span className="text-lg">حدث الآن 🚀</span>
+            <span className="text-lg">تحديث الصفحة الآن 🚀</span>
           </button>
           
           <button
