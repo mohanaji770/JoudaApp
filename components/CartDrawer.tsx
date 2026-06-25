@@ -220,6 +220,11 @@ export const CartDrawer: React.FC = () => {
           address={checkout.address}
           notes={checkout.notes}
           orderType="delivery"
+          subtotal={checkout.currentSubtotal}
+          deliveryFee={checkout.currentFee}
+          total={checkout.grandTotal}
+          phone={checkout.phone}
+          discount={checkout.totalSavings}
           onClose={() => setShowReceipt(false)}
         />
       )}

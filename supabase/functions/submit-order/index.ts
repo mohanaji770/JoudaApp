@@ -345,7 +345,7 @@ Deno.serve(async (req: Request) => {
     try {
       payload = validatePayload(await req.json());
     } catch (e: any) {
-      return jsonResponse({ success: false, message: e.message || 'Invalid JSON format' }, 400);
+      return jsonResponse({ success: false, message: e.message || 'Invalid JSON format' }, 200);
     }
 
     const joudaClient = createClient(config.joudaUrl, config.joudaServiceKey, { auth: { persistSession: false } });
@@ -381,11 +381,13 @@ Deno.serve(async (req: Request) => {
       for (const [barcode, needed] of requiredQtyMap.entries()) {
         const available = stockData?.find(s => s.product_barcode === barcode)?.current_stock || 0;
         if (needed > available) {
-          const pName = baseProducts?.find(p => p.barcode === barcode)?.name || barcode;
+          const pName = payload.items.find(i => i.product_barcode === barcode)?.product_name 
+                     || baseProducts?.find(p => p.barcode === barcode)?.name 
+                     || barcode;
           return jsonResponse({ 
             success: false, 
             message: `عذراً، المنتج "${pName}" غير متوفر بالكمية المطلوبة (المتاح: ${available})` 
-          }, 400);
+          }, 200);
         }
       }
     }
@@ -400,7 +402,7 @@ Deno.serve(async (req: Request) => {
     } catch (localErr) {
       console.error('Local DB Failure. Initiating Rollback:', localErr);
       await voidQuotation(quotationId, config, inventoryClient);
-      return jsonResponse({ success: false, message: 'فشل حفظ الطلب محلياً. تم إلغاء الحجز تلقائياً.' }, 500);
+      return jsonResponse({ success: false, message: 'فشل حفظ الطلب محلياً. تم إلغاء الحجز تلقائياً.' }, 200);
     }
 
     // 8. Telegram Background Notification
@@ -451,6 +453,6 @@ Deno.serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error('Critical request error:', error);
-    return jsonResponse({ success: false, message: error.message || 'حدث خطأ غير متوقع' }, 400);
+    return jsonResponse({ success: false, message: error.message || 'حدث خطأ غير متوقع' }, 200);
   }
 });

@@ -121,6 +121,8 @@ export async function handleWfCallback(
   }
 
   // ── 5.5 Deposit → settle invoice via RPC (creates settlement_batch + wallet entry) ──
+  // TEMPORARILY DISABLED PER USER REQUEST (2026-06-25)
+  /*
   if (action === 'deposit' && order.quotation_id) {
     const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
       p_invoice_id: order.quotation_id,
@@ -147,9 +149,12 @@ export async function handleWfCallback(
       return;
     }
   }
+  */
 
   // ── 5.6 Invoice Assignment (Driver Mapping) — reserve only ──
+  // TEMPORARILY DISABLED PER USER REQUEST (2026-06-25)
   // Only assign collector at the 'reserve' step. Prepare/deliver can be done by anyone.
+  /*
   if (action === 'reserve' && order.quotation_id) {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
@@ -185,6 +190,7 @@ export async function handleWfCallback(
       return;
     }
   }
+  */
 
   // ── 6. Update status (optimistic lock) ──
   const updatePayload: Record<string, unknown> = {
@@ -540,6 +546,8 @@ async function handleUndo(
   }
 
   // If undoing 'reserve' (reverting to 'confirmed'), clear collector and COLLECTION entry
+  // TEMPORARILY DISABLED PER USER REQUEST (2026-06-25)
+  /*
   if (prevStatus === 'confirmed' && order.quotation_id) {
     const suid = env.systemUserId();
     await inventory.from('invoices').update({
@@ -551,6 +559,7 @@ async function handleUndo(
       .eq('entry_type', 'COLLECTION')
       .eq('direction', 'IN');
   }
+  */
 
   // 4. Update Telegram Message Trail
   if (messageId) {

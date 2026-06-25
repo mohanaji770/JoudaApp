@@ -106,6 +106,8 @@ export async function handleInvCallback(
   }
 
   // ── 4.5 Deposit → settle invoice via RPC (creates settlement_batch + wallet entry) ──
+  // TEMPORARILY DISABLED PER USER REQUEST (2026-06-25)
+  /*
   if (action === 'deposit') {
     const { data: settleResult, error: settleErr } = await inventory.rpc('settle_single_invoice', {
       p_invoice_id: invoiceId,
@@ -132,6 +134,7 @@ export async function handleInvCallback(
       return;
     }
   }
+  */
 
   // ── 5. Normal action: update workflow_status (optimistic lock) ──
   const { error: updateErr } = await inventory
@@ -162,7 +165,9 @@ export async function handleInvCallback(
   }
 
   // ── 6.5 Invoice Assignment (Driver Mapping) — reserve only ──
+  // TEMPORARILY DISABLED PER USER REQUEST (2026-06-25)
   // Only assign collector at the 'reserve' step. Prepare/deliver can be done by anyone.
+  /*
   if (action === 'reserve') {
     const inventoryUserId = getInventoryUserId(userId);
     if (inventoryUserId) {
@@ -182,6 +187,7 @@ export async function handleInvCallback(
       return;
     }
   }
+  */
 
   // ── 7. Acknowledge ──
   await answerCallback(

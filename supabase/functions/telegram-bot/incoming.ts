@@ -10,7 +10,7 @@ import { sendMessage } from './telegram.ts';
 import { getClients } from './db.ts';
 import { env } from './config.ts';
 import { invButtons } from './workflow.ts';
-import { fmtDate, paymentLabel } from './format.ts';
+import { fmtDate, paymentLabel, formatPhone } from './format.ts';
 
 // ─── New Invoice (POS → Group) ──────────────────────────
 
@@ -73,8 +73,9 @@ export async function handleNewInvoice(record: any) {
 🛒 <b>فاتورة مبيعات جديدة (#${record.id})</b>
 
 👤 <b>العميل:</b> ${record.customer_name_snapshot}
+${record.customer_phone_snapshot ? `📞 <b>الرقم:</b> <code>${formatPhone(record.customer_phone_snapshot)}</code>\n` : ''}\
 💳 <b>الدفع:</b> <code>${paymentLabel(record.payment_method || 'CASH')}</code>
-${record.collector_id ? `🧔 <b>المحصل:</b> ${collectorName}\n` : ''}
+${record.collector_id ? `🧔 <b>المحصل:</b> ${collectorName}\n` : ''}\
 📦 <b>المنتجات:</b>
 ${itemsList}${extraItems}
 

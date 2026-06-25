@@ -624,6 +624,11 @@ export const OrdersPage: React.FC = () => {
           address={viewingReceiptForOrder.customer_address || ''}
           notes={viewingReceiptForOrder.notes || ''}
           orderType={viewingReceiptForOrder.order_type === 'pickup' ? 'pickup' : 'delivery'}
+          subtotal={viewingReceiptForOrder.subtotal}
+          deliveryFee={viewingReceiptForOrder.delivery_fee}
+          total={viewingReceiptForOrder.total}
+          phone={viewingReceiptForOrder.customer_phone}
+          orderNumber={viewingReceiptForOrder.order_number}
           onClose={() => setViewingReceiptForOrder(null)}
         />
       )}

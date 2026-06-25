@@ -13,6 +13,12 @@ interface ReceiptModalProps {
   address: string;
   notes: string;
   orderType: 'delivery' | 'pickup';
+  subtotal?: number;
+  deliveryFee?: number;
+  total?: number;
+  phone?: string;
+  discount?: number;
+  orderNumber?: string;
   onClose: () => void;
 }
 
@@ -22,6 +28,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   address,
   notes,
   orderType,
+  subtotal,
+  deliveryFee,
+  total,
+  phone,
+  discount,
+  orderNumber,
   onClose,
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -37,29 +49,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   }, []);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const orderDate = new Date().toLocaleDateString('ar-SA', { 
-    year: 'numeric', month: 'long', day: 'numeric', 
-    hour: '2-digit', minute: '2-digit' 
-  });
-  const orderId = `#${Math.floor(1000 + Math.random() * 9000)}`;
-
-  // Categorize Items
-  const packagesList = items.filter(item => {
-    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
-    return item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
-  });
-
-  const storeItems = items.filter(item => {
-    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
-    const isPackage = item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
-    return !isPackage && (!item.source || item.source === 'store');
-  });
-
-  const bakeryItems = items.filter(item => {
-    const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
-    const isPackage = item.barcode?.startsWith('PKG-') || matchedProduct?.category === 'عروض وبكجات';
-    return !isPackage && item.source === 'bakery';
-  });
+  const d = new Date();
+  const orderDate = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const orderId = orderNumber || `#${Math.floor(1000 + Math.random() * 9000)}`;
 
   const handleShare = async () => {
     if (!receiptRef.current) return;
@@ -120,58 +112,46 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         {/* RECEIPT PREVIEW AREA */}
         <div className="relative shadow-2xl mx-auto w-full" ref={receiptRef}>
             {/* Paper Texture Background */}
-            <div className="bg-receipt px-6 py-8 relative overflow-hidden text-gray-800 font-sans font-medium text-[13px] leading-relaxed">
+            <div className="bg-receipt px-6 py-6 relative overflow-hidden text-gray-800 font-sans font-medium text-[13px] leading-relaxed">
                 
                 {/* Sawtooth Top Edge Effect */}
                 <div className="absolute top-0 left-0 right-0 h-2 bg-[radial-gradient(circle,transparent_50%,#fffdf8_50%)] bg-[length:16px_16px] rotate-180 -mt-2"></div>
 
-                {/* RUBBER STAMP EFFECT */}
-                <div className="absolute top-24 left-6 z-10 pointer-events-none select-none opacity-20">
-                      <div className="border-4 border-red-800 text-red-800 font-black text-lg px-4 py-2 rounded-lg -rotate-12 uppercase tracking-widest flex items-center justify-center border-double">
-                          <span>طلب من التطبيق</span>
-                      </div>
-                </div>
-
                 {/* Header */}
-                <div className="flex flex-col items-center text-center border-b-2 border-dashed border-gray-300 pb-6 mb-6 relative z-20">
-                    <div className="w-16 h-16 mb-3 grayscale opacity-90">
-                        <img 
-                          src={APP_LOGO} 
-                          alt="Logo" 
-                          className="w-full h-full object-contain" 
-                          crossOrigin="anonymous"
-                        />
+                <div className="flex justify-between items-center border-b-2 border-dashed border-gray-300 pb-4 mb-4 relative z-20">
+                    <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 border-gray-100">
+                            <img 
+                              src={APP_LOGO} 
+                              alt="Logo" 
+                              className="w-full h-full object-cover" 
+                              crossOrigin="anonymous"
+                            />
+                        </div>
+                        <div className="flex flex-col text-right">
+                            <h2 className="text-lg font-black text-gray-900 leading-tight">{STORE_CONFIG.NAME}</h2>
+                            <p className="text-xs text-gray-700 font-bold mt-0.5 tracking-wider" dir="ltr">{STORE_CONFIG.PHONE.replace('+967', '')}</p>
+                        </div>
                     </div>
-                    <h2 className="text-xl font-black text-gray-900 mb-1">{STORE_CONFIG.NAME}</h2>
-                    <p className="text-xs text-gray-500 dir-ltr">{STORE_CONFIG.PHONE}</p>
-                    <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">Electronic Receipt</p>
-                </div>
-
-                {/* Order Details */}
-                <div className="mb-6 space-y-2 text-xs relative z-20">
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">رقم الطلب:</span>
-                        <span className="font-bold">{orderId}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">التاريخ:</span>
-                        <span className="font-bold">{orderDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">طريقة الاستلام:</span>
-                        <span className="font-bold bg-gray-100 px-2 rounded">
-                            {orderType === 'delivery' ? 'توصيل للبيت 🚚' : 'استلام من المحل 🏪'}
-                        </span>
+                    
+                    <div className="flex flex-col text-left space-y-0.5 text-[11px]">
+                        <div className="text-gray-500">
+                            رقم الطلب: <span className="font-bold text-gray-800 dir-ltr inline-block">{orderId}</span>
+                        </div>
+                        <div className="text-gray-500">
+                            التاريخ: <span className="font-bold text-gray-800 dir-ltr inline-block">{orderDate}</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Customer Info */}
-                <div className="bg-white p-3 rounded-lg border border-gray-200 mb-6 space-y-2 text-xs relative z-20">
+                <div className="bg-white p-3 rounded-lg border border-gray-200 mb-4 space-y-2 text-xs relative z-20">
                     <div className="flex items-start gap-2">
                         <User className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                         <div>
                             <span className="block text-gray-400 text-[10px]">الاسم الكريم</span>
                             <span className="font-bold">{customerName}</span>
+                            {phone && <span className="block font-medium text-gray-500 dir-ltr text-right mt-0.5">{phone}</span>}
                         </div>
                     </div>
                     <div className="flex items-start gap-2 pt-2 border-t border-gray-100">
@@ -189,91 +169,67 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     </div>
                 </div>
 
-                {/* Items Table - CATEGORIZED SPLIT */}
-                <div className="mb-6 relative z-20">
+                {/* Items Table - UNIFIED */}
+                <div className="mb-4 relative z-20">
                     <div className="flex justify-between text-xs font-bold border-b border-gray-800 pb-2 mb-3">
                         <span>المنتج</span>
                         <span>الكمية</span>
                     </div>
                     
-                    <div className="space-y-5">
-                        {/* Packages Section */}
-                        {packagesList.length > 0 && (
-                            <div>
-                                <h4 className="text-[10px] font-bold text-rose-600 mb-2 pb-1 border-b border-rose-100 flex items-center gap-1">
-                                    <ShoppingBag className="w-3 h-3 text-rose-500" />
-                                    <span>العروض والباكجات 🎁</span>
-                                </h4>
-                                <div className="space-y-3 pr-2">
-                                    {packagesList.map((item, idx) => {
-                                        const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
-                                        const bundleItems = matchedProduct?.bundle_items || [];
-                                        return (
-                                            <div key={`package-${idx}`} className="space-y-1">
-                                                <div className="flex justify-between text-xs items-start font-bold">
-                                                    <span className="flex-1 ml-2 text-gray-900">{item.name}</span>
-                                                    <span className="font-bold">x{item.quantity}</span>
+                    <div className="space-y-2">
+                        {items.map((item, idx) => {
+                            const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+                            const bundleItems = matchedProduct?.bundle_items || [];
+                            return (
+                                <div key={`item-${idx}`} className="space-y-1">
+                                    <div className="flex justify-between text-xs items-start">
+                                        <span className="flex-1 ml-2 text-gray-800 font-medium">{item.name}</span>
+                                        <span className="font-bold font-mono">x{item.quantity}</span>
+                                    </div>
+                                    {bundleItems.length > 0 && (
+                                        <div className="pr-3 border-r border-dashed border-gray-300 space-y-0.5 text-gray-500 text-[10px]">
+                                            {bundleItems.map((bItem: any, bIdx: number) => (
+                                                <div key={bIdx} className="flex justify-between items-center">
+                                                    <span>- {bItem.product_name}</span>
+                                                    <span className="">x{bItem.quantity * item.quantity}</span>
                                                 </div>
-                                                {bundleItems.length > 0 && (
-                                                    <div className="pr-3 border-r border-dashed border-gray-300 space-y-0.5 text-gray-500 text-[10px]">
-                                                        {bundleItems.map((bItem: any, bIdx: number) => (
-                                                            <div key={bIdx} className="flex justify-between items-center">
-                                                                <span>- {bItem.product_name}</span>
-                                                                <span className="">x{bItem.quantity * item.quantity}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Store Section */}
-                        {storeItems.length > 0 && (
-                            <div>
-                                <h4 className="text-[10px] font-bold text-gray-500 mb-2 pb-1 border-b border-gray-100 flex items-center gap-1">
-                                    <ShoppingBag className="w-3 h-3" />
-                                    <span>طلبات المتجر</span>
-                                </h4>
-                                <div className="space-y-2 pr-2">
-                                    {storeItems.map((item, idx) => (
-                                        <div key={`store-${idx}`} className="flex justify-between text-xs items-start">
-                                            <span className="flex-1 ml-2 text-gray-800">{item.name}</span>
-                                            <span className="font-bold font-mono">x{item.quantity}</span>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Bakery Section */}
-                        {bakeryItems.length > 0 && (
-                            <div>
-                                <h4 className="text-[10px] font-bold text-pink-500 mb-2 pb-1 border-b border-pink-100 flex items-center gap-1">
-                                    <Store className="w-3 h-3" />
-                                    <span>مخبوزات طازجة</span>
-                                </h4>
-                                <div className="space-y-2 pr-2">
-                                    {bakeryItems.map((item, idx) => (
-                                        <div key={`bakery-${idx}`} className="flex justify-between text-xs items-start">
-                                            <span className="flex-1 ml-2 text-gray-800">{item.name}</span>
-                                            <span className="font-bold font-mono">x{item.quantity}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                            );
+                        })}
                     </div>
 
-                    <div className="border-t border-gray-800 mt-5 pt-2 flex justify-between font-bold">
-                        <span>إجمالي العدد</span>
-                        <span>{totalItems}</span>
-                    </div>
-                    <div className="text-center text-[10px] text-gray-400 mt-2">
-                        * بنحسب السعر النهائي ونكلمك عند تأكيد الطلب
+                    <div className="border-t border-gray-800 mt-4 pt-2 space-y-2">
+                        <div className="flex justify-between font-bold">
+                            <span>إجمالي العدد</span>
+                            <span>{totalItems}</span>
+                        </div>
+                        {subtotal !== undefined && (
+                          <div className="flex justify-between font-bold text-gray-700">
+                              <span>المجموع</span>
+                              <span>{subtotal} ريال</span>
+                          </div>
+                        )}
+                        {discount !== undefined && discount > 0 && (
+                          <div className="flex justify-between font-bold text-green-600">
+                              <span>الخصم</span>
+                              <span>-{discount} ريال</span>
+                          </div>
+                        )}
+                        {deliveryFee !== undefined && orderType === 'delivery' && (
+                          <div className="flex justify-between font-bold text-gray-700">
+                              <span>سعر التوصيل</span>
+                              <span>{deliveryFee === 0 ? 'مجاناً' : `${deliveryFee} ريال`}</span>
+                          </div>
+                        )}
+                        {total !== undefined && (
+                          <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-gray-300">
+                              <span>الإجمالي</span>
+                              <span>{total} ريال</span>
+                          </div>
+                        )}
                     </div>
                 </div>
 
@@ -287,21 +243,6 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         <p className="text-xs bg-yellow-50 p-2 rounded text-gray-600">{notes}</p>
                     </div>
                 )}
-
-                {/* BONUS COUPON */}
-                <div className="mt-8 mb-4 border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 relative z-20 mx-1">
-                     {/* Scissors Icon */}
-                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-receipt px-2 text-gray-400">
-                        <Scissors className="w-4 h-4 text-gray-400 rotate-90" />
-                     </div>
-                     <div className="text-center">
-                        <p className="font-bold text-xs mb-1 text-gray-800">🎁 شكراً لثقتك في جوده</p>
-                        <p className="text-[10px] text-gray-600 mb-2">خلي الفاتورة معك، ولك خصم 5% على طلبك الجاي لكيك المناسبات!</p>
-                        <div className="font-bold text-xs bg-white border border-gray-200 inline-block px-3 py-1 rounded text-gray-700 tracking-wider">
-                            JOUDA-CAKE-5
-                        </div>
-                     </div>
-                </div>
 
                 {/* Footer */}
                 <div className="text-center pt-2 relative z-20">

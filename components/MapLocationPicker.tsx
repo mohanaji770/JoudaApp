@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle } from 'lucide-react';
+import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle, LocateFixed } from 'lucide-react';
+import { Geolocation } from '@capacitor/geolocation';
 import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
 
 // Custom iOS-like Map Pin
@@ -72,6 +73,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
 
   const handleConfirm = () => {
@@ -125,6 +127,30 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
     setPosition([lat, lon]);
     setSearchQuery(result.properties.name || '');
     setShowDropdown(false);
+  };
+
+  const handleLocateMe = async () => {
+    setIsLocating(true);
+    try {
+      const permission = await Geolocation.checkPermissions();
+      if (permission.location === 'denied' || permission.location === 'prompt') {
+        const req = await Geolocation.requestPermissions();
+        if (req.location === 'denied') {
+           throw new Error('Permission denied');
+        }
+      }
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+      setPosition([coordinates.coords.latitude, coordinates.coords.longitude]);
+      setSearchQuery('موقعي الحالي');
+    } catch (error) {
+      console.error('Error getting location:', error);
+      alert('لم نتمكن من تحديد موقعك. يرجى التأكد من تفعيل الـ GPS وصلاحيات الموقع.');
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   const distanceKm = calculateDistance(storeLat, storeLng, position[0], position[1]);
@@ -205,6 +231,16 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
             <MapEvents onLocationClick={(lat, lng) => setPosition([lat, lng])} />
             <MapController position={position} />
           </MapContainer>
+
+          {/* Locate Me FAB */}
+          <button
+            onClick={handleLocateMe}
+            disabled={isLocating}
+            className="absolute bottom-4 right-4 z-[400] w-12 h-12 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center text-brand-600 hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all border border-gray-100 disabled:opacity-70 disabled:scale-100"
+            title="تحديد موقعي"
+          >
+            {isLocating ? <Loader2 className="w-6 h-6 animate-spin" /> : <LocateFixed className="w-6 h-6" />}
+          </button>
         </div>
 
         <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 space-y-3 relative z-10">
