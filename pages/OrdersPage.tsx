@@ -483,14 +483,29 @@ export const OrdersPage: React.FC = () => {
                         </button>
                       )}
                       
-                      {/* Receipt Button */}
-                      <button
-                        onClick={() => setViewingReceiptForOrder(order)}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        عرض الفاتورة
-                      </button>
+                      {/* Receipt & Share Buttons */}
+                      <div className="flex gap-2 w-full">
+                        <button
+                          onClick={() => setViewingReceiptForOrder(order)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
+                        >
+                          <FileText className="w-4 h-4 shrink-0" />
+                          عرض الفاتورة
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const itemsText = orderItems[order.id]?.map(i => `- ${i.quantity}x ${i.product_name}`).join('\n') || '';
+                            const text = `*فاتورة طلب من متجر جوده* 🛒\nرقم الطلب: ${order.order_number}\nالعميل: ${order.customer_name}\n\n*الأصناف:*\n${itemsText}\n\n*سعر التوصيل: ${order.delivery_fee} ريال*\n*الإجمالي: ${order.total} ريال*`;
+                            const encoded = encodeURIComponent(text);
+                            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-[11px] font-bold transition-all shadow-sm active:scale-[0.98]"
+                        >
+                          <MessageCircle className="w-4 h-4 shrink-0" />
+                          مشاركة واتساب
+                        </button>
+                      </div>
 
                       {order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'failed' && (
                         <button
