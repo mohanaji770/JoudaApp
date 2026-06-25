@@ -4,7 +4,7 @@ import {
   Package, Heart, ShoppingCart, Calendar, Repeat, Trash2, Settings, User as UserIcon, LogOut,
   Clock, MapPin, Phone, Truck, Store, AlertCircle, X, RefreshCw,
   Check, MessageCircle, Send, CheckCircle2, Building, AlertTriangle, ShieldCheck,
-  Info, ChevronLeft, FileText
+  Info, ChevronLeft, FileText, Share2
 } from 'lucide-react';
 import { getCompletedOrders, deleteCompletedOrder, CompletedOrder } from '../services/db';
 import { fetchLiveOrders, fetchLiveOrderItems, type LiveOrder, type LiveOrderItem } from '../services/liveOrderService';
@@ -483,27 +483,64 @@ export const OrdersPage: React.FC = () => {
                         </button>
                       )}
                       
-                      {/* Receipt & Share Buttons */}
-                      <div className="flex gap-2 w-full">
+                      {/* Receipt & Share Actions */}
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => setViewingReceiptForOrder(order)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
+                          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
                         >
-                          <FileText className="w-4 h-4 shrink-0" />
+                          <FileText className="w-3.5 h-3.5" />
                           عرض الفاتورة
                         </button>
 
                         <button
                           onClick={() => {
-                            const itemsText = orderItems[order.id]?.map(i => `- ${i.quantity}x ${i.product_name}`).join('\n') || '';
-                            const text = `*فاتورة طلب من متجر جوده* 🛒\nرقم الطلب: ${order.order_number}\nالعميل: ${order.customer_name}\n\n*الأصناف:*\n${itemsText}\n\n*سعر التوصيل: ${order.delivery_fee} ريال*\n*الإجمالي: ${order.total} ريال*`;
-                            const encoded = encodeURIComponent(text);
-                            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+                            const items = orderItems[order.id] || [];
+                            const storeItems = items.filter((i: any) => i.source === 'store' || !i.source);
+                            const bakeryItems = items.filter((i: any) => i.source === 'bakery');
+
+                            let msg = `*فاتورة طلبك من جوده* 🧾✨\n`;
+                            msg += `*رقم الطلب:* ${order.order_number}\n\n`;
+                            
+                            if (order.customer_name) msg += `👤 *الاسم:* ${order.customer_name}\n`;
+                            if (order.customer_address) msg += `📍 *عنوان التوصيل:* ${order.customer_address}\n`;
+                            
+                            msg += `\n------------------\n`;
+                            
+                            if (storeItems.length > 0) {
+                              msg += `*🛒 طلبات المتجر:*\n`;
+                              storeItems.forEach((i: any) => {
+                                msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
+                              });
+                              msg += `\n`;
+                            }
+
+                            if (bakeryItems.length > 0) {
+                              msg += `*🧁 طلبات المخبز:*\n`;
+                              bakeryItems.forEach((i: any) => {
+                                msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
+                              });
+                              msg += `\n`;
+                            }
+
+                            msg += `------------------\n`;
+                            if (order.delivery_fee === 0) {
+                              msg += `🚚 *التوصيل:* مجاناً\n`;
+                            } else if (order.delivery_fee) {
+                              msg += `🚚 *التوصيل:* ${order.delivery_fee} ريال\n`;
+                            }
+                            msg += `💳 *الحساب الإجمالي:* ${order.total} ريال\n`;
+                            msg += `------------------\n`;
+                            msg += `صحتكم تهمنا.. وبالعافية مقدماً! 💖`;
+
+                            const encoded = encodeURIComponent(msg);
+                            const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
+                            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-[11px] font-bold transition-all shadow-sm active:scale-[0.98]"
+                          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
                         >
-                          <MessageCircle className="w-4 h-4 shrink-0" />
-                          مشاركة واتساب
+                          <Share2 className="w-3.5 h-3.5" />
+                          شارك الفاتورة
                         </button>
                       </div>
 
