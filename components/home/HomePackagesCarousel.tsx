@@ -100,7 +100,7 @@ export const HomePackagesCarousel: React.FC = () => {
     <>
       <div className="px-4 mb-6 animate-fade-in">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-4">
-          <span className="text-brand-600">🎁</span>
+          <span className="text-brand-600 animate-bounce-subtle inline-block origin-bottom">🎁</span>
           <span>عروض التوفير</span>
         </h3>
 
