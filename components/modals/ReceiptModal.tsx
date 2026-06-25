@@ -62,12 +62,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const blob = await toBlob(receiptRef.current, { 
-        cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        filter: (node) => {
-          return (node.tagName !== 'LINK');
-        }
+        backgroundColor: '#ffffff'
       });
 
       if (!blob) throw new Error('Failed to generate receipt');
