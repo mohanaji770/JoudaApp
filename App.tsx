@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { Wrench, Clock, Shield } from 'lucide-react';
 import { Layout } from './components/layout/Layout';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
@@ -85,6 +86,9 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAdmin(!!session);
+      if (session?.user) {
+        Sentry.setUser({ id: session.user.id, email: session.user.email });
+      }
       setCheckingAuth(false);
     });
 
@@ -92,6 +96,11 @@ const AppContent: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAdmin(!!session);
+      if (session?.user) {
+        Sentry.setUser({ id: session.user.id, email: session.user.email });
+      } else {
+        Sentry.setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -232,6 +241,7 @@ const AppContent: React.FC = () => {
 
   const handleAdminLogout = async () => {
     navigate('/', { replace: true });
+    Sentry.setUser(null);
     // Add a tiny delay before signing out so React Router processes the navigation first
     setTimeout(async () => {
       await supabase.auth.signOut();

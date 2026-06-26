@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toBlob } from 'html-to-image';
 import { X, Share2, CheckCircle, AlertTriangle, XCircle, Leaf, ScanLine, BadgeCheck } from 'lucide-react';
 import { AnalysisResult, VerdictType } from '../../types';
@@ -103,8 +104,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="w-full max-w-sm flex flex-col gap-4 my-auto">
         
         {/* Header Actions */}
@@ -241,6 +242,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ result, onClose }) => {
         </button>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

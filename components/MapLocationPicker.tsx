@@ -238,14 +238,18 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
             <MapController position={position} />
           </MapContainer>
 
-          {/* Locate Me FAB */}
+          {/* Locate Me FAB (Pill Style) */}
           <button
             onClick={handleLocateMe}
             disabled={isLocating}
-            className="absolute bottom-4 right-4 z-[400] w-12 h-12 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center text-brand-600 hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all border border-gray-100 disabled:opacity-70 disabled:scale-100"
-            title="تحديد موقعي"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] w-max bg-white text-gray-800 px-5 py-3 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] flex items-center justify-center gap-2 font-bold hover:scale-105 active:scale-95 transition-all border-2 border-brand-500 disabled:opacity-70 disabled:scale-100"
           >
-            {isLocating ? <Loader2 className="w-6 h-6 animate-spin" /> : <LocateFixed className="w-6 h-6" />}
+            {isLocating ? (
+              <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
+            ) : (
+              <LocateFixed className="w-5 h-5 text-brand-600 animate-pulse" />
+            )}
+            <span className="text-sm">{isLocating ? 'جاري التحديد...' : 'حدد موقعي الحالي 📍'}</span>
           </button>
         </div>
 

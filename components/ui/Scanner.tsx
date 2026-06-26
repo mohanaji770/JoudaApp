@@ -1,6 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { Camera, ScanSearch, Search, Type, Info, X } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Camera as CameraIcon, ScanSearch, Search, Type, Info, X } from 'lucide-react';
 import { compressImage, fileToBase64 } from '../../utils/imageCompression';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 type Mode = 'camera' | 'text';
 
@@ -18,6 +20,26 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
   const [dragActive, setDragActive] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [isSubmittingText, setIsSubmittingText] = useState(false);
+  const [loadingIndex, setLoadingIndex] = useState(0);
+
+  const loadingMessages = [
+    "جاري التعرف على المنتج...",
+    "نطابقها مع لستة الممنوعات...",
+    "نجهز لك النتيجة النهائية..."
+  ];
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isAnalyzing) {
+      setLoadingIndex(0);
+      interval = setInterval(() => {
+        setLoadingIndex((prev) => (prev < loadingMessages.length - 1 ? prev + 1 : prev));
+      }, 1500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAnalyzing]);
 
   const processFile = async (file: File) => {
       if (isProcessingImage || isAnalyzing) return;
@@ -74,9 +96,28 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
     }
   };
 
-  const triggerFileInput = () => {
+  const triggerFileInput = async () => {
     if (isProcessingImage || isAnalyzing) return;
-    fileInputRef.current?.click();
+    
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const image = await Camera.getPhoto({
+          quality: 60,
+          allowEditing: false,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Prompt // Prompts user to choose Camera or Gallery natively
+        });
+        
+        if (image.base64String) {
+          onImageSelected(image.base64String);
+        }
+      } catch (error) {
+        console.error("Capacitor camera error:", error);
+        // Fallback to web input if user cancels or error occurs
+      }
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
@@ -93,7 +134,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
               : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
-          <Camera className="w-4 h-4" />
+          <CameraIcon className="w-4 h-4" />
           <span>فحص بصورة</span>
         </button>
         <button
@@ -124,7 +165,9 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
             <div className="w-24 h-24 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-4 relative">
                <ScanSearch className="w-12 h-12 text-brand-600 animate-spin-slow" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">جالس ندقق في المكونات عشانك...</h3>
+            <h3 className="text-xl font-bold text-brand-600 dark:text-brand-400 min-h-[2rem] transition-all duration-300">
+              {loadingMessages[loadingIndex]}
+            </h3>
             <p className="text-sm text-gray-550 dark:text-gray-400 mt-2">ثواني والنتيجة تكون جاهزة</p>
           </div>
         ) : mode === 'camera' ? (
@@ -142,7 +185,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onImageSelected, onTextSearch,
             onDrop={handleDrop}
           >
             <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-100 dark:shadow-none mb-4 transition-transform duration-300 hover:scale-105 active:scale-95">
-              <Camera className="w-7 h-7 text-white" />
+              <CameraIcon className="w-7 h-7 text-white" />
             </div>
             
             <h2 className="text-base font-black text-gray-900 dark:text-white mb-1.5">صوّر المكونات أو الباركود</h2>
