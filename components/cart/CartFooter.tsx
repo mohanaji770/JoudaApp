@@ -56,8 +56,12 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         ) : (
           <button
             onClick={handleSubmitOrder}
-            disabled={!isFormValid || submitting}
-            className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] text-lg"
+            disabled={submitting}
+            className={`w-full text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-lg shadow-lg ${
+              !isFormValid
+                ? 'bg-gray-400 dark:bg-gray-700 cursor-pointer'
+                : 'bg-brand-600 hover:bg-brand-700 shadow-brand-200 dark:shadow-none'
+            }`}
           >
             <ShoppingBag className="w-5 h-5" />
             <span>{submitting ? 'جاري إرسال طلبك...' : 'أرسل الطلب الآن ✅'}</span>

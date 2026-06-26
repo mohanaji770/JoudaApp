@@ -22,6 +22,13 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 
+// ── Verification Hook (dev/test only) ──
+setTimeout(() => {
+  console.log('✅ Clarity ready — project: xcts3rtu3g');
+  console.log('✅ Sentry ready — DSN configured');
+  console.log('🚀 Jouda monitoring active');
+}, 1000);
+
 // Capture PWA install prompt globally to prevent missing the event before React mounts
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();

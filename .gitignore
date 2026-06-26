@@ -48,3 +48,4 @@ supabase/.temp/cli-latest
 dev-dist/registerSW.js
 .gitignore
 dev-dist/workbox-15ec2ecc.js
+docs/*

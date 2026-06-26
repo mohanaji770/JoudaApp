@@ -166,7 +166,7 @@ export const OrdersPage: React.FC = () => {
     catch { return iso; }
   };
 
-  const formatPrice = (n: number) => n?.toLocaleString('ar-SA') || '0';
+  const formatPrice = (n: number) => n?.toLocaleString('en-US') || '0';
 
   const mappedLocalOrders: DisplayOrder[] = localOrders.map(o => ({
     id: o.id,

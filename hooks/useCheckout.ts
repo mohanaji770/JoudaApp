@@ -148,11 +148,21 @@ export const useCheckout = (
 
   const handleSubmitOrder = async (onSuccess: () => void) => {
     if (!isFormValid) {
-      if (deliveryZone === 'sanaa') {
-        alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، عنوان التوصيل، وتحديد موقعك على الخريطة');
-      } else {
-        alert('يرجى تعبئة الاسم الكريم، رقم الهاتف، وكتابة تفاصيل عنوان الشحن للمحافظة');
+      const missingFields = [];
+      if (!customerName.trim()) {
+        missingFields.push('الاسم الكريم');
       }
+      if (phone.trim().length < 9) {
+        missingFields.push('رقم الجوال (9 أرقام على الأقل)');
+      }
+      if (!address.trim()) {
+        missingFields.push(deliveryZone === 'sanaa' ? 'تفاصيل العنوان (رقم البيت/الشقة)' : 'تفاصيل عنوان الشحن (المحافظة/المدينة)');
+      }
+      if (deliveryZone === 'sanaa' && (customerLat === null || customerLng === null)) {
+        missingFields.push('تحديد موقع التوصيل على الخريطة 📍');
+      }
+
+      alert(`فضلاً، أكمل البيانات التالية لتأكيد طلبك:\n\n• ${missingFields.join('\n• ')}`);
       return;
     }
 
