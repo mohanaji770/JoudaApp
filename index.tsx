@@ -2,10 +2,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
+import Clarity from '@microsoft/clarity';
 import './index.css';
 import App from './App';
 import { CartProvider } from './contexts/CartContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
+
+Clarity.init('xcts3rtu3g');
 
 Sentry.init({
   dsn: 'https://2881f18e4d347194c2edaa8b517ed839@o4511510064922624.ingest.de.sentry.io/4511510070755408',
