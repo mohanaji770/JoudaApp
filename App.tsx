@@ -265,9 +265,12 @@ const AppContent: React.FC = () => {
     }
 
     if (location.pathname === '/admin/login') {
+      if (isAdmin) {
+        return <Navigate to="/admin/overview" replace />;
+      }
       return (
         <Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full" /></div>}>
-          {!isAdmin ? <AdminLogin /> : <AdminDashboard />}
+          <AdminLogin />
         </Suspense>
       );
     }

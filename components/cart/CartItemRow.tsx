@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShoppingBag, Minus, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, ShoppingBag, Minus, Plus, Trash2 } from 'lucide-react';
+import { canAddQuantity, getCartStockIssue, getLowStockLabel } from '../../utils/stockUtils';
 
 interface CartItemRowProps {
   item: any;
@@ -7,6 +8,7 @@ interface CartItemRowProps {
   bouncingItemId: string | null;
   handleIncrease: (name: string, id: string) => void;
   handleDecrease: (id: string) => void;
+  handleSetQuantity: (id: string, quantity: number) => void;
   handleRemove: (id: string) => void;
 }
 
@@ -16,6 +18,7 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
   bouncingItemId,
   handleIncrease,
   handleDecrease,
+  handleSetQuantity,
   handleRemove
 }) => {
   const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
@@ -36,6 +39,9 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
   }
 
   const isBouncing = bouncingItemId === item.id;
+  const stockIssue = getCartStockIssue(item, matchedProduct);
+  const lowStockLabel = !stockIssue ? getLowStockLabel(matchedProduct) : null;
+  const canIncrease = canAddQuantity(matchedProduct, item.quantity);
 
   return (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
@@ -81,7 +87,28 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
                 وفرت {savings.toLocaleString('en-US')}<span className="saudi-riyal mr-1">{"\u00ea"}</span>! 🎉
               </span>
             )}
+            {lowStockLabel && (
+              <span className="text-[9px] font-black text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20 px-2 py-0.5 rounded-md border border-orange-100 dark:border-orange-900/30">
+                {lowStockLabel}
+              </span>
+            )}
           </div>
+
+          {stockIssue && (
+            <div className="mt-2 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/80 dark:bg-red-950/20 p-2 text-[10px] font-bold text-red-700 dark:text-red-300 flex items-center gap-2">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span className="flex-1">
+                طلبت {stockIssue.requestedQuantity}، المتاح {stockIssue.availableQuantity} فقط
+              </span>
+              <button
+                type="button"
+                onClick={() => handleSetQuantity(item.id, stockIssue.availableQuantity)}
+                className="shrink-0 rounded-lg bg-white/80 dark:bg-gray-900/60 px-2 py-1 text-[9px] text-red-700 dark:text-red-200 border border-red-100 dark:border-red-900/30"
+              >
+                تعديل للمتاح
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 mr-2 self-center shrink-0">
@@ -97,7 +124,13 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({
             </span>
             <button 
               onClick={() => handleIncrease(item.name, item.id)}
-              className="w-8 h-8 flex items-center justify-center bg-brand-600 text-white rounded-lg shadow-sm active:scale-95 transition-transform"
+              disabled={!canIncrease}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg shadow-sm transition-transform ${
+                canIncrease
+                  ? 'bg-brand-600 text-white active:scale-95'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+              }`}
+              title={canIncrease ? 'زيادة الكمية' : 'وصلت للكمية المتاحة'}
             >
               <Plus className="w-4 h-4" />
             </button>

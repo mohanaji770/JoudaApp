@@ -8,6 +8,7 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 import { useScrollLock, useBackButton } from '../../hooks/index';
 import { ProductRequestModal } from './ProductRequestModal';
 import { getCachedProducts } from '../../services/db';
+import { canAddQuantity, getLowStockLabel } from '../../utils/stockUtils';
 
 interface ProductDetailsModalProps {
   product: Product;
@@ -100,6 +101,8 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
    
   const quantity = getItemQuantity(product.name);
   const liked = isFavorite(product.id);
+  const canIncrease = canAddQuantity(product, quantity);
+  const lowStockLabel = getLowStockLabel(product);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -212,7 +215,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                       )}
                       {product.inStock ? (
                          <span className="mr-auto text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full">
-                            <Check className="w-3.5 h-3.5" /> متوفر
+                            <Check className="w-3.5 h-3.5" /> {lowStockLabel || 'متوفر'}
                          </span>
                       ) : (
                          <span className="mr-auto text-xs font-bold text-red-500 flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-full">
@@ -329,8 +332,14 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                              </button>
                              <span className="text-base font-black px-1">{quantity}</span>
                              <button 
-                                onClick={() => addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString())}
-                                className="w-9 h-9 bg-brand-600 text-white rounded-xl shadow-sm flex items-center justify-center text-lg font-bold hover:bg-brand-700 transition-colors"
+                                onClick={() => canIncrease && addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString())}
+                                disabled={!canIncrease}
+                                className={`w-9 h-9 rounded-xl shadow-sm flex items-center justify-center text-lg font-bold transition-colors ${
+                                  canIncrease
+                                    ? 'bg-brand-600 text-white hover:bg-brand-700'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                                }`}
+                                title={canIncrease ? 'زيادة الكمية' : 'وصلت للكمية المتاحة'}
                              >
                                 +
                              </button>
@@ -357,15 +366,26 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     </div>
                  ) : (
                     <button 
-                      onClick={() => product.inStock ? addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString()) : setRequestModalOpen(true)}
+                      onClick={() => {
+                        if (!product.inStock) {
+                          setRequestModalOpen(true);
+                          return;
+                        }
+                        if (canIncrease) {
+                          addToCart(product.name, product.source || 'store', product.barcode, product.price?.toString());
+                        }
+                      }}
+                      disabled={product.inStock && !canIncrease}
                       className={`flex-1 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-                        product.inStock 
+                        product.inStock && canIncrease
                           ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-200 dark:shadow-none' 
-                          : 'bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600'
+                          : product.inStock
+                            ? 'bg-gray-400 dark:bg-gray-700 cursor-not-allowed'
+                            : 'bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600'
                       }`}
                     >
                        <ShoppingBag className="w-5 h-5" />
-                       <span>{product.inStock ? 'إضافة للسلة' : 'اطلب توفيره'}</span>
+                       <span>{product.inStock ? (canIncrease ? 'إضافة للسلة' : 'وصلت للكمية المتاحة') : 'اطلب توفيره'}</span>
                     </button>
                  )}
               </div>

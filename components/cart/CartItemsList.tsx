@@ -9,6 +9,7 @@ interface CartItemsListProps {
   bouncingItemId: string | null;
   handleIncrease: (name: string, id: string) => void;
   handleDecrease: (id: string) => void;
+  handleSetQuantity: (id: string, quantity: number) => void;
   handleRemove: (id: string) => void;
 }
 
@@ -19,6 +20,7 @@ export const CartItemsList: React.FC<CartItemsListProps> = ({
   bouncingItemId,
   handleIncrease,
   handleDecrease,
+  handleSetQuantity,
   handleRemove
 }) => (
   <section className="mb-4">
@@ -38,6 +40,7 @@ export const CartItemsList: React.FC<CartItemsListProps> = ({
           bouncingItemId={bouncingItemId}
           handleIncrease={handleIncrease}
           handleDecrease={handleDecrease}
+          handleSetQuantity={handleSetQuantity}
           handleRemove={handleRemove}
         />
       ))}

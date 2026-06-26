@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { ReceiptModal } from './modals/ReceiptModal';
@@ -10,11 +10,12 @@ import { useCheckout } from '../hooks/useCheckout';
 import { CartHeader } from './cart/CartHeader';
 import { EmptyCartView } from './cart/EmptyCartView';
 import { CartItemsList } from './cart/CartItemsList';
-import { DeliveryProgressBar } from './cart/DeliveryProgressBar';
+import { FreeDeliveryProgressCard } from './cart/FreeDeliveryProgressCard';
 import { CheckoutFormFields } from './cart/CheckoutFormFields';
 import { MapLocationPicker } from './MapLocationPicker';
 import { TotalsBreakdownCard } from './cart/TotalsBreakdownCard';
 import { CartFooter } from './cart/CartFooter';
+import { StockIssue, formatStockIssueMessage, getCartStockIssue } from '../utils/stockUtils';
 
 export const CartDrawer: React.FC = () => {
   const location = useLocation();
@@ -24,6 +25,7 @@ export const CartDrawer: React.FC = () => {
     setIsCartOpen, 
     removeFromCart,
     decreaseQuantity,
+    setItemQuantity,
     addToCart, 
     sendOrderToWhatsApp,
     submitOrderToSystem,
@@ -99,7 +101,14 @@ export const CartDrawer: React.FC = () => {
   };
 
   const handleIncrease = (name: string, id: string) => {
-    addToCart(name);
+    const item = items.find((cartItem) => cartItem.id === id);
+    addToCart(name, item?.source || 'store', item?.barcode, item?.price);
+    setBouncingItemId(id);
+    setTimeout(() => setBouncingItemId(null), 350);
+  };
+
+  const handleSetQuantity = (id: string, quantity: number) => {
+    setItemQuantity(id, quantity);
     setBouncingItemId(id);
     setTimeout(() => setBouncingItemId(null), 350);
   };
@@ -108,6 +117,21 @@ export const CartDrawer: React.FC = () => {
     try { navigator.vibrate?.(25); } catch {}
     removeFromCart(id);
   };
+
+  const cartStockIssues = useMemo<StockIssue[]>(() => {
+    return items
+      .map((item) => {
+        const matchedProduct = cachedProducts.find(p => p.barcode === item.barcode || p.name === item.name);
+        return getCartStockIssue(item, matchedProduct);
+      })
+      .filter((issue): issue is StockIssue => issue !== null);
+  }, [items, cachedProducts]);
+
+  const stockValidationMessage = cartStockIssues.length > 0
+    ? formatStockIssueMessage(cartStockIssues[0]!)
+    : undefined;
+
+  const canSubmitOrder = checkout.isFormValid && cartStockIssues.length === 0;
 
   if (!isCartOpen && !checkout.showSuccessModal) return null;
 
@@ -132,6 +156,7 @@ export const CartDrawer: React.FC = () => {
               ) : (
                 <>
                   {step === 'cart' ? (
+                    <div className="space-y-4">
                       <CartItemsList
                         items={items}
                         cachedProducts={cachedProducts}
@@ -139,8 +164,14 @@ export const CartDrawer: React.FC = () => {
                         bouncingItemId={bouncingItemId}
                         handleIncrease={handleIncrease}
                         handleDecrease={handleDecrease}
+                        handleSetQuantity={handleSetQuantity}
                         handleRemove={handleRemove}
                       />
+                      <FreeDeliveryProgressCard
+                        subtotal={checkout.currentSubtotal}
+                        zone={checkout.deliveryZone}
+                      />
+                    </div>
                   ) : (
                     <div className="animate-fade-in space-y-6">
                       <CheckoutFormFields
@@ -163,6 +194,11 @@ export const CartDrawer: React.FC = () => {
                         setDeliveryZone={checkout.setDeliveryZone}
                         qualifiesForFree={checkout.qualifiesForFree}
                       />
+                      <FreeDeliveryProgressCard
+                        subtotal={checkout.currentSubtotal}
+                        zone={checkout.deliveryZone}
+                        isMinimal={true}
+                      />
                       <TotalsBreakdownCard
                         currentSubtotal={checkout.currentSubtotal}
                         totalSavings={checkout.totalSavings}
@@ -184,10 +220,18 @@ export const CartDrawer: React.FC = () => {
             {items.length > 0 && (
               <CartFooter
                 isFormValid={checkout.isFormValid}
+                canSubmitOrder={canSubmitOrder}
+                validationMessage={stockValidationMessage}
                 submitting={checkout.submitting}
                 submitResult={checkout.submitResult}
                 handleSendOrder={checkout.handleSendOrder}
-                handleSubmitOrder={() => checkout.handleSubmitOrder(() => setIsCartOpen(false))}
+                handleSubmitOrder={() => {
+                  if (cartStockIssues.length > 0) {
+                    alert(`راجع الكميات قبل إرسال الطلب:\n\n${cartStockIssues.map(issue => `• ${formatStockIssueMessage(issue)}`).join('\n')}`);
+                    return;
+                  }
+                  checkout.handleSubmitOrder(() => setIsCartOpen(false));
+                }}
                 showReceipt={showReceipt}
                 setShowReceipt={setShowReceipt}
                 step={step}

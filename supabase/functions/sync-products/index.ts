@@ -13,6 +13,7 @@ interface InventoryProduct {
   is_active: boolean;
   unit: string;
   min_stock: number;
+  is_stock_tracked?: boolean;
 }
 
 interface StockSummary {
@@ -86,6 +87,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // 5. Prepare upsert data
+    const syncedAt = new Date().toISOString();
     const productsToUpsert = (inventoryProducts as any[]).map((p) => {
       const stockQty = stockMap.get(p.barcode) ?? 0;
       const isBakery = (p.category ?? '') === 'مخبوزات';
@@ -99,9 +101,11 @@ Deno.serve(async (req: Request) => {
         image_url: p.image_url,
         is_active: p.is_active,
         stock_status: isAlwaysAvailable ? 'available' : (stockQty > 0 ? 'available' : 'out_of_stock'),
+        stock_quantity: isAlwaysAvailable ? null : stockQty,
+        stock_updated_at: syncedAt,
         unit: p.unit ?? 'piece',
         min_stock: p.min_stock ?? 0,
-        last_synced: new Date().toISOString(),
+        last_synced: syncedAt,
       };
     });
 
@@ -132,6 +136,8 @@ Deno.serve(async (req: Request) => {
       if (p.barcode.startsWith('PKG-')) {
         const stock = pkgMinStock.get(p.barcode) ?? 0;
         p.stock_status = stock > 0 ? 'available' : 'out_of_stock';
+        p.stock_quantity = stock;
+        p.stock_updated_at = syncedAt;
       }
     }
 

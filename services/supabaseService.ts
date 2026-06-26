@@ -25,6 +25,8 @@ export interface Product {
   is_hidden_in_app?: boolean;
   force_out_of_stock?: boolean;
   stock_status?: 'available' | 'out_of_stock';
+  stock_quantity?: number | null;
+  stock_updated_at?: string | null;
   unit?: string;
   popular?: boolean;
   tags?: string[];
@@ -184,6 +186,8 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
         is_hidden_in_app: p.is_hidden_in_app,
         force_out_of_stock: p.force_out_of_stock,
         stock_status: finalStockStatus,
+        stock_quantity: p.stock_quantity === undefined || p.stock_quantity === null ? null : Number(p.stock_quantity),
+        stock_updated_at: p.stock_updated_at,
         unit: p.unit,
         tags: p.tags || [],
         valid_until: p.valid_until,
@@ -385,5 +389,4 @@ export const getYouTubeEmbedId = (url: string): string | null => {
   }
   return null;
 };
-
 

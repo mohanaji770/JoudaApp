@@ -3,6 +3,8 @@ import { ShoppingBag, MessageCircle, FileOutput, Info } from 'lucide-react';
 
 interface CartFooterProps {
   isFormValid: boolean;
+  canSubmitOrder?: boolean;
+  validationMessage?: string;
   submitting: boolean;
   submitResult: { success: boolean; message: string } | null;
   handleSendOrder: () => void;
@@ -15,6 +17,8 @@ interface CartFooterProps {
 
 export const CartFooter: React.FC<CartFooterProps> = ({
   isFormValid,
+  canSubmitOrder = isFormValid,
+  validationMessage,
   submitting,
   submitResult,
   handleSendOrder,
@@ -27,10 +31,10 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 safe-area-bottom mt-auto shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
 
     <div className="px-5 pb-4 space-y-2.5">
-      {!isFormValid && (
+      {(!isFormValid || validationMessage) && (
         <div className="flex items-center gap-2 text-[10px] text-orange-600 bg-orange-50 dark:bg-orange-950/20 p-2 rounded-lg">
           <Info className="w-3 h-3 shrink-0" />
-          <span>لا تنسى تكتب الاسم، الجوال، وتحدد موقع التوصيل</span>
+          <span>{validationMessage || 'لا تنسى تكتب الاسم، الجوال، وتحدد موقع التوصيل'}</span>
         </div>
       )}
 
@@ -58,7 +62,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
             onClick={handleSubmitOrder}
             disabled={submitting}
             className={`w-full text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-lg shadow-lg ${
-              !isFormValid
+              !canSubmitOrder
                 ? 'bg-gray-400 dark:bg-gray-700 cursor-pointer'
                 : 'bg-brand-600 hover:bg-brand-700 shadow-brand-200 dark:shadow-none'
             }`}
@@ -72,7 +76,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={handleSendOrder}
-              disabled={!isFormValid || submitting}
+              disabled={!canSubmitOrder || submitting}
               className="py-2 text-[12px] text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               <MessageCircle className="w-4 h-4" />
@@ -83,10 +87,10 @@ export const CartFooter: React.FC<CartFooterProps> = ({
 
             <button
               onClick={() => {
-                if (!isFormValid) return;
+                if (!canSubmitOrder) return;
                 setShowReceipt(true);
               }}
-              disabled={!isFormValid || submitting}
+              disabled={!canSubmitOrder || submitting}
               className="py-2 text-[12px] text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               <FileOutput className="w-4 h-4" />

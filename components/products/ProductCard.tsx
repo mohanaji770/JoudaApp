@@ -3,6 +3,7 @@ import { Plus, Minus, ShoppingBag, Cake, Check, Heart, Sparkles, Gift, BadgeChec
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import heartAnimation from '../../public/system-regular-48-favorite-heart-morph-select.json';
 import { Product } from '../../services/supabaseService';
+import { canAddQuantity, getLowStockLabel } from '../../utils/stockUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -60,6 +61,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isAdded = justAdded === product.name;
   const liked = isFavorite(product.id);
   const isPackage = product.barcode.startsWith('PKG-') || product.category === 'عروض وبكجات';
+  const canIncrease = canAddQuantity(product, quantity);
+  const lowStockLabel = getLowStockLabel(product);
 
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   const isFirstRender = useRef(true);
@@ -120,6 +123,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {isPackage && product.bundle_items && product.bundle_items.length > 0 && (
             <span className="bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-gray-700/50">
               {product.bundle_items.length} منتجات
+            </span>
+          )}
+          {lowStockLabel && (
+            <span className="bg-orange-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border border-orange-400/30">
+              {lowStockLabel}
             </span>
           )}
         </div>
@@ -222,8 +230,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             >
               <button 
                 type="button"
-                onClick={() => handleAddToCart(product, viewMode)} 
-                className="w-8 h-8 flex items-center justify-center text-brand-600 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-r-full transition-colors"
+                onClick={() => canIncrease && handleAddToCart(product, viewMode)} 
+                disabled={!canIncrease}
+                className={`w-8 h-8 flex items-center justify-center rounded-r-full transition-colors ${
+                  canIncrease
+                    ? 'text-brand-600 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                    : 'text-gray-400 cursor-not-allowed'
+                }`}
+                title={canIncrease ? 'زيادة الكمية' : 'وصلت للكمية المتاحة'}
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -255,12 +269,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 type="button"
                 onClick={(e) => { 
                   e.stopPropagation(); 
-                  handleAddToCart(product, viewMode); 
+                  if (canIncrease) handleAddToCart(product, viewMode); 
                 }}
+                disabled={!canIncrease}
                 className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 shrink-0 border ${
                   isAdded 
                     ? 'bg-green-500 text-white border-green-500 scale-110' 
-                    : 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 border-gray-200 dark:border-gray-700 hover:scale-105 hover:border-brand-600 dark:hover:border-brand-400'
+                    : canIncrease
+                      ? 'bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 border-gray-200 dark:border-gray-700 hover:scale-105 hover:border-brand-600 dark:hover:border-brand-400'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 cursor-not-allowed'
                 }`}
               >
                 {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}

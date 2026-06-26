@@ -20,6 +20,7 @@ interface CartContextType {
   addMultipleToCart: (names: string[], source?: 'store' | 'bakery') => void;
   decreaseQuantity: (id: string) => void;
   decreaseQuantityByName: (name: string) => void;
+  setItemQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   isCartOpen: boolean;
@@ -185,6 +186,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         return item;
       }).filter(item => item.quantity > 0);
+    });
+  };
+
+  const setItemQuantity = (id: string, quantity: number) => {
+    const normalizedQuantity = Math.max(0, Math.floor(quantity));
+    setItems((prev) => {
+      if (normalizedQuantity === 0) {
+        return prev.filter((item) => item.id !== id);
+      }
+
+      return prev.map((item) => (
+        item.id === id ? { ...item, quantity: normalizedQuantity } : item
+      ));
     });
   };
 
@@ -362,6 +376,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         addMultipleToCart,
         decreaseQuantity,
         decreaseQuantityByName,
+        setItemQuantity,
         removeFromCart,
         clearCart,
         isCartOpen,
