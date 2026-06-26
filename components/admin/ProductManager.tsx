@@ -64,8 +64,16 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
   const handleSaveProperties = async (product: Product, updates: any) => {
     setIsSaving(true);
     try {
+      const inventoryUpdates: { category?: string; is_stock_tracked?: boolean } = {};
       if (updates.category && updates.category !== product.category) {
-        await AdminProductService.updateCashierCategory(product.barcode, updates.category);
+        inventoryUpdates.category = updates.category;
+      }
+      if (typeof updates.is_stock_tracked === 'boolean' && updates.is_stock_tracked !== product.is_stock_tracked) {
+        inventoryUpdates.is_stock_tracked = updates.is_stock_tracked;
+      }
+
+      if (Object.keys(inventoryUpdates).length > 0) {
+        await AdminProductService.updateInventoryProduct(product.barcode, inventoryUpdates);
       }
       
       await AdminProductService.updateProductProperties(product.barcode, updates);

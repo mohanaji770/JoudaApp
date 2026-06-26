@@ -85,6 +85,8 @@ Deno.serve(async (req: Request) => {
         stockMap.set(row.product_barcode, row.current_stock ?? 0);
       });
     }
+    const inventoryProductMap = new Map<string, any>();
+    (inventoryProducts as any[]).forEach((p) => inventoryProductMap.set(p.barcode, p));
 
     // 5. Prepare upsert data
     const syncedAt = new Date().toISOString();
@@ -100,6 +102,7 @@ Deno.serve(async (req: Request) => {
         category: p.category ?? 'عام',
         image_url: p.image_url,
         is_active: p.is_active,
+        is_stock_tracked: p.is_stock_tracked !== false,
         stock_status: isAlwaysAvailable ? 'available' : (stockQty > 0 ? 'available' : 'out_of_stock'),
         stock_quantity: isAlwaysAvailable ? null : stockQty,
         stock_updated_at: syncedAt,
@@ -119,8 +122,16 @@ Deno.serve(async (req: Request) => {
       .from('package_items')
       .select('package_barcode, product_barcode, quantity');
 
+    const packageBarcodesWithItems = new Set<string>();
+    const packagesWithTrackedComponents = new Set<string>();
     const pkgMinStock = new Map<string, number>();
     for (const pi of packageItems || []) {
+      packageBarcodesWithItems.add(pi.package_barcode);
+      const component = inventoryProductMap.get(pi.product_barcode);
+      const componentIsAlwaysAvailable = component?.is_stock_tracked === false || component?.category === 'مخبوزات';
+      if (componentIsAlwaysAvailable) continue;
+
+      packagesWithTrackedComponents.add(pi.package_barcode);
       const compStock = stockMap.get(pi.product_barcode) ?? 0;
       const compQty = pi.quantity;
       const maxPackages = Math.floor(compStock / compQty);
@@ -134,6 +145,13 @@ Deno.serve(async (req: Request) => {
     // Update productsToUpsert for packages
     for (const p of productsToUpsert) {
       if (p.barcode.startsWith('PKG-')) {
+        if (packageBarcodesWithItems.has(p.barcode) && !packagesWithTrackedComponents.has(p.barcode)) {
+          p.stock_status = 'available';
+          p.stock_quantity = null;
+          p.stock_updated_at = syncedAt;
+          continue;
+        }
+
         const stock = pkgMinStock.get(p.barcode) ?? 0;
         p.stock_status = stock > 0 ? 'available' : 'out_of_stock';
         p.stock_quantity = stock;

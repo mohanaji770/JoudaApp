@@ -124,7 +124,7 @@ async function processPackagesAndExpiry(payload: OrderPayload, joudaClient: Supa
   ];
 
   const { data: invProducts } = allBarcodesToQuery.length > 0
-    ? await inventoryClient.from('products').select('barcode, track_expiry').in('barcode', allBarcodesToQuery).eq('is_active', true)
+    ? await inventoryClient.from('products').select('barcode, category, track_expiry, is_stock_tracked').in('barcode', allBarcodesToQuery).eq('is_active', true)
     : { data: [] };
 
   const barcodesWithExpiry = (invProducts || []).filter(p => p.track_expiry).map(p => p.barcode);
@@ -179,7 +179,7 @@ async function processPackagesAndExpiry(payload: OrderPayload, joudaClient: Supa
     }
   }
 
-  return { rpcItems, packageDiscount, packageMappings, baseProducts };
+  return { rpcItems, packageDiscount, packageMappings, baseProducts, invProducts: invProducts || [] };
 }
 
 async function createInventoryQuotation(payload: OrderPayload, rpcItems: RpcItem[], packageDiscount: number, config: Config, inventoryClient: SupabaseClient, invoiceId: string, idempotencyKey: string, orderNumber: string) {
@@ -361,7 +361,7 @@ Deno.serve(async (req: Request) => {
     } catch {}
 
     // 5. Business Logic: Packages & Expiry
-    const { rpcItems, packageDiscount, packageMappings, baseProducts } = await processPackagesAndExpiry(payload, joudaClient, inventoryClient, config.onlineWarehouseId);
+    const { rpcItems, packageDiscount, packageMappings, baseProducts, invProducts } = await processPackagesAndExpiry(payload, joudaClient, inventoryClient, config.onlineWarehouseId);
     
     // 5.5 Early Stock Validation (Prevent out-of-stock orders from entering as DRAFT)
     const requiredQtyMap = new Map<string, number>();
@@ -379,6 +379,10 @@ Deno.serve(async (req: Request) => {
         .eq('warehouse_id', config.onlineWarehouseId);
 
       for (const [barcode, needed] of requiredQtyMap.entries()) {
+        const invProduct = invProducts.find((p: any) => p.barcode === barcode);
+        const isAlwaysAvailable = invProduct?.is_stock_tracked === false || invProduct?.category === 'مخبوزات';
+        if (isAlwaysAvailable) continue;
+
         const available = stockData?.find(s => s.product_barcode === barcode)?.current_stock || 0;
         if (needed > available) {
           const pName = payload.items.find(i => i.product_barcode === barcode)?.product_name 

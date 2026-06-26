@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Clock, Flame, ChefHat, Sparkles, Heart, Play, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { fetchRecipesFromSupabase, Recipe } from '../../services/supabaseService';
+import {
+  formatRecipeAddSummary,
+  getRecipeRawItems,
+  loadRecipeCartCandidates,
+  planRecipeCartAdditions,
+} from '../../utils/recipeCartUtils';
 
 const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
@@ -24,7 +30,7 @@ export const RecipeOfTheDay: React.FC = () => {
   const touchStartX = useRef(0);
   const mouseStartX = useRef(0);
   const swipedRef = useRef(false);
-  const { addToCart, addToCartWithBarcode, addMultipleToCart } = useCart();
+  const { items: cartItems, addToCartWithBarcode } = useCart();
 
   const recipe = recipes[currentIndex] || null;
 
@@ -147,70 +153,27 @@ export const RecipeOfTheDay: React.FC = () => {
     e.stopPropagation();
     e.preventDefault();
     if (!recipe) return;
-    const rawItems = [];
+    const rawItems = getRecipeRawItems(recipe);
 
-    if (recipe.mainProduct) rawItems.push(recipe.mainProduct);
-
-    if (recipe.bundleItems && recipe.bundleItems.length > 0) {
-      rawItems.push(...recipe.bundleItems);
-    } else if (!recipe.mainProduct) {
+    if (rawItems.length === 0) {
       alert("عذراً، لا توجد منتجات محددة لهذه الوصفة في المتجر حالياً.");
       return;
     }
 
-    if (rawItems.length === 0) return;
-
-    const uniqueProducts = new Map<string, { name: string; barcode: string; price?: string; source?: 'store' | 'bakery' }>();
-
     try {
-      const { getCachedProducts, getCachedProductByBarcode } = await import('../../services/db');
-      const latestProducts = await getCachedProducts();
+      const { candidates, notFound } = await loadRecipeCartCandidates(rawItems);
+      const plan = planRecipeCartAdditions(candidates, cartItems, notFound);
 
-      for (const itemOrBarcode of rawItems) {
-        if (!itemOrBarcode) continue;
-        const trimmed = itemOrBarcode.trim();
-
-        let matched = latestProducts.find(p => p.barcode === trimmed || p.id === trimmed);
-        if (!matched) {
-          matched = latestProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-        }
-
-        if (!matched) {
-          try {
-            const dbProduct = await getCachedProductByBarcode(trimmed);
-            if (dbProduct) matched = dbProduct;
-          } catch { /* ignore */ }
-        }
-
-        if (matched) {
-          uniqueProducts.set(matched.barcode || matched.name, {
-            name: matched.name,
-            barcode: matched.barcode,
-            price: matched.price?.toString(),
-            source: matched.source || 'store'
-          });
-        } else {
-          const isBarcodeFormat = /^[A-Za-z]?\d{3,}$/.test(trimmed);
-          if (!isBarcodeFormat) {
-            uniqueProducts.set(trimmed, {
-              name: trimmed,
-              barcode: '',
-              price: '0',
-              source: 'store' as const
-            });
-          }
-        }
+      for (const product of plan.addable) {
+        addToCartWithBarcode(product);
       }
 
-      for (const product of Array.from(uniqueProducts.values())) {
-        if (product.barcode) {
-          addToCartWithBarcode(product);
-        } else {
-          addToCart(product.name, product.source);
-        }
+      const summary = formatRecipeAddSummary(plan.addable.length, plan.skipped);
+      if (summary) {
+        alert(summary);
       }
     } catch {
-      addMultipleToCart(rawItems, 'store');
+      alert("عذراً، ما قدرنا نتحقق من توفر مقادير الوصفة حالياً.");
     }
   };
 

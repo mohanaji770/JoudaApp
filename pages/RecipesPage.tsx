@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { ChefHat, Clock, Flame, ChevronDown, ChevronUp, ShoppingBag, Plus, AlertCircle, RefreshCw, PackageCheck, PlayCircle, ExternalLink } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { fetchRecipesFromSupabase, Recipe, Product, getYouTubeEmbedId } from '../services/supabaseService';
+import {
+  formatRecipeAddSummary,
+  getRecipeRawItems,
+  loadRecipeCartCandidates,
+  planRecipeCartAdditions,
+} from '../utils/recipeCartUtils';
 
 export const RecipesPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { addToCart, addToCartWithBarcode } = useCart();
+  const { items: cartItems, addToCartWithBarcode } = useCart();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -63,73 +69,20 @@ export const RecipesPage: React.FC = () => {
   };
 
   const handleBuyBundle = async (recipe: Recipe) => {
-    const rawItems = [];
-    if (recipe.mainProduct) rawItems.push(recipe.mainProduct);
-    if (recipe.bundleItems && recipe.bundleItems.length > 0) {
-      rawItems.push(...recipe.bundleItems);
-    }
+    const rawItems = getRecipeRawItems(recipe);
     
     if (rawItems.length === 0) return;
 
-    const uniqueProducts = new Map<string, { name: string; barcode: string; price?: string; source?: 'store' | 'bakery' }>();
+    const { candidates, notFound } = await loadRecipeCartCandidates(rawItems, cachedProducts);
+    const plan = planRecipeCartAdditions(candidates, cartItems, notFound);
 
-    let latestProducts = cachedProducts;
-    if (latestProducts.length === 0) {
-      try {
-        const { getCachedProducts } = await import('../services/db');
-        latestProducts = await getCachedProducts();
-      } catch (e) {
-        console.warn("Failed to fetch latest products", e);
-      }
+    for (const product of plan.addable) {
+      addToCartWithBarcode(product);
     }
 
-    for (const itemOrBarcode of rawItems) {
-      if (!itemOrBarcode) continue;
-      const trimmed = itemOrBarcode.trim();
-      
-      let matched = latestProducts.find(p => p.barcode === trimmed || p.id === trimmed);
-      if (!matched) {
-        matched = latestProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-      }
-
-      if (!matched) {
-        try {
-          const { getCachedProductByBarcode } = await import('../services/db');
-          const dbProduct = await getCachedProductByBarcode(trimmed);
-          if (dbProduct) {
-            matched = dbProduct;
-          }
-        } catch (e) {
-          console.warn("Fallback DB lookup failed", e);
-        }
-      }
-
-      if (matched) {
-        uniqueProducts.set(matched.barcode || matched.name, {
-          name: matched.name,
-          barcode: matched.barcode,
-          price: matched.price?.toString(),
-          source: matched.source || 'store'
-        });
-      } else {
-        const isBarcodeFormat = /^[A-Za-z]?\d{3,}$/.test(trimmed);
-        if (!isBarcodeFormat) {
-          uniqueProducts.set(trimmed, {
-            name: trimmed,
-            barcode: '',
-            price: '0',
-            source: 'store'
-          });
-        }
-      }
-    }
-
-    for (const product of Array.from(uniqueProducts.values())) {
-      if (product.barcode) {
-        addToCartWithBarcode(product);
-      } else {
-        addToCart(product.name, product.source);
-      }
+    const summary = formatRecipeAddSummary(plan.addable.length, plan.skipped);
+    if (summary) {
+      alert(summary);
     }
   };
 
@@ -137,39 +90,16 @@ export const RecipesPage: React.FC = () => {
     if (!itemOrBarcode) return;
     const trimmed = itemOrBarcode.trim();
 
-    let matched = cachedProducts.find(p => p.barcode === trimmed || p.id === trimmed);
-    if (!matched) {
-      matched = cachedProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
+    const { candidates, notFound } = await loadRecipeCartCandidates([trimmed], cachedProducts);
+    const plan = planRecipeCartAdditions(candidates, cartItems, notFound);
+
+    for (const product of plan.addable) {
+      addToCartWithBarcode(product);
     }
 
-    if (!matched) {
-      try {
-        const { getCachedProductByBarcode, getCachedProducts } = await import('../services/db');
-        const dbProduct = await getCachedProductByBarcode(trimmed);
-        if (dbProduct) {
-          matched = dbProduct;
-        } else {
-          const allDbProducts = await getCachedProducts();
-          matched = allDbProducts.find(p => p.name.trim().toLowerCase() === trimmed.toLowerCase());
-        }
-      } catch (e) {
-        console.warn("Fallback DB lookup failed", e);
-      }
-    }
-
-    if (matched) {
-      addToCartWithBarcode({
-        name: matched.name,
-        barcode: matched.barcode,
-        price: matched.price?.toString(),
-        source: matched.source || 'store'
-      });
-      return;
-    }
-
-    const isBarcodeFormat = /^[A-Za-z]?\d{3,}$/.test(trimmed);
-    if (!isBarcodeFormat) {
-      addToCart(trimmed);
+    const summary = formatRecipeAddSummary(plan.addable.length, plan.skipped);
+    if (summary) {
+      alert(summary);
     }
   };
 

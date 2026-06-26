@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Star, Gift, EyeOff, XCircle } from 'lucide-react';
+import { Tag, Star, Gift, EyeOff, XCircle, Infinity } from 'lucide-react';
 import { Product } from '../../../services/supabaseService';
 
 export const ProductIndicators: React.FC<{ product: Product }> = ({ product }) => {
@@ -15,6 +15,11 @@ export const ProductIndicators: React.FC<{ product: Product }> = ({ product }) =
       {product.force_out_of_stock && (
         <span className="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
           <XCircle className="w-2.5 h-2.5" /> منتهي
+        </span>
+      )}
+      {product.is_stock_tracked === false && (
+        <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
+          <Infinity className="w-2.5 h-2.5" /> دائم
         </span>
       )}
       {tags.includes('discount') && <span title="خصم"><Tag className="w-3.5 h-3.5 text-red-500" /></span>}

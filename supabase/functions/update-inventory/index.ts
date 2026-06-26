@@ -47,14 +47,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // 3. Parse Payload
-    const { barcode, category } = await req.json();
-    if (!barcode || !category) {
-      return new Response(JSON.stringify({ error: 'Missing barcode or category' }), { 
+    const { barcode, category, is_stock_tracked } = await req.json();
+    const hasCategoryUpdate = typeof category === 'string' && category.trim().length > 0;
+    const hasStockTrackingUpdate = typeof is_stock_tracked === 'boolean';
+
+    if (!barcode || (!hasCategoryUpdate && !hasStockTrackingUpdate)) {
+      return new Response(JSON.stringify({ error: 'Missing barcode or inventory update fields' }), { 
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       });
     }
 
-    // 4. Connect to Inventory Project and Update Category
+    // 4. Connect to Inventory Project and update allowed product fields.
     const invUrl = Deno.env.get('INVENTORY_SUPABASE_URL');
     const invKey = Deno.env.get('INVENTORY_SERVICE_ROLE_KEY');
     
@@ -63,16 +66,20 @@ Deno.serve(async (req: Request) => {
     }
 
     const invClient = createClient(invUrl, invKey);
+    const updatePayload: Record<string, unknown> = {};
+    if (hasCategoryUpdate) updatePayload.category = category.trim();
+    if (hasStockTrackingUpdate) updatePayload.is_stock_tracked = is_stock_tracked;
+
     const { error: updateError } = await invClient
       .from('products')
-      .update({ category })
+      .update(updatePayload)
       .eq('barcode', barcode);
 
     if (updateError) throw updateError;
 
     // Return Success
     return new Response(
-      JSON.stringify({ success: true, message: 'Category updated in inventory' }), 
+      JSON.stringify({ success: true, message: 'Inventory product updated' }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {

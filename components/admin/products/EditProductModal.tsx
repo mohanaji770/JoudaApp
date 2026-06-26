@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Tag, Star, PackageSearch, SlidersHorizontal, CheckCircle2, Fingerprint, Banknote, LayoutGrid } from 'lucide-react';
+import { X, Save, Tag, Star, PackageSearch, SlidersHorizontal, CheckCircle2, Fingerprint, Banknote, LayoutGrid, Infinity } from 'lucide-react';
 import { Product, AppCategory } from '../../../services/supabaseService';
 import { BADGE_OPTIONS } from './constants';
 
@@ -19,6 +19,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
   const [draftCashierCategory, setDraftCashierCategory] = useState<string>(product.category || '');
   const [isHidden, setIsHidden] = useState<boolean>(product.is_hidden_in_app || false);
   const [isOutOfStock, setIsOutOfStock] = useState<boolean>(product.force_out_of_stock || false);
+  const [isAlwaysAvailable, setIsAlwaysAvailable] = useState<boolean>(product.is_stock_tracked === false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -34,9 +35,10 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
     const cashierCatChanged = draftCashierCategory !== (product.category || '');
     const hiddenChanged = isHidden !== (product.is_hidden_in_app || false);
     const outOfStockChanged = isOutOfStock !== (product.force_out_of_stock || false);
+    const alwaysAvailableChanged = isAlwaysAvailable !== (product.is_stock_tracked === false);
     
-    return tagsChanged || descChanged || catChanged || cashierCatChanged || hiddenChanged || outOfStockChanged;
-  }, [draftTags, draftDescription, draftCategory, draftCashierCategory, isHidden, isOutOfStock, product]);
+    return tagsChanged || descChanged || catChanged || cashierCatChanged || hiddenChanged || outOfStockChanged || alwaysAvailableChanged;
+  }, [draftTags, draftDescription, draftCategory, draftCashierCategory, isHidden, isOutOfStock, isAlwaysAvailable, product]);
 
   const handleClose = () => {
     if (hasChanges && !isSaving) {
@@ -62,7 +64,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
       app_category: draftCategory || null,
       category: draftCashierCategory.trim() || 'عام',
       is_hidden_in_app: isHidden,
-      force_out_of_stock: isOutOfStock
+      force_out_of_stock: isOutOfStock,
+      is_stock_tracked: !isAlwaysAvailable
     });
   };
 
@@ -118,7 +121,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 <SlidersHorizontal className="w-4 h-4 text-brand-500" /> ظهور المنتج للعملاء
               </h3>
             </div>
-            <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="p-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 onClick={() => setIsHidden(!isHidden)}
                 className={`w-full p-3.5 rounded-xl border transition-all flex items-center justify-between active:scale-[0.98] ${
@@ -134,7 +137,11 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 </div>
               </button>
               <button
-                onClick={() => setIsOutOfStock(!isOutOfStock)}
+                onClick={() => {
+                  const nextValue = !isOutOfStock;
+                  setIsOutOfStock(nextValue);
+                  if (nextValue) setIsAlwaysAvailable(false);
+                }}
                 className={`w-full p-3.5 rounded-xl border transition-all flex items-center justify-between active:scale-[0.98] ${
                   isOutOfStock ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50' : 'bg-white border-transparent hover:border-gray-100 dark:bg-gray-900 dark:border-transparent'
                 }`}
@@ -145,6 +152,27 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 </div>
                 <div className={`w-11 h-6 rounded-full p-1 transition-colors flex shrink-0 ${isOutOfStock ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                   <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isOutOfStock ? '-translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  const nextValue = !isAlwaysAvailable;
+                  setIsAlwaysAvailable(nextValue);
+                  if (nextValue) setIsOutOfStock(false);
+                }}
+                className={`w-full p-3.5 rounded-xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                  isAlwaysAvailable ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50' : 'bg-white border-transparent hover:border-gray-100 dark:bg-gray-900 dark:border-transparent'
+                }`}
+              >
+                <div className="flex flex-col items-start gap-1">
+                  <span className={`font-bold text-sm flex items-center gap-1 ${isAlwaysAvailable ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Infinity className="w-3.5 h-3.5" />
+                    دائماً متوفر
+                  </span>
+                  <span className="text-[10px] text-gray-500">لا يرتبط بكمية المخزون.</span>
+                </div>
+                <div className={`w-11 h-6 rounded-full p-1 transition-colors flex shrink-0 ${isAlwaysAvailable ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isAlwaysAvailable ? '-translate-x-5' : 'translate-x-0'}`} />
                 </div>
               </button>
             </div>
@@ -262,4 +290,3 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
     </div>
   );
 };
-

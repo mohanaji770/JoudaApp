@@ -36,6 +36,7 @@ export const AdminProductService = {
       category?: string;
       is_hidden_in_app?: boolean;
       force_out_of_stock?: boolean;
+      is_stock_tracked?: boolean;
     }
   ): Promise<void> {
     const { error } = await supabase
@@ -49,17 +50,24 @@ export const AdminProductService = {
   },
 
   /**
-   * Updates the cashier category directly in the Inventory project via Edge Function
+   * Updates inventory-owned product fields via Edge Function
    */
-  async updateCashierCategory(barcode: string, category: string): Promise<void> {
+  async updateInventoryProduct(
+    barcode: string,
+    updates: { category?: string; is_stock_tracked?: boolean }
+  ): Promise<void> {
     const { data, error } = await supabase.functions.invoke('update-inventory', {
-      body: { barcode, category }
+      body: { barcode, ...updates }
     });
     
     if (error) throw error;
     if (data && !data.success) {
       throw new Error(data.error || 'Failed to update inventory category');
     }
+  },
+
+  async updateCashierCategory(barcode: string, category: string): Promise<void> {
+    await this.updateInventoryProduct(barcode, { category });
   },
 
   /**
