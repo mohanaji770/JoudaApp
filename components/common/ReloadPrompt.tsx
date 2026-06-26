@@ -46,11 +46,11 @@ export const ReloadPrompt: React.FC = () => {
         </div>
         
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-          تحديث سريع جاهز! ✨
+          تطبيقك صار أفضل! ✨
         </h2>
         
         <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-          تحديث جديد نزل عشان تشوف أحدث المنتجات والأسعار. بضغطة زر و ثانية واحدة فقط!
+          جهزنا لك تحديث جديد يخلي طلباتك أسهل وأسرع. بضغطة زر وتكون على أحدث نسخة!
         </p>
 
         <div className="flex flex-col gap-3">
@@ -59,7 +59,7 @@ export const ReloadPrompt: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-colors shadow-lg shadow-blue-200 dark:shadow-none active:scale-[0.98]"
           >
             <RefreshCw className="w-5 h-5" />
-            <span className="text-lg">تحديث الصفحة الآن 🚀</span>
+            <span className="text-lg">تحديث الآن 🚀</span>
           </button>
           
           <button
