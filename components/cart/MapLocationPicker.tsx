@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { MapPin, Check, Search, Loader2, Map as MapIcon, AlertTriangle, LocateFixed } from 'lucide-react';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
-import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
+import { calculateDistance, calculateDeliveryFeeDetails } from '../../utils/distanceUtils';
 
 // Custom iOS-like Map Pin
 const iosPinIcon = L.divIcon({

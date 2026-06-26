@@ -2,8 +2,8 @@ import React, { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
-import { CartDrawer } from '../CartDrawer';
-import { CartFloatingButton } from '../CartFloatingButton';
+import { CartDrawer } from '../cart/CartDrawer';
+import { CartFloatingButton } from '../cart/CartFloatingButton';
 
 import { InstallPrompt } from '../ui/InstallPrompt';
 import { useCart } from '../../contexts/CartContext';

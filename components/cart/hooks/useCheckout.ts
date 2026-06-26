@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
-import { calculateDistance, calculateDeliveryFeeDetails } from '../utils/distanceUtils';
+import { supabase } from '../../../services/supabaseClient';
+import { calculateDistance, calculateDeliveryFeeDetails } from '../../../utils/distanceUtils';
 
 export const useCheckout = (
   items: any[], 

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
+import { ArrowRight } from 'lucide-react';
+import { useCart } from '../../contexts/CartContext';
 
 export const CartFloatingButton: React.FC = () => {
   const { totalItems, setIsCartOpen } = useCart();

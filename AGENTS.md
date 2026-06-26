@@ -1,351 +1,331 @@
-# AGENTS.md — Jouda System Reference
+# AGENTS.md - Jouda System Reference
 
-> المرجِع التقني الوحيد لأي Agent أو مطور يعدّل على النظام.
-> اقرأه بالكامل قبل أي تعديل — وحدثه بعد كل تغيير جوهري.
+> المرجع السريع لأي Agent أو مطور يعدل على Jouda.
+> اقرأه قبل التعديل، وحدثه بعد أي تغيير جوهري في البنية أو التدفق أو الأمان.
 
----
-
-## 1. هيكل المشاريع
-
-النظام يتكون من **مشروعين Supabase**:
-
-| المشروع | الـ Project ID | الوصف |
-|---------|---------------|-------|
-| **JoudaApp** | `unsqyovqzsgmxacrqunh` | تطبيق العميل (React + Capacitor → Android native) + دوال البوت + تزامن المنتجات |
-| **JoudaStockManager (Inventory)** | `tfecwguylsxbfknrxrlx` | نظام المخزون (POS) — الفواتير، المنتجات، المحصلين، المستودعات |
+آخر تحديث: 2026-06-27
 
 ---
 
-## 2. هيكل تطبيق Android (Capacitor)
+## 1. صورة النظام
 
-تم تحويل تطبيق Jouda من PWA إلى تطبيق Android أصلي باستخدام **Capacitor v8**.
+Jouda يتكون من تطبيق عميل React/Capacitor ومشروعين Supabase:
 
-### المكونات المضافة
+| الجزء | المعرف / المسار | الدور |
+|---|---|---|
+| JoudaApp | `unsqyovqzsgmxacrqunh` | تطبيق العميل، لوحة الإدارة، دوال Edge، نسخة المنتجات المعروضة |
+| JoudaStockManager / Inventory | `tfecwguylsxbfknrxrlx` | نظام المخزون/POS: المنتجات، الفواتير، المستودعات، المحصلين |
+| Frontend | `React 18 + Vite + Tailwind` | تطبيق الويب ولوحة الإدارة |
+| Android | `Capacitor 8` | تطبيق Android native مبني من `dist/` |
 
-| الحزمة | الإصدار | الغرض |
-|--------|---------|-------|
-| `@capacitor/core` | ^8.4.1 | أساسيات Capacitor |
-| `@capacitor/cli` | ^8.4.1 | أدوات CLI |
-| `@capacitor/android` | ^8.4.1 | منصة Android |
-| `@capacitor/camera` | ^8.2.0 | كاميرا الهاتف الأصلية |
+تطبيق العميل يقرأ المنتجات والمحتوى من JoudaApp. المخزون النهائي والحجز والفواتير تتم في Inventory.
 
-### إعدادات التطبيق
+---
+
+## 2. هيكل الملفات المهم
+
+```text
+Jouda-main/
+├── App.tsx, pages/, components/, services/, hooks/, utils/
+├── context/folder-structure-guidelines.md
+├── capacitor.config.ts
+├── android/
+├── supabase/
+│   ├── config.toml
+│   ├── migrations/
+│   └── functions/
+│       ├── telegram-bot/
+│       ├── submit-order/
+│       ├── sync-products/
+│       ├── update-inventory/
+│       └── analyze-product/
+└── docs/security/
+```
+
+لا تفترض أن migrations وحدها تمثل حالة قاعدة البيانات الحية. عند تغييرات RLS أو RPC أو Edge Functions، تحقق من Supabase الحي عند الإمكان.
+
+قبل إضافة ملفات frontend جديدة أو نقل ملفات قديمة، راجع `context/folder-structure-guidelines.md`.
+
+---
+
+## 3. Android / Capacitor
+
+الإعدادات الفعلية:
 
 | الخاصية | القيمة |
-|---------|--------|
+|---|---|
 | App ID | `com.joudafood.app` |
 | App Name | `Jouda - جودة` |
+| Web Dir | `dist` |
 | Hostname | `joudafood.com` |
-| Web Dir | `dist/` |
-| السيرفر | `https` |
+| Android Scheme | `https` |
+| AGP | `8.13.2` |
+| Gradle Wrapper | `8.13` |
 
-### هيكل المجلدات
+الحزم المهمة في `package.json`:
 
-```
-Jouda-main/
-├── capacitor.config.ts        ← إعدادات Capacitor
-├── android/                    ← مشروع Android الأصلي
-│   ├── app/
-│   │   ├── build.gradle        ← AGP 8.5.0, Gradle 8.7
-│   │   └── src/main/java/
-│   │       └── com/joudafood/app/MainActivity.java
-│   ├── build.gradle
-│   └── gradle/wrapper/
-│       └── gradle-wrapper.properties
-├── dist/                       ← مخرجات npm run build
-└── package.json                ← Capacitor مضاف في dependencies
-```
+| الحزمة | الدور |
+|---|---|
+| `@capacitor/core`, `@capacitor/cli`, `@capacitor/android` | تشغيل Android native |
+| `@capacitor/camera` | تصوير/اختيار صورة من الجهاز |
+| `@capacitor/geolocation` | الموقع وحساب التوصيل |
 
-### دورة التطوير
+دورة Android:
 
-```
-npm run build           ← بناء Web
-npx cap sync android    ← مزامنة مع Android
-npx cap open android    ← فتح Android Studio
-▶️ Run                   ← تشغيل على الهاتف (USB)
+```bash
+npm run build
+npx cap sync android
+npx cap open android
 ```
 
-### النشر على Google Play
-
-```
-Android Studio → Build → Generate Signed Bundle / APK
-→ اختار Android App Bundle (AAB)
-→ استخدم Keystore (jouda-keystore.jks)
-→ ارفع AAB على Google Play Console
-```
-
-### الكاميرا
-
-تم استبدال `<input type="file">` في Scanner.tsx بـ `@capacitor/camera` لتصوير المنتجات مباشرة بكاميرا الهاتف بدلاً من اختيار الصور من الألبوم.
+`components/ui/Scanner.tsx` يستخدم `Camera.getPhoto()` على المنصة الأصلية مع `CameraSource.Prompt`، ويبقي `<input type="file">` كـ fallback للويب.
 
 ---
 
-## 3. دوال Edge Function
+## 4. Edge Functions
 
-كل الدوال موجوده في `supabase/functions/telegram-bot/` وتُنشر معاً.
+| الدالة | المسار | التوثيق/الحماية | الدور |
+|---|---|---|---|
+| `telegram-bot` | `supabase/functions/telegram-bot/` | `verify_jwt=false`; Telegram يمر بدون JWT، والـ DB/Cron يتطلب `x-webhook-secret` | أوامر وأزرار تيليجرام واستقبال Webhooks |
+| `submit-order` | `supabase/functions/submit-order/index.ts` | `verify_jwt=true` في `supabase/config.toml` | استقبال طلب التطبيق، إنشاء quotation في Inventory، إنشاء `customer_orders` في JoudaApp |
+| `sync-products` | `supabase/functions/sync-products/index.ts` | `verify_jwt=false`; يتحقق من `WEBHOOK_SECRET` | مزامنة منتجات Inventory إلى JoudaApp |
+| `update-inventory` | `supabase/functions/update-inventory/index.ts` | يتحقق من JWT داخل الكود ويقبل فقط `joudafood@gmail.com`; تحقق من JWT deployment setting في Supabase Dashboard | تحديث حقول مملوكة للمخزون مثل `category` و`is_stock_tracked` |
+| `analyze-product` | `supabase/functions/analyze-product/index.ts` | يستخدم `GEMINI_API_KEY` ويقرأ المنتجات النشطة؛ تحقق من JWT deployment setting في Supabase Dashboard | تحليل صورة/اسم منتج للمستخدم |
 
-| الدالة | Slug | JWT | الغرض |
-|--------|------|-----|-------|
-| **telegram-bot** | `telegram-bot` | ❌ `false` | بوت تيليجرام — يستقبل Webhooks + أوامر + أزرار |
-| **submit-order** | `submit-order` | ✅ `true` | استقبال طلبات تطبيق الجوال + إرسال إشعار تيليجرام |
-| **sync-products** | `sync-products` | ❌ `false` | مزامنة منتجات المخزون ← JoudaApp كل 10 دقائق |
+`telegram-bot` فقط هو مجلد متعدد الملفات. بقية الدوال مستقلة في مجلداتها.
 
-### ملفات telegram-bot (Clean Architecture — 10 ملفات)
+ملفات `telegram-bot` الحالية:
 
-**الطبقة الأساسية (Base Layer):**
-
-| الملف | المحتوى |
-|-------|---------|
-| `config.ts` | متغيرات البيئة + ثوابت الحالات + دالة `isAdmin()` |
-| `db.ts` | `getClients()` — مصدر واحد لعملاء Supabase (jouda + inventory) |
-| `telegram.ts` | دوال Telegram API: `sendMessage`, `editMessage`, `answerCallback` |
+| الملف | الدور |
+|---|---|
+| `index.ts` | نقطة الدخول والتوجيه والتحقق |
+| `config.ts` | متغيرات البيئة و`isAdmin()` وخرائط السائقين |
+| `db.ts` | عملاء Supabase لـ JoudaApp وInventory |
+| `telegram.ts` | Telegram API helpers |
 | `format.ts` | `fmtDate()`, `formatPhone()`, `whatsappButton()`, `paymentLabel()` |
-| `workflow.ts` | آلة الحالة (State Machine) لـ `wf_*` و `inv_*` + بناء الأزرار |
-
-**طبقة المعالجات (Handler Layer):**
-
-| الملف | المحتوى |
-|-------|---------|
-| `commands.ts` | 3 أوامر نصية: `/help`, `/orders`, `/status` |
-| `wf-callbacks.ts` | معالج أزرار طلبات التطبيق (`wf_*`): approve, reject, reserve, prepare, deliver, paid, deposit, cancel |
-| `inv-callbacks.ts` | معالج أزرار فواتير POS (`inv_*`): reserve, prepare, deliver, paid, deposit, reverse |
-| `incoming.ts` | استقبال فواتير POS من المخزون + إرسالها للمجموعة |
-
-**طبقة التوجيه (Router Layer):**
-
-| الملف | المحتوى |
-|-------|---------|
-| `index.ts` | نقطة الدخول — Auth + Route فقط (لا يحتوي على business logic) |
+| `workflow.ts` | State machines وأزرار `wf_*` و`inv_*` |
+| `commands.ts` | `/help`, `/orders`, `/status` |
+| `wf-callbacks.ts` | أزرار طلبات التطبيق |
+| `inv-callbacks.ts` | أزرار فواتير POS |
+| `incoming.ts` | استقبال فواتير Inventory الجديدة |
+| `confirmations.ts` | تأكيد الإجراءات الحساسة |
 
 ---
 
-## 4. تدفق البيانات
+## 5. تدفقات العمل
 
-### المسار A — فاتورة POS (مخزون)
+### فاتورة POS من Inventory
 
-```
-نظام POS → Inventory (invoices INSERT)
-    → Database Webhook (pg_net, x-webhook-secret)
-    → telegram-bot (handleNewInvoice)
-    → customer_orders INSERT (status=submitted)
-    → إرسال للمجموعة مع inv_* أزرار
-```
-
-### المسار B — طلب تطبيق جوده
-
-```
-تطبيق الجوال → submit-order (JWT)
-    → Inventory (create_quotation RPC) — حجز مخزون
-    → JoudaApp (customer_orders INSERT — service_role)
-    → إشعار تيليجرام للمدير فقط (مع wf_approve_ زر)
+```text
+Inventory invoices INSERT
+→ Database Webhook / pg_net مع x-webhook-secret
+→ telegram-bot handleNewInvoice
+→ customer_orders في JoudaApp
+→ رسالة تيليجرام للمجموعة مع أزرار inv_*
 ```
 
-### المسار C — اعتماد المدير للطلب
+### طلب تطبيق Jouda
 
-```
-مدير يضغط "اعتماد الطلب" (wf_approve_)
-    → تحديث status = confirmed
-    → إرسال الطلب للمجموعة مع wf_* أزرار (حجز، تجهيز، توصيل...)
+```text
+Frontend → submit-order
+→ Inventory RPC: create_quotation
+→ JoudaApp: customer_orders + order_items باستخدام service_role
+→ إشعار تيليجرام للمدير مع wf_approve_
 ```
 
-### المسار D — مزامنة المنتجات
+### اعتماد الطلب
 
+```text
+Admin يضغط wf_approve_
+→ status = confirmed
+→ إرسال الطلب للمجموعة مع أزرار wf_*
 ```
-pg_cron (كل 10 دقائق) → net.http_post
-    → sync-products (WEBHOOK_SECRET)
-    → Inventory: products + product_stock_summary
-    → JoudaApp: products upsert + stock_quantity + sync_logs INSERT
+
+### مزامنة المنتجات
+
+```text
+pg_cron / net.http_post
+→ sync-products مع WEBHOOK_SECRET
+→ قراءة Inventory products + product_stock_summary
+→ upsert في JoudaApp products
+→ كتابة sync_logs
 ```
 
 ---
 
-## 5. قاعدة البيانات (JoudaApp)
+## 6. قاعدة البيانات وRLS
 
-### جداول + RLS
+### JoudaApp
 
-| الجدول | RLS | من يقرأ | من يكتب |
-|--------|-----|---------|---------|
-| `app_settings` | ✅ | service_role فقط | service_role فقط |
-| `app_settings_public` (view) | ✅ | anon, authenticated (صيانة فقط) | — |
-| `customer_orders` | ✅ | service_role فقط | service_role فقط |
-| `order_items` | ✅ | service_role فقط | service_role فقط |
-| `products` | ✅ | anon, authenticated (is_active=true) | service_role فقط |
-| `sync_logs` | ✅ | service_role فقط | service_role فقط |
-| `recipes, articles, banners, faq` | ✅ | عامة | service_role فقط |
+| الجدول | القراءة | الكتابة الحالية المتوقعة |
+|---|---|---|
+| `products` | عامة للمنتجات النشطة | لوحة الإدارة/الدوال حسب RLS الحي، و`sync-products` عبر service_role |
+| `package_items` | عامة للقراءة | لوحة البكجات و`submit-order`/`sync-products` تعتمد عليه؛ تحقق من RLS الحي قبل تغييره |
+| `app_categories` | عامة/لوحة الإدارة حسب RLS الحي | لوحة الإدارة تستخدمه لإدارة تصنيفات التطبيق |
+| `customer_orders` | service_role، وبعض سياسات قراءة العميل بالهاتف | `submit-order` و`telegram-bot` عبر service_role |
+| `order_items` | service_role، وبعض سياسات قراءة العميل بالهاتف | `submit-order` عبر service_role |
+| `app_settings` | service_role/RPC إداري | RPC إداري |
+| `app_settings_public` | `anon`, `authenticated` | View فقط |
+| `recipes`, `articles`, `banners`, `faq` | عامة | لوحة الإدارة تتوقع كتابة مستخدم authenticated حسب إعدادات RLS الحية |
+| `sync_logs` | service_role وauthenticated للوحة الإدارة | `sync-products` عبر service_role |
 
-### ملاحظات
-- **(جديد 2026-06-06)** تم استبدال نظام `admin_pin` القديم بنظام تسجيل دخول معياري (Supabase Auth). 
-- **(جديد 2026-06-26)** `products.stock_quantity` نسخة قراءة فقط من مخزون Inventory لعرض الكمية المتاحة في الواجهة؛ القيمة `NULL` تعني منتج غير محدود/غير متتبع، ولا تُستخدم للحجز النهائي.
-- **(جديد 2026-06-26)** خيار "دائماً متوفر" في خصائص المنتجات يحدّث `Inventory.products.is_stock_tracked=false` عبر `update-inventory`، ثم تنعكس القيمة إلى JoudaApp عبر `sync-products`.
-- الجداول المتعلقة بالمحتوى (المنتجات، الوصفات، إلخ) تسمح بالتعديل لأي مستخدم يمتلك Token ومسجل دخوله (`authenticated`).
-- لا تستخدم `anon key` في دوال Edge Function للكتابة — دائماً `service_role`.
+مهم: لوحة الإدارة الحالية تستخدم Supabase Auth (`signInWithPassword`). خدمات الإدارة في `services/admin/` تكتب مباشرة إلى جداول المحتوى والمنتجات والبكجات والتصنيفات، وتستدعي `update-inventory` لتحديث Inventory. لا تعد إلى نظام `admin_pin` كمسار رئيسي، حتى لو بقيت migrations قديمة تحتوي RPCs مبنية عليه.
+
+الكود الحالي يعتمد على live schema/RLS قد لا يكون ممثلاً بالكامل في migrations الموجودة. قبل تعديل Admin Services أو RLS، تحقق من Supabase الحي.
+
+حقول منتجات مستخدمة في الواجهة ولوحة الإدارة:
+
+| الحقل | الدور |
+|---|---|
+| `app_category` | تصنيف العرض داخل التطبيق، وقد يختلف عن تصنيف Inventory |
+| `is_hidden_in_app` | إخفاء المنتج من واجهة العميل |
+| `force_out_of_stock` | إجبار المنتج يظهر غير متوفر في التطبيق |
+| `valid_until` | تاريخ انتهاء عروض/بكجات |
+| `tags` | شارات واجهة مثل خصم، الأكثر مبيعاً، هدية |
+
+الصور الإدارية ترفع إلى bucket اسمه `public-assets`.
+
+### Inventory
+
+Inventory هو مصدر الحقيقة للمخزون والحجز. `products.stock_quantity` في JoudaApp نسخة عرض فقط، ولا يعتمد عليها للحجز النهائي.
+
+`products.stock_quantity = NULL` يعني منتج غير محدود/غير متتبع في واجهة التطبيق.
+
+خيار "دائماً متوفر" يغيّر `Inventory.products.is_stock_tracked=false` عبر `update-inventory`، ثم ينعكس إلى JoudaApp عبر `sync-products`.
 
 ---
 
-## 6. قواعد العمل (Business Logic)
+## 7. قواعد العمل
+
+### Workflow طلبات التطبيق `wf_*`
+
+```text
+submitted → approve → confirmed → reserve → reserved → prepare → preparing
+          → reject  → cancelled                                → deliver → delivered
+                                                                          → paid → deposited
+```
+
+الإلغاء متاح من `confirmed`, `reserved`, `preparing`. العكس الإداري متاح بعد التسليم/الدفع/الإيداع حسب `workflow.ts`.
+
+### Workflow فواتير POS `inv_*`
+
+```text
+pending → reserve → prepare → deliver → paid → deposit
+```
+
+العكس `reverse` إداري فقط من المراحل بعد `reserve`.
 
 ### حسابات المحصلين
-- المبلغ = `subtotal` — `discount` (بدون delivery_fee)
-- الفواتير المضمنة: `status = POSTED` فقط، `is_voided = false`
-- يُستبعد: `role = admin` أو `name = Manager` من تقارير المحصلين
-- الكاش فقط (`payment_method = CASH`)
 
-### تسلسل Workflow لفواتير POS (inv_*)
-
-```
-pending → حجز reserve → تجهيز prepare → توصيل deliver → استلام paid → ايداع deposit
-                 ↘ عكس reverse (مدير فقط)
-```
-
-### تسلسل Workflow لطلبات التطبيق (wf_*)
-
-```
-submitted → اعتماد (approve) confirmed → حجز reserved → تجهيز preparing → توصيل delivered → استلام paid → ايداع deposited
-           ↘ رفض (reject) cancelled
-```
-
-### الحالات الخاصة
-- الإيداع والعكس: مدير فقط
-- العكس: يرجع المخزون ويلغي القيد المالي
-- تحويل التسعيرة لفاتورة: `convert_quotation_to_invoice` RPC (خصم مخزون)
+- المبلغ = `subtotal - discount` بدون `delivery_fee`.
+- الفواتير المضمنة: `status = POSTED` و`is_voided = false`.
+- يستبعد `role = admin` أو `name = Manager`.
+- الكاش فقط: `payment_method = CASH`.
 
 ---
 
-## 7. اتفاقيات الكود
+## 8. اتفاقيات الكود
 
-### عام
-- TypeScript + Deno runtime (Supabase Edge Functions)
-- المكتبات: `jsr:@supabase/supabase-js@2`
-- parse_mode: `HTML` (تيليجرام)
+- Frontend: TypeScript + React + Vite.
+- Edge Functions: TypeScript على Deno.
+- Supabase JS في الدوال: `jsr:@supabase/supabase-js@2`.
+- Telegram `parse_mode`: HTML.
+- رسائل تيليجرام بالعربية.
+- استخدم `fmtDate()` من `supabase/functions/telegram-bot/format.ts` للتواريخ داخل البوت.
+- لا تستخدم `toLocaleString('ar-SA')` للتواريخ لأنه قد ينتج تاريخ هجري.
+- استخدام `toLocaleString()` للأرقام فقط مقبول.
 
-### رسائل تيليجرام
-- اللغة: العربية
-- التنسيق: `<b>غامق</b>`, `<code>كود</code>`, `<i>مائل</i>`
-- التواريخ: صيغة 12 ساعة ميلادي — `2026-05-22 5:30 م`
-- دالة التاريخ: `fmtDate()` في `utils.ts` — تستخدم في كل النصوص
-- لا تستخدم `toLocaleString('ar-SA')` أبداً — ينتج تاريخ هجري
+Callback data:
 
-### صيغ Callback Data
-| النوع | الصيغة | مثال |
-|-------|--------|------|
-| فواتير POS | `inv_{action}_{invoiceId}` | `inv_reserve_INV-JRF-2026-000056` |
-| فريق العمل | `wf_{action}_{orderId}` | `wf_prepare_uuid-here` |
-| طلبات قديم | `order_{newStatus}_{orderId}` | `order_confirmed_uuid-here` |
+| النوع | الصيغة |
+|---|---|
+| POS | `inv_{action}_{invoiceId}` |
+| طلبات التطبيق | `wf_{action}_{orderId}` |
+| قديم | `order_{newStatus}_{orderId}` |
 
-**حدود callback_data**: ماكس 64 حرف. لو زاد الطول → `BUTTON_DATA_INVALID`.
+حد Telegram: `callback_data` لا يتجاوز 64 حرفاً، وإلا يظهر `BUTTON_DATA_INVALID`.
 
-### أزرار الكيبورد
-- فواتير POS: كل زر في صف لحاله (6 صفوف)
-- طلبات التطبيق (فريق): كل زر في صف لحاله (6 صفوف)
-- أزرار الاعتماد: زرّين في صف واحد (اعتماد + رفض)
+أزرار العمل لفواتير POS وطلبات التطبيق تكون غالباً كل زر في صف مستقل. أزرار الاعتماد/الرفض يمكن أن تكون في صف واحد.
 
 ---
 
-## 8. متغيرات البيئة المطلوبة
+## 9. متغيرات البيئة
 
-### telegram-bot + sync-products
+### Frontend / Vite
 
-| المتغير | الغرض |
-|---------|-------|
-| `TELEGRAM_BOT_TOKEN` | توكن بوت تيليجرام |
-| `TELEGRAM_ADMIN_CHAT_ID` | أرقام المديرين (مفصولة بفاصلة) |
-| `TELEGRAM_GROUP_CHAT_ID` | أرقام المجموعات (مفصولة بفاصلة) |
-| `SUPABASE_URL` | رابط JoudaApp |
-| `SUPABASE_SERVICE_ROLE_KEY` | مفتاح service_role لـ JoudaApp |
-| `INVENTORY_SUPABASE_URL` | رابط مشروع المخزون |
-| `INVENTORY_SERVICE_ROLE_KEY` | مفتاح service_role للمخزون |
-| `SYSTEM_USER_UUID` | UUID المستخدم الآلي للنظام |
-| `WEBHOOK_SECRET` | كلمة سر للـ Webhook (لغير تيليجرام) |
+| المتغير | الدور |
+|---|---|
+| `VITE_SUPABASE_URL` | رابط JoudaApp |
+| `VITE_SUPABASE_ANON_KEY` | anon key للعميل |
 
-### submit-order (إضافية)
+### Edge Functions
 
-| المتغير | الغرض |
-|---------|-------|
-| `SUPABASE_ANON_KEY` | لقراءة وضع الصيانة |
-| `ONLINE_WAREHOUSE_ID` | معرف المستودع للطلبات الآونلاين |
-
-### تلقائي (لا تحتاج إضافة)
-
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`
-
----
-
-## 9. الأمان
-
-### نموذج التوثيق
-- **تيليجرام**: يرسل `update_id` — يمرر تلقائياً (ما يقدر يرسل JWT)
-- **Webhooks + Cron**: يتحقق من `x-webhook-secret` header
-- **submit-order**: يستخدم JWT (العميل يرسله)
-
-### نظام RLS
-- كل جداول البيانات الحساسة مقيدة بـ `service_role`
-- `anon key` يقرأ فقط المنتجات النشطة والمحتويات العامة
-- **لوحة الإدارة**: محمية بتسجيل الدخول (Supabase Auth). يجب توفر حساب بصلاحية الوصول.
-
-### القيود
-- لا مفاتيح API مخزنة في الكود (كلها `Deno.env.get()`)
-- CORS حالياً `*` — يفضل تقييده لاحقاً
-- المفاتيح السرية مشتركة بين كل الدوال (بيئة Supabase واحدة)
+| المتغير | مستخدم في |
+|---|---|
+| `SUPABASE_URL` | دوال JoudaApp |
+| `SUPABASE_ANON_KEY` | قراءة عامة/تحقق JWT عند الحاجة |
+| `SUPABASE_SERVICE_ROLE_KEY` | كتابة حساسة في JoudaApp |
+| `INVENTORY_SUPABASE_URL` | الاتصال بـ Inventory |
+| `INVENTORY_SERVICE_ROLE_KEY` | عمليات Inventory الحساسة |
+| `WEBHOOK_SECRET` | Cron/DB webhooks مثل `sync-products` و`telegram-bot` |
+| `ALLOWED_ORIGIN` | CORS؛ إذا غاب يرجع الكود إلى `*` |
+| `TELEGRAM_BOT_TOKEN` | بوت تيليجرام |
+| `TELEGRAM_ADMIN_CHAT_ID` | معرفات المديرين، مفصولة بفواصل |
+| `TELEGRAM_GROUP_CHAT_ID` | معرفات المجموعات، مفصولة بفواصل |
+| `TELEGRAM_WEBHOOK_SECRET` | سر اختياري لتيليجرام |
+| `TELEGRAM_DRIVER_MAP` | ربط Telegram user id بمستخدم Inventory |
+| `SYSTEM_USER_UUID` | المستخدم الآلي في Inventory/Jouda |
+| `ONLINE_WAREHOUSE_ID` | مستودع الطلبات الأونلاين |
+| `GEMINI_API_KEY` | تحليل المنتجات في `analyze-product` |
 
 ---
 
-## 10. النشر (Deployment)
+## 10. النشر
 
-| المكون | طريقة النشر |
-|--------|------------|
-| **الواجهة (React)** | GitHub → Vercel (تلقائي) |
-| **تطبيق Android** | Capacitor Build → Google Play Console |
-| **Edge Functions** | Supabase Dashboard (يدوي — نسخ/لصق) |
-| **Database Migrations** | Supabase Dashboard (SQL Editor) |
-| **متغيرات البيئة** | Supabase → Settings → Functions → Secrets |
+| الجزء | طريقة النشر |
+|---|---|
+| Frontend | GitHub ثم Vercel |
+| Android | `npm run build` ثم `npx cap sync android` ثم Android Studio لإنتاج AAB |
+| Edge Functions | Supabase Dashboard أو CLI حسب المتاح |
+| Database | Supabase SQL Editor أو migrations |
+| Secrets | Supabase Dashboard → Functions → Secrets |
 
-### خطوات نشر تحديث Android
-1. عدّل الكود في `Jouda-main/`
-2. `npm run build`
-3. `npx cap sync android`
-4. افتح Android Studio: `npx cap open android`
-5. Build → Generate Signed Bundle / APK → AAB
-6. ارفع الملف على Google Play Console
-7. انتظر المراجعة (ساعات-أيام)
-
-### خطوات نشر Edge Function
-1. ادخل على Supabase Dashboard → Edge Functions
-2. اختار الدالة
-3. استبدل/أضف محتويات الملفات
-4. اضغط Deploy
+عند نشر Edge Function، لا تنس تحديث المتغيرات المرتبطة بها. عند تغيير واجهة Android، شغل build ثم sync قبل فتح Android Studio.
 
 ---
 
-## 11. المشاكل السابقة (لا تكررها)
+## 11. أخطاء سابقة لا تكررها
 
-| المشكلة | السبب | الحل |
-|---------|-------|------|
-| `admin_pin` ظاهر للعامة | RLS كان `USING(true)` على الجدول | تقييد إلى service_role + view |
-| `pg_net` في public schema | تثبيت افتراضي خاطئ | Drop + Create في extensions |
-| `BUTTON_DATA_INVALID` | callback_data > 64 حرف | تقصير الصيغة |
-| زر يختفي مع زر (inv_*) | الأزرار في نفس الصف | كل زر في صف لحاله |
-| "الخطوة غير متاحة" (inv_*) | validNext يستخدم `reserved` و workflow_status `reserve` | توحيد الأسماء |
-| sync-products كود submit-order | نشر خاطئ للدالة | كتابة كود المزامنة الصحيح |
-| sync-products `description` column | العمود موجود في JoudaApp مو Inventory | إزالته من الاستعلام |
-| تواريخ هجرية | `toLocaleString('ar-SA')` | استخدام `fmtDate()` |
-| إشعارات لكل الشاتات | إرسال للمجموعة + المدير | تصفية adminIds فقط |
-| RLS يمنع submit-order | anon key بعد تقييد RLS | تبديل إلى service_role |
-| `WEBHOOK_SECRET` يمنع cron | cron ما يرسل السر | تحديث cron job بإضافة header |
+| الخطأ | القاعدة الحالية |
+|---|---|
+| كشف `admin_pin` أو الاعتماد عليه كحماية رئيسية | الإدارة الحالية عبر Supabase Auth؛ لا تضف مسارات PIN جديدة |
+| استخدام anon key للكتابة الحساسة داخل Edge Functions | استخدم service_role داخل الدوال فقط |
+| `callback_data` أطول من 64 حرف | اختصر الصيغة |
+| تواريخ هجرية في تيليجرام | استخدم `fmtDate()` |
+| إرسال إشعار لكل الشاتات بدل المدير فقط | استخدم `adminIds()` عندما يكون الإشعار للمدير |
+| نسيان `x-webhook-secret` في cron/webhooks | أرسله مع `WEBHOOK_SECRET` |
+| تحديث `stock_quantity` يدوياً كأنه مصدر الحقيقة | مصدر الحقيقة Inventory؛ JoudaApp للعرض |
+| الخلط بين `reserved` و`reserve` | JoudaApp يستخدم `reserved`; Inventory workflow يستخدم `reserve` |
 
 ---
 
-## 12. الإجراءات المعلقة
+## 12. العمل المفتوح
 
-- [x] استبدال نظام `admin_pin` القديم وتسجيل الدخول بتوثيق Supabase Auth وتعديل RLS.
-- [ ] تدقيق أمان مشروع Inventory (RLS، API keys، webhook)
-- [x] تحديث cron job في JoudaApp لإرسال `x-webhook-secret`
-- [x] تقييد CORS إلى Domain التطبيق
-- [ ] إشعارات واتساب مباشرة (خطة مستقبلية)
-- [x] تحويل التطبيق إلى Android Native عبر Capacitor
-- [ ] رفع أول إصدار على Google Play
+- تدقيق أمان Inventory: RLS، المفاتيح، webhooks، RPCs.
+- مراجعة بقايا migrations القديمة المبنية على `admin_pin` وتقرير هل تزال أو تؤرشف.
+- رفع أول إصدار Android إلى Google Play.
+- إشعارات واتساب مباشرة، إن تقرر تنفيذها لاحقاً.
 
 ---
 
-## تحديث الملف
+## 13. قاعدة تحديث هذا الملف
 
-بعد أي تغيير جوهري في النظام، حدّث هذا الملف. آخر تحديث: 2026-06-26.
+حدث هذا الملف عند أي تغيير في:
+
+- بنية الملفات أو الدوال.
+- تدفق الطلبات أو المخزون.
+- RLS أو auth أو secrets.
+- خطوات Android أو النشر.
+- قرارات تمنع تكرار خطأ سابق.
+
+لا تضف تفاصيل تنفيذية صغيرة هنا. ضع التفاصيل الطويلة في `docs/` أو `context/`.

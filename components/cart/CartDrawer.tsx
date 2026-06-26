@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { ReceiptModal } from './modals/ReceiptModal';
-import { SuccessOrderModal } from './modals/SuccessOrderModal';
-import { useScrollLock, useBackButton } from '../hooks';
-import { getCachedProducts } from '../services/db';
-import { useCheckout } from '../hooks/useCheckout';
+import { useCart } from '../../contexts/CartContext';
+import { ReceiptModal } from '../modals/ReceiptModal';
+import { SuccessOrderModal } from '../modals/SuccessOrderModal';
+import { useScrollLock, useBackButton } from '../../hooks';
+import { getCachedProducts } from '../../services/db';
+import { useCheckout } from './hooks/useCheckout';
 
-import { CartHeader } from './cart/CartHeader';
-import { EmptyCartView } from './cart/EmptyCartView';
-import { CartItemsList } from './cart/CartItemsList';
-import { FreeDeliveryProgressCard } from './cart/FreeDeliveryProgressCard';
-import { CheckoutFormFields } from './cart/CheckoutFormFields';
+import { CartHeader } from './CartHeader';
+import { EmptyCartView } from './EmptyCartView';
+import { CartItemsList } from './CartItemsList';
+import { FreeDeliveryProgressCard } from './FreeDeliveryProgressCard';
+import { CheckoutFormFields } from './CheckoutFormFields';
 import { MapLocationPicker } from './MapLocationPicker';
-import { TotalsBreakdownCard } from './cart/TotalsBreakdownCard';
-import { CartFooter } from './cart/CartFooter';
-import { StockIssue, formatStockIssueMessage, getCartStockIssue } from '../utils/stockUtils';
+import { TotalsBreakdownCard } from './TotalsBreakdownCard';
+import { CartFooter } from './CartFooter';
+import { StockIssue, formatStockIssueMessage, getCartStockIssue } from '../../utils/stockUtils';
 
 export const CartDrawer: React.FC = () => {
   const location = useLocation();

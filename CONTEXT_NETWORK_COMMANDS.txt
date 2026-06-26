@@ -1,0 +1,197 @@
+Jouda - Context Network Usage Commands
+======================================
+
+هذا الملف يحتوي عبارات جاهزة تنسخها للـ Agent حتى يستخدم AGENTS.md و context-network بشكل صحيح.
+
+
+1) بداية أي جلسة
+----------------
+
+انسخ هذا قبل أي شغل جديد:
+
+اقرأ AGENTS.md أولاً، ثم اقرأ .context-network.md و context/status.md.
+بعدها اقرأ ملف الدومين المناسب من context/domains حسب المهمة.
+لا تبدأ تعديل قبل ما تلخص لي فهمك لحالة المشروع والملفات التي ستلمسها.
+
+
+صيغة أقوى لو المهمة كبيرة:
+
+ابدأ بتهيئة السياق:
+1. اقرأ AGENTS.md.
+2. اقرأ .context-network.md.
+3. اقرأ context/status.md.
+4. اقرأ context/architecture.md.
+5. اقرأ ملف الدومين المناسب من context/domains.
+ثم اعطني ملخص قصير:
+- ما حالة المشروع الحالية؟
+- ما الملفات المتوقعة للتعديل؟
+- ما المخاطر أو الأشياء التي يجب التحقق منها؟
+
+
+2) قبل أي تعديل في الكود
+------------------------
+
+انسخ هذا قبل السماح بالتعديل:
+
+قبل ما تعدل، اربط المهمة بسياق المشروع:
+- ما القسم المتأثر؟ Frontend، Edge Functions، Android، Database/RLS، Inventory sync؟
+- ما ملفات context التي قرأتها؟
+- هل التغيير يحتاج تحديث AGENTS.md أو context-network؟
+- هل فيه خطر على RLS أو service_role أو secrets أو workflow؟
+بعدها نفذ التعديل.
+
+
+لو التعديل يمس Supabase أو الأمان:
+
+هذه مهمة حساسة. قبل التعديل اقرأ:
+- AGENTS.md
+- context/domains/database-rls.md
+- context/security/security-status.md
+- context/domains/edge-functions.md إذا التعديل يخص الدوال
+لا تعتمد على migrations فقط. وضح لي ما الذي يحتاج تحقق من Supabase الحي.
+
+
+لو التعديل يمس الطلبات أو المخزون:
+
+قبل التعديل اقرأ:
+- AGENTS.md
+- context/domains/inventory-sync.md
+- context/architecture.md
+- context/decisions.md
+تذكر أن Inventory هو مصدر الحقيقة للمخزون، و stock_quantity في JoudaApp للعرض فقط.
+
+
+لو التعديل يمس Android:
+
+قبل التعديل اقرأ:
+- AGENTS.md
+- context/domains/android.md
+- context/processes/deployment.md
+بعد التعديل، إذا كان له أثر على Android، شغل npm run build ثم npx cap sync android.
+
+
+3) بعد أي تعديل مهم
+-------------------
+
+انسخ هذا بعد الانتهاء من تعديل مهم:
+
+راجع هل التغيير يحتاج تحديث AGENTS.md أو context-network.
+إذا نعم:
+- حدّث AGENTS.md للحقائق العامة التي يجب أن يعرفها أي Agent.
+- حدّث context/status.md بحالة العمل والتغييرات الأخيرة.
+- حدّث ملف الدومين المناسب في context/domains إذا تغيّرت علاقة أو workflow أو خطر.
+- حدّث context/decisions.md إذا كان التغيير قراراً معمارياً أو أمنياً مهماً.
+ثم اعطني ملخص ما حدث وما الملفات التي تغيرت.
+
+
+صيغة مختصرة:
+
+حدّث الذاكرة بعد هذا التغيير:
+- AGENTS.md إذا تغيرت حقائق النظام.
+- context/status.md للحالة الحالية.
+- ملف الدومين المناسب في context/domains.
+- context/decisions.md إذا كان فيه قرار مهم.
+
+
+4) عند تسليم المشروع لوكيل جديد
+-------------------------------
+
+انسخ هذا في بداية المحادثة مع أي Agent جديد:
+
+أنت تعمل على مشروع Jouda.
+ابدأ بقراءة الملفات التالية بالترتيب:
+1. AGENTS.md
+2. .context-network.md
+3. context/status.md
+4. context/architecture.md
+5. context/decisions.md
+6. context/glossary.md
+ثم اقرأ ملف الدومين المناسب للمهمة من:
+- context/domains/android.md
+- context/domains/frontend-admin.md
+- context/domains/edge-functions.md
+- context/domains/inventory-sync.md
+- context/domains/database-rls.md
+لا تعتمد على الذاكرة العامة. تحقق من الكود قبل أي تعديل.
+
+
+5) أوامر حسب نوع المهمة
+-----------------------
+
+Frontend/Admin:
+
+اقرأ AGENTS.md و context/domains/frontend-admin.md.
+افهم كيف تستخدم لوحة الإدارة Supabase Auth وخدمات services/admin.
+ثم نفذ المهمة بدون إدخال service_role في frontend.
+
+
+Edge Functions:
+
+اقرأ AGENTS.md و context/domains/edge-functions.md و context/security/security-status.md.
+تأكد من JWT/WEBHOOK_SECRET/CORS/secrets قبل التعديل.
+بعد التعديل وضح هل يحتاج نشر Function أو تحديث secrets.
+
+
+Inventory/Product Sync:
+
+اقرأ AGENTS.md و context/domains/inventory-sync.md و context/decisions.md.
+لا تجعل JoudaApp مصدر الحقيقة للمخزون.
+أي حجز أو خصم مخزون يجب أن يمر عبر Inventory.
+
+
+Database/RLS:
+
+اقرأ AGENTS.md و context/domains/database-rls.md و context/security/security-status.md.
+هذه مهمة حساسة. تحقق من السياسات والـ RPCs الحية إن أمكن.
+لا تضف سياسات عامة بدون سبب واضح.
+
+
+Android:
+
+اقرأ AGENTS.md و context/domains/android.md و context/processes/deployment.md.
+بعد أي تغيير يؤثر على Android استخدم:
+npm run build
+npx cap sync android
+
+
+Security audit:
+
+اقرأ:
+- AGENTS.md
+- context/security/security-status.md
+- context/domains/database-rls.md
+- docs/security/README.md إن وجد
+ثم راجع الملفات ذات العلاقة ولا تكتفي بالملاحظات القديمة.
+
+
+6) أوامر صيانة الذاكرة
+----------------------
+
+استخدم هذا مرة كل فترة:
+
+راجع context-network:
+- هل context/status.md قديم؟
+- هل فيه قرارات جديدة غير موثقة في context/decisions.md؟
+- هل AGENTS.md فيه معلومات خالفت الكود؟
+- هل يوجد دومين ناقص أو ملف context صار غير مفيد؟
+اقترح تحديثات مختصرة ونفذها بعد موافقتي.
+
+
+بعد جلسة طويلة:
+
+اختصر ما تم في هذه الجلسة وحدث context/status.md.
+إذا تغير workflow أو قرار معماري، حدث context/decisions.md والملف المناسب في context/domains.
+
+
+7) قاعدة ذهبية
+--------------
+
+AGENTS.md = الحقائق العامة السريعة التي يحتاجها أي Agent.
+context/status.md = الحالة الحالية وما الذي يجري الآن.
+context/decisions.md = لماذا اخترنا هذا المسار.
+context/domains/* = التفاصيل العملية لكل جزء.
+docs/security/* = تقارير طويلة ومراجعات تفصيلية.
+
+لا تجعل AGENTS.md كبيراً جداً.
+لا تجعل context-network نسخة مكررة من الكود.
+اكتب فقط المعلومات التي ستمنع Agent مستقبلي من تكرار البحث أو ارتكاب خطأ معروف.
