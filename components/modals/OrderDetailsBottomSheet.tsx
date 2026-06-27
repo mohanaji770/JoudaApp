@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Repeat, MessageCircle, FileText, Share2, MapPin, Calendar, CheckCircle2, Clipboard } from 'lucide-react';
+import { X, Repeat, MessageCircle, FileText, Share2, MapPin, Calendar, CheckCircle2, Clipboard, Check } from 'lucide-react';
 import { LiveOrderItem } from '../../services/liveOrderService';
 import { useScrollLock, useBackButton } from '../../hooks';
 
@@ -32,6 +32,121 @@ export const OrderDetailsBottomSheet: React.FC<OrderDetailsBottomSheetProps> = (
   statusInfo
 }) => {
   const isShipping = order.order_type === 'shipping';
+
+  const getTimelineSteps = () => {
+    const isShippingOrder = order.order_type === 'shipping';
+    
+    // Define the sequence of status keys
+    const statusSequence = isShippingOrder
+      ? ['submitted', 'confirmed', 'preparing', 'delivered', 'paid', 'deposited']
+      : ['submitted', 'confirmed', 'reserved', 'preparing', 'delivered', 'paid', 'deposited'];
+
+    // Map each status key to its index
+    const currentStatusIdx = statusSequence.indexOf(order.status);
+
+    // If order is cancelled or failed, we handle it separately
+    const isCancelled = order.status === 'cancelled';
+    const isFailed = order.status === 'failed';
+
+    const formatDateOnlyTime = (isoString: string) => {
+      try {
+        const d = new Date(isoString);
+        let hours = d.getHours();
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+      } catch {
+        return '--:--';
+      }
+    };
+
+    const steps = statusSequence.map((statusKey, idx) => {
+      let isCompleted = false;
+      let isCurrent = false;
+
+      if (!isCancelled && !isFailed) {
+        isCompleted = idx < currentStatusIdx;
+        isCurrent = idx === currentStatusIdx;
+      } else {
+        isCompleted = false;
+        isCurrent = false;
+      }
+
+      // Titles & Explanations mapping
+      let title = '';
+      let explanation = '';
+
+      if (statusKey === 'submitted') {
+        title = 'تم إرسال الطلب';
+        explanation = 'طلبك وصل لفريق جودة وجاري مراجعته';
+      } else if (statusKey === 'confirmed') {
+        title = 'تم تأكيد الطلب';
+        explanation = 'تم اعتماد الطلب وتجهيز الفاتورة';
+      } else if (statusKey === 'reserved') {
+        title = 'استلمه المندوب';
+        explanation = 'المندوب استلم مسؤولية التوصيل وسيبدأ التنسيق قريباً';
+      } else if (statusKey === 'preparing') {
+        title = isShippingOrder ? 'تجهيز الشحنة' : 'قيد التجهيز';
+        explanation = isShippingOrder ? 'جاري تغليف شحنتك وتجهيزها للنقل البري' : 'جاري تجهيز وتغليف منتجاتك الطازجة';
+      } else if (statusKey === 'delivered') {
+        title = isShippingOrder ? 'سُلّمت لشركة الشحن' : 'تم التسليم';
+        explanation = isShippingOrder ? 'سُلّمت الشحنة لشركة النقل البري ومتاحة للاستلام' : 'تم تسليم طلبك بنجاح، صحة وعافية! 💚';
+      } else if (statusKey === 'paid') {
+        title = 'تم استلام المبلغ';
+        explanation = 'تم استلام وسداد قيمة الطلب بنجاح';
+      } else if (statusKey === 'deposited') {
+        title = 'تم الإيداع';
+        explanation = 'تم إيداع المبلغ في حساب المتجر بنجاح';
+      }
+
+      // Time resolution
+      let time = '--:--';
+      if (statusKey === 'submitted') {
+        time = formatDateOnlyTime(order.created_at);
+      } else if (isCurrent && order.workflow_updated_at) {
+        time = formatDateOnlyTime(order.workflow_updated_at);
+      } else if (isCompleted) {
+        time = 'مكتمل';
+      }
+
+      return {
+        statusKey,
+        title,
+        explanation,
+        isCompleted,
+        isCurrent,
+        time,
+        isUpcoming: !isCompleted && !isCurrent
+      };
+    });
+
+    // If cancelled or failed, append a final red node
+    if (isCancelled) {
+      steps.push({
+        statusKey: 'cancelled',
+        title: 'تم إلغاء الطلب 🚫',
+        explanation: 'تم إلغاء هذا الطلب من قبل الإدارة أو بناءً على طلبك',
+        isCompleted: false,
+        isCurrent: true,
+        time: order.workflow_updated_at ? formatDateOnlyTime(order.workflow_updated_at) : '--:--',
+        isUpcoming: false
+      });
+    } else if (isFailed) {
+      steps.push({
+        statusKey: 'failed',
+        title: 'فشل الطلب ⚠️',
+        explanation: 'تعذر تسليم أو إتمام هذا الطلب',
+        isCompleted: false,
+        isCurrent: true,
+        time: order.workflow_updated_at ? formatDateOnlyTime(order.workflow_updated_at) : '--:--',
+        isUpcoming: false
+      });
+    }
+
+    return steps;
+  };
 
   // Lock body scrolling when bottom sheet is open
   useScrollLock(true);
@@ -73,22 +188,92 @@ export const OrderDetailsBottomSheet: React.FC<OrderDetailsBottomSheetProps> = (
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           
-          {/* Status & Delivery Summary Card */}
-          <div className="bg-gray-50 dark:bg-gray-805 p-4 rounded-2xl border border-gray-100 dark:border-gray-800/55 flex flex-col gap-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-550 dark:text-gray-400">حالة الطلب الحالية</span>
+          {/* Status & Delivery Summary Card with Timeline */}
+          <div className="bg-gray-50/50 dark:bg-gray-805/40 p-4 rounded-3xl border border-gray-100 dark:border-gray-800/55 space-y-4">
+            
+            {/* Header: Title and Active Status Pill */}
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-850">
+              <span className="text-xs font-bold text-gray-550 dark:text-gray-400">تتبع مسار الطلب</span>
               <span 
                 style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
-                className="px-3 py-1 rounded-full font-bold text-xs inline-flex items-center justify-center min-w-[75px] text-center"
+                className="px-3 py-1 rounded-full font-black text-[11px] inline-flex items-center gap-1.5 justify-center text-center"
               >
-                {statusInfo.label}
+                {statusInfo.icon}
+                <span>{statusInfo.label}</span>
               </span>
             </div>
+
+            {/* Vertical Timeline */}
+            <div className="relative flex flex-col gap-5 pr-2.5 mr-1.5 overflow-visible">
+              {/* Vertical connecting line */}
+              <div className="absolute right-[9px] top-2.5 bottom-2.5 w-0.5 bg-gray-200 dark:bg-gray-800" />
+              
+              {getTimelineSteps().map((step, idx) => {
+                let bulletClass = '';
+                let bulletIcon = null;
+                let titleClass = '';
+
+                if (step.isCompleted) {
+                  // Green checkmark
+                  bulletClass = 'bg-emerald-500 border-emerald-500 text-white z-10 shadow-sm';
+                  bulletIcon = <Check className="w-3 h-3 stroke-[3]" />;
+                  titleClass = 'text-gray-800 dark:text-gray-200 font-bold';
+                } else if (step.isCurrent) {
+                  // Pulsing active state (Brand red/orange or amber)
+                  const isRedStatus = ['cancelled', 'failed'].includes(step.statusKey);
+                  bulletClass = isRedStatus 
+                    ? 'bg-red-500 border-red-500 text-white z-10 shadow-sm'
+                    : 'bg-amber-500 border-amber-500 text-white z-10 animate-pulse shadow-sm shadow-amber-500/20';
+                  bulletIcon = isRedStatus 
+                    ? <X className="w-3 h-3 stroke-[3]" />
+                    : <div className="w-1.5 h-1.5 bg-white rounded-full" />;
+                  titleClass = isRedStatus
+                    ? 'text-red-650 dark:text-red-400 font-extrabold'
+                    : 'text-amber-600 dark:text-amber-400 font-black';
+                } else {
+                  // Upcoming gray state
+                  bulletClass = 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 z-10';
+                  bulletIcon = <div className="w-1.5 h-1.5 bg-gray-200 dark:bg-gray-750 rounded-full" />;
+                  titleClass = 'text-gray-400 dark:text-gray-650 font-bold';
+                }
+
+                return (
+                  <div key={idx} className="relative flex items-start gap-2 select-none">
+                    {/* Bullet Circle Node */}
+                    <div className={`absolute right-0 top-0.5 w-[20px] h-[20px] rounded-full flex items-center justify-center border-2 transition-all duration-300 ${bulletClass}`}>
+                      {bulletIcon}
+                    </div>
+
+                    {/* Text block (indented to avoid overlapping bullet) */}
+                    <div className="pr-7 flex-1 flex items-start justify-between gap-4">
+                      {/* Left: Title & Description */}
+                      <div className="flex-1 text-right">
+                        <h5 className={`text-xs ${titleClass}`}>
+                          {step.title}
+                        </h5>
+                        {(step.isCompleted || step.isCurrent) && (
+                          <p className="text-[10px] text-gray-450 dark:text-gray-500 font-bold mt-0.5 leading-relaxed">
+                            {step.explanation}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Right: Time / Status text */}
+                      <span className="text-[10px] font-mono font-bold text-gray-400 dark:text-gray-500 shrink-0 mt-0.5">
+                        {step.time}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Address Info Section */}
             {order.customer_address && (
-              <div className="flex items-start gap-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
-                <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <span className="block text-[10px] font-bold text-gray-400 dark:text-gray-500">عنوان التوصيل</span>
+                  <span className="block text-[9px] font-bold text-gray-450 dark:text-gray-500">عنوان التوصيل</span>
                   <span className="text-xs text-gray-700 dark:text-gray-300 font-bold leading-normal block">
                     {order.customer_address}
                   </span>

@@ -31,6 +31,45 @@ function ensureOrderTypeLine(messageText: string, orderType?: string | null): st
   return `${messageText}\n${line}`;
 }
 
+function mapsLinkLine(latitude?: number | null, longitude?: number | null): string {
+  if (!latitude || !longitude) return '';
+  const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+  return `🗺️ <b>موقع العميل:</b> <a href="${url}">فتح في خرائط جوجل</a>`;
+}
+
+function ensureMapsLinkLine(
+  messageText: string,
+  latitude?: number | null,
+  longitude?: number | null,
+): string {
+  const line = mapsLinkLine(latitude, longitude);
+  if (!messageText || !line) return messageText;
+
+  if (messageText.includes('موقع العميل')) {
+    return messageText.replace(/^🗺️[^\n]*موقع العميل[^\n]*$/m, line);
+  }
+
+  const addressLine = /(^📍[^\n]*$)/m;
+  if (addressLine.test(messageText)) {
+    return messageText.replace(addressLine, `$1\n${line}`);
+  }
+
+  return `${messageText}\n${line}`;
+}
+
+function prepareOrderMessageText(
+  messageText: string,
+  orderType?: string | null,
+  latitude?: number | null,
+  longitude?: number | null,
+): string {
+  return ensureMapsLinkLine(
+    ensureOrderTypeLine(messageText, orderType),
+    latitude,
+    longitude,
+  );
+}
+
 function hasReserveTrail(messageText: string): boolean {
   return messageText.includes('استلمت الطلب') || messageText.includes('استلمت مهمة الشحن');
 }
@@ -91,9 +130,14 @@ export async function handleWfCallback(
 
   // ── 1.6 Special action: abort (cancel confirmation) ──
   if (isAbort) {
-    const messageText = callback.message?.text || '';
+    const messageText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
     const restoredButtons = appOrderButtonsForMessage(orderId, order.status, order.order_type, messageText);
-    await handleAbort(token, chatId, callback.id, messageId, callback.message?.text || '', restoredButtons);
+    await handleAbort(token, chatId, callback.id, messageId, messageText, restoredButtons);
     return;
   }
 
@@ -125,7 +169,13 @@ export async function handleWfCallback(
 
   // ── 3.5 Check Confirmation ──
   if (actionDef.requiresConfirmation && !isConfirmed) {
-    await requireConfirmation(token, chatId, callback.id, messageId, callback.message?.text || '', action, orderId, actionDef, 'wf');
+    const messageText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
+    await requireConfirmation(token, chatId, callback.id, messageId, messageText, action, orderId, actionDef, 'wf');
     return;
   }
 
@@ -279,7 +329,12 @@ export async function handleWfCallback(
 
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
-    const originalText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
+    const originalText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
     const hasHeader = originalText.includes('سجل الحركات');
     const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
     const trail = `${headerBlock}\n${actionDisplay.emoji} <b>${actionDisplay.label}</b> (بواسطة: ${userName})`;
@@ -405,7 +460,12 @@ async function handleApprove(
 
   // Edit admin message: show "approved" + remove buttons
   if (messageId) {
-    const originalText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
+    const originalText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
     const newText =
       originalText +
       `\n\n📋 <b>سجل الحركات:</b>\n✅ <b>تم الاعتماد</b> (بواسطة: ${userName})`;
@@ -416,7 +476,12 @@ async function handleApprove(
 
   // Build group message with team buttons
   const teamButtons = appOrderButtons(order.id, 'confirmed', order.order_type);
-  const orderText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
+  const orderText = prepareOrderMessageText(
+    callback.message?.text || '',
+    order.order_type,
+    order.latitude,
+    order.longitude,
+  );
   const groupText = orderText.includes('طلب جديد')
     ? orderText
     : `🛒 <b>طلب من تطبيق جوده</b>\n\n${orderText}`;
@@ -518,7 +583,12 @@ async function handleReject(
   }
 
   if (messageId) {
-    const originalText = callback.message?.text || '';
+    const originalText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
     const newText =
       originalText +
       `\n\n📋 <b>سجل الحركات:</b>\n❌ <b>تم رفض الطلب</b> (بواسطة: ${userName})`;
@@ -608,10 +678,20 @@ async function handleUndo(
 
   // 4. Update Telegram Message Trail
   if (messageId) {
-    const originalText = callback.message?.text || '';
+    const originalText = prepareOrderMessageText(
+      callback.message?.text || '',
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
     const lines = originalText.split('\n');
     lines.pop(); // Remove the last trail line
-    const newText = lines.join('\n');
+    const newText = prepareOrderMessageText(
+      lines.join('\n'),
+      order.order_type,
+      order.latitude,
+      order.longitude,
+    );
 
     // Generate original buttons for the restored status
     const restoredButtons = appOrderButtonsForMessage(orderId, prevStatus, order.order_type, newText);

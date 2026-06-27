@@ -29,7 +29,8 @@ ${productListString}
 **PROTOCOL:**
 
 1.  **IF SAFE:** 
-    - Confirm safety immediately.
+    - Use SAFE only when the product is clearly gluten-free from visible/known evidence or a strong store inventory match.
+    - If the image/text is unclear, incomplete, or only looks safe by assumption, use RISKY instead.
     - **Upsell:** Mention one complementary product briefly.
 
 2.  **IF UNSAFE:**
@@ -38,7 +39,8 @@ ${productListString}
     - **CRITICAL:** You MUST place the exact name of this suggested alternative in the \`matchedStoreItem\` JSON field.
 
 3.  **IF RISKY/UNCLEAR:**
-    - State the risk briefly and suggest a guaranteed safe alternative from the inventory.
+    - State the uncertainty briefly and tell the user to read the label/ingredients before use.
+    - Suggest a guaranteed safe alternative from the inventory.
     - **CRITICAL:** You MUST place the exact name of this suggested alternative in the \`matchedStoreItem\` JSON field.
 
 ---
@@ -51,8 +53,9 @@ Return JSON strictly.
 - UNSAFE: "يحتوي جلوتين 🚫"
 - RISKY: "غير مؤكد ⚠️"
 
-**Analysis:** 1 short sentence explaining why it is safe or unsafe. NO filler words.
+**Analysis:** 1 short sentence explaining why it is safe, unsafe, or uncertain. NO filler words.
 **Guidance:** 1 short sentence suggesting an alternative or complement. Example: "استبدل هذا المنتج بـ دقيق الأرز المتوفر في المتجر." or "آمن تماماً، جربه مع صلصة الطماطم من جوده."
+**Safety rule:** Never present the result as a medical diagnosis. For unclear labels, unknown ingredients, or unreadable images, return RISKY.
 `;
 
 const analysisSchema: Schema = {

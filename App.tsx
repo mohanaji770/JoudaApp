@@ -12,6 +12,7 @@ const ProductsPageRoute = lazy(() => import('./pages/ProductsPageRoute').then(m 
 const RecipesPageRoute = lazy(() => import('./pages/RecipesPageRoute').then(m => ({ default: m.RecipesPageRoute })));
 const ArticlesPageRoute = lazy(() => import('./pages/ArticlesPageRoute').then(m => ({ default: m.ArticlesPageRoute })));
 const AboutPageRoute = lazy(() => import('./pages/AboutPageRoute').then(m => ({ default: m.AboutPageRoute })));
+const HealthPage = lazy(() => import('./pages/HealthPage').then(m => ({ default: m.HealthPage })));
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })));
 import { Onboarding } from './components/ui/Onboarding';
 import { OfflineIndicator } from './components/layout/OfflineIndicator';
@@ -317,8 +318,9 @@ const AppContent: React.FC = () => {
             <Route path="/products" element={<ProductsPageRoute />} />
             <Route path="/recipes" element={<RecipesPageRoute />} />
             <Route path="/articles" element={<ArticlesPageRoute />} />
-            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders" element={<OrdersPage isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />} />
             <Route path="/about" element={<AboutPageRoute />} />
+            <Route path="/health" element={<HealthPage />} />
           </Routes>
         </Suspense>
       </Layout>

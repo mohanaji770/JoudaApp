@@ -67,11 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // تحديد الشارة النشطة حسب الأولويات المطلوبة لمنع الازدحام
   const renderBadge = () => {
     if (!product.inStock) {
-      return (
-        <span className="bg-red-650 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border border-red-500/20">
-          خلصت الكمية
-        </span>
-      );
+      return null;
     }
     if (lowStockLabel) {
       return (

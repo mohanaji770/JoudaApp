@@ -196,6 +196,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
           </div>
         </div>
 
+        {/* Medical disclaimer */}
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs font-bold leading-relaxed text-amber-800 dark:text-amber-200">
+            الفحص إرشادي ولا يغني عن قراءة الملصق والمكونات أو استشارة الطبيب.
+          </p>
+        </div>
+
         {/* Alternatives */}
         {(result.verdict === VerdictType.RISKY || result.verdict === VerdictType.UNSAFE) && result.alternatives && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">

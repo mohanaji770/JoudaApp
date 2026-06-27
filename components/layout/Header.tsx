@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
-import { Moon, Sun, HelpCircle, Shield, LogOut, Download, MessageSquare } from 'lucide-react';
+import { Moon, Sun, HelpCircle, Shield, LogOut, Download, MessageSquare, ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { APP_LOGO } from '../../constants';
 import { SuggestionModal } from '../modals/SuggestionModal';
+import { useCart } from '../../contexts/CartContext';
 
 interface HeaderProps {
   isDarkMode?: boolean;
@@ -15,6 +15,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
+  const { setIsCartOpen, totalItems } = useCart();
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
@@ -142,34 +143,39 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
           {/* Suggestion Button */}
           <button 
             onClick={() => setIsSuggestionModalOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/20 text-red-550 hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors"
             title="شاركنا اقتراحك"
             aria-label="شاركنا اقتراحك"
           >
-            <MessageSquare className="w-5 h-5" />
+            <MessageSquare className="w-5 h-5 text-red-500" />
           </button>
 
           {/* Help Button */}
           {onHelpClick && (
             <button 
               onClick={onHelpClick}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-brand-600 dark:text-gray-500 dark:hover:text-brand-400 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-950/20 text-red-550 hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors"
               aria-label="مساعدة"
             >
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-5 h-5 text-red-500" />
             </button>
           )}
 
-          {/* Dark Mode Toggle */}
-          {toggleDarkMode && (
-            <button 
-              onClick={toggleDarkMode}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="تبديل الوضع الداكن"
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-          )}
+          {/* Cart Button */}
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="px-3.5 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white transition-colors relative font-black text-xs shadow-sm shadow-orange-550/20 active:scale-95"
+            title="فتح سلتك"
+            aria-label="سلتك"
+          >
+            <ShoppingCart className="w-4.5 h-4.5" />
+            <span>سلتك</span>
+            {totalItems > 0 && (
+              <span className="bg-white text-orange-600 text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-sm leading-none shrink-0">
+                {totalItems}
+              </span>
+            )}
+          </button>
 
         </div>
         

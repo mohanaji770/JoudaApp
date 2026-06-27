@@ -123,7 +123,12 @@ const getOrderStepDetails = (order: DisplayOrder) => {
   }
 };
 
-export const OrdersPage: React.FC = () => {
+interface OrdersPageProps {
+  isDarkMode?: boolean;
+  toggleDarkMode?: () => void;
+}
+
+export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMode }) => {
   const navigate = useNavigate();
   const { addToCartWithBarcode, addToCart } = useCart();
   const { favorites, toggleFavorite } = useFavorites();
@@ -375,7 +380,7 @@ export const OrdersPage: React.FC = () => {
           }`}
         >
           <Package className="w-4 h-4 mb-0.5" />
-          طلباتي
+          طلباتك
         </button>
         <button
           onClick={() => setActiveTab('favorites')}
@@ -680,6 +685,26 @@ export const OrdersPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Theme Settings Card */}
+          {toggleDarkMode && (
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+              <div className="text-right">
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm">مظهر التطبيق (الوضع الداكن)</h3>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 font-bold">تفعيل الوضع الليلي لإراحة عينيك</p>
+              </div>
+              <button
+                onClick={toggleDarkMode}
+                className="w-12 h-6 rounded-full bg-gray-200 dark:bg-brand-600 transition-colors relative flex items-center p-0.5"
+                aria-label="تبديل الوضع الداكن"
+              >
+                <div 
+                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
+                    isDarkMode ? '-translate-x-6' : 'translate-x-0'
+                  }`} 
+                />
+              </button>
+            </div>
+          )}
 
           <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl p-5 border border-red-100 dark:border-red-900/20">
              <button 
