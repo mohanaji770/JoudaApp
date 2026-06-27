@@ -8,9 +8,51 @@
 import { answerCallback, editMessage, sendMessage } from './telegram.ts';
 import { getClients } from './db.ts';
 import { env, isAdmin, getInventoryUserId } from './config.ts';
-import { APP_ACTIONS, appOrderButtons, APP_TO_INV_STATUS_MAP } from './workflow.ts';
+import { APP_ACTIONS, appOrderButtons, APP_TO_INV_STATUS_MAP, getActionDisplay, isShippingOrder } from './workflow.ts';
 import { fmtDate, whatsappButton } from './format.ts';
 import { parseCallbackData, handleAbort, requireConfirmation } from './confirmations.ts';
+
+function orderTypeLabel(orderType?: string | null): string {
+  if (orderType === 'shipping') return '📦 نوع الطلب: شحن محافظات';
+  if (orderType === 'delivery') return '🚚 نوع الطلب: توصيل داخل صنعاء';
+  if (orderType === 'pickup') return '🏬 نوع الطلب: استلام من الفرع';
+  return '📋 نوع الطلب: غير محدد';
+}
+
+function ensureOrderTypeLine(messageText: string, orderType?: string | null): string {
+  if (!messageText || messageText.includes('نوع الطلب')) return messageText;
+
+  const line = orderTypeLabel(orderType);
+  const phoneLine = /(\n📞[^\n]*\n)/;
+  if (phoneLine.test(messageText)) {
+    return messageText.replace(phoneLine, `$1${line}\n`);
+  }
+
+  return `${messageText}\n${line}`;
+}
+
+function hasReserveTrail(messageText: string): boolean {
+  return messageText.includes('استلمت الطلب') || messageText.includes('استلمت مهمة الشحن');
+}
+
+function withoutReserveButton(buttons: any[][]): any[][] {
+  return buttons
+    .map(row => row.filter(button => !String(button.callback_data || '').startsWith('wf_reserve_')))
+    .filter(row => row.length > 0);
+}
+
+function appOrderButtonsForMessage(
+  orderId: string,
+  status: string,
+  orderType: string | null | undefined,
+  messageText: string,
+): any[][] {
+  const buttons = appOrderButtons(orderId, status, orderType);
+  if (status === 'preparing' && hasReserveTrail(messageText)) {
+    return withoutReserveButton(buttons);
+  }
+  return buttons;
+}
 
 // ─── Main Handler ───────────────────────────────────────
 
@@ -30,7 +72,7 @@ export async function handleWfCallback(
   const { data: order, error: orderErr } = await jouda
     .from('customer_orders')
     .select(
-      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, payment_method, notes, latitude, longitude',
+      'id, status, quotation_id, order_number, customer_name, customer_phone, subtotal, discount, delivery_fee, total, payment_method, notes, order_type, latitude, longitude',
     )
     .eq('id', orderId)
     .single();
@@ -49,7 +91,8 @@ export async function handleWfCallback(
 
   // ── 1.6 Special action: abort (cancel confirmation) ──
   if (isAbort) {
-    const restoredButtons = appOrderButtons(orderId, order.status, order.latitude, order.longitude);
+    const messageText = callback.message?.text || '';
+    const restoredButtons = appOrderButtonsForMessage(orderId, order.status, order.order_type, messageText);
     await handleAbort(token, chatId, callback.id, messageId, callback.message?.text || '', restoredButtons);
     return;
   }
@@ -67,6 +110,7 @@ export async function handleWfCallback(
   }
 
   const actionDef = currentActions[action];
+  const actionDisplay = getActionDisplay(actionDef, order.order_type);
 
   // ── 3. Admin guard ──
   if (actionDef.adminOnly && !isAdmin(userId)) {
@@ -230,27 +274,26 @@ export async function handleWfCallback(
   await answerCallback(
     token,
     callback.id,
-    `${actionDef.emoji} ${actionDef.label}`,
+    `${actionDisplay.emoji} ${actionDisplay.label}`,
   );
 
   // ── 8. Update message: action trail + smart keyboard ──
   if (messageId) {
-    const originalText = callback.message?.text || '';
+    const originalText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
     const hasHeader = originalText.includes('سجل الحركات');
     const headerBlock = hasHeader ? '' : '\n\n📋 <b>سجل الحركات:</b>';
-    const trail = `${headerBlock}\n${actionDef.emoji} <b>${actionDef.label}</b> (بواسطة: ${userName})`;
-    const nextButtons = appOrderButtons(orderId, actionDef.nextStatus, order.latitude, order.longitude);
+    const trail = `${headerBlock}\n${actionDisplay.emoji} <b>${actionDisplay.label}</b> (بواسطة: ${userName})`;
+    let nextButtons = appOrderButtonsForMessage(
+      orderId,
+      actionDef.nextStatus,
+      order.order_type,
+      originalText + trail,
+    );
 
     // Append Undo button if eligible
-    if (['reserve', 'prepare', 'deliver'].includes(action)) {
-      // Must insert before the Google Maps button if it exists (which is usually the last button)
+    if (['reserve', 'prepare', 'deliver'].includes(action) && actionDef.nextStatus !== order.status) {
       const undoBtn = [{ text: '🔙 تراجع عن الحركة السابقة', callback_data: `wf_undo_${order.status}_${orderId}` }];
-      if (order.latitude && order.longitude && nextButtons.length > 0) {
-        // Insert before the last button (which is the map)
-        nextButtons.splice(nextButtons.length - 1, 0, undoBtn);
-      } else {
-        nextButtons.push(undoBtn);
-      }
+      nextButtons.push(undoBtn);
     }
 
     await editMessage(token, chatId, messageId, originalText + trail, {
@@ -267,7 +310,9 @@ export async function handleWfCallback(
     order.customer_phone
   ) {
     const msgs: Record<string, string> = {
-      delivered: 'تم تسليم طلبك بنجاح 🎉\n\nنهتم جداً برأيك! كيف كانت تجربتك معنا؟\nنرجو منك تقييم الخدمة عبر الرد على هذه الرسالة من 1 إلى 5 نجوم ⭐\n(ملاحظاتك تساعدنا على تقديم الأفضل دائماً)',
+      delivered: isShippingOrder(order.order_type)
+        ? 'تم تسليم طلبك لشركة الشحن 🚛\n\nسيتم التواصل معك حسب مسار شركة الشحن. لأي استفسار، تواصل معنا عبر واتساب.'
+        : 'تم تسليم طلبك بنجاح 🎉\n\nنهتم جداً برأيك! كيف كانت تجربتك معنا؟\nنرجو منك تقييم الخدمة عبر الرد على هذه الرسالة من 1 إلى 5 نجوم ⭐\n(ملاحظاتك تساعدنا على تقديم الأفضل دائماً)',
     };
     const waText = `*جوده — تحديث طلبك*\n\n*رقم الطلب:* ${order.order_number}\n${msgs[actionDef.nextStatus]}\n\n*المبلغ:* ${(order.total || 0).toLocaleString()} ر.ي\n\nشكراً لاختيارك جوده`;
     const waHtml = whatsappButton(order.customer_phone, waText);
@@ -360,7 +405,7 @@ async function handleApprove(
 
   // Edit admin message: show "approved" + remove buttons
   if (messageId) {
-    const originalText = callback.message?.text || '';
+    const originalText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
     const newText =
       originalText +
       `\n\n📋 <b>سجل الحركات:</b>\n✅ <b>تم الاعتماد</b> (بواسطة: ${userName})`;
@@ -370,8 +415,8 @@ async function handleApprove(
   }
 
   // Build group message with team buttons
-  const teamButtons = appOrderButtons(order.id, 'confirmed', order.latitude, order.longitude);
-  const orderText = callback.message?.text || '';
+  const teamButtons = appOrderButtons(order.id, 'confirmed', order.order_type);
+  const orderText = ensureOrderTypeLine(callback.message?.text || '', order.order_type);
   const groupText = orderText.includes('طلب جديد')
     ? orderText
     : `🛒 <b>طلب من تطبيق جوده</b>\n\n${orderText}`;
@@ -510,7 +555,7 @@ async function handleUndo(
   // 2. Fetch order to verify
   const { data: order, error: orderErr } = await jouda
     .from('customer_orders')
-    .select('id, status, quotation_id')
+    .select('id, status, quotation_id, order_type, latitude, longitude')
     .eq('id', orderId)
     .single();
 
@@ -569,7 +614,7 @@ async function handleUndo(
     const newText = lines.join('\n');
 
     // Generate original buttons for the restored status
-    const restoredButtons = appOrderButtons(orderId, prevStatus);
+    const restoredButtons = appOrderButtonsForMessage(orderId, prevStatus, order.order_type, newText);
 
     await editMessage(token, chatId, messageId, newText, {
       reply_markup: restoredButtons.length > 0 ? { inline_keyboard: restoredButtons } : undefined,

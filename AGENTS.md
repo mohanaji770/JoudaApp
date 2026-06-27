@@ -207,6 +207,15 @@ submitted → approve → confirmed → reserve → reserved → prepare → pre
 
 الإلغاء متاح من `confirmed`, `reserved`, `preparing`. العكس الإداري متاح بعد التسليم/الدفع/الإيداع حسب `workflow.ts`.
 
+في طلبات التطبيق، `reserved` لا يعني حجز مندوب داخل Inventory حالياً. معناه التشغيلي أن عضو الفريق/المندوب استلم مسؤولية الطلب من تيليجرام. إسناد المندوب داخل Inventory مؤجل، وكود `assign_invoice_to_collector` في `wf-callbacks.ts` يبقى معطلاً حتى يقرر المشروع تفعيله.
+
+أزرار `wf_*` تتغير حسب `customer_orders.order_type`:
+
+| النوع | `reserve` | `prepare` | `deliver` |
+|---|---|---|---|
+| `delivery` | استلمت الطلب | بدء التجهيز | تم التسليم |
+| `shipping` | استلمت مهمة الشحن | تجهيز الشحنة | سُلّمت لشركة الشحن |
+
 ### Workflow فواتير POS `inv_*`
 
 ```text

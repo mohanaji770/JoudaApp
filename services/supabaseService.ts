@@ -335,7 +335,7 @@ export interface SubmitOrderPayload {
   customer_name: string;
   customer_phone: string;
   customer_address?: string;
-  order_type: 'delivery' | 'pickup';
+  order_type: 'delivery' | 'shipping' | 'pickup';
   branch_id?: string;
   payment_method: string;
   notes?: string;

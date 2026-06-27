@@ -25,12 +25,18 @@ Jouda is a React/Vite customer app with Supabase Edge Functions and a Capacitor 
 | 2026-06-27 | Cart root components moved under `components/cart/` | First small structure refactor completed and verified with `npm run build` |
 | 2026-06-27 | `MapLocationPicker` moved under `components/cart/` | `components/` root is now free of standalone cart/checkout components |
 | 2026-06-27 | `useCheckout` moved under `components/cart/hooks/` | Checkout state and submission logic now lives with the cart feature and builds successfully |
+| 2026-06-27 | Telegram app-order workflow labels made order-type aware | Delivery and province-shipping orders now show different operational wording without enabling Inventory driver assignment |
+| 2026-06-27 | Gemini frontend exposure paths removed | Frontend no longer declares `VITE_GEMINI_API_KEY`; Gemini stays behind the `analyze-product` Edge Function |
+| 2026-06-27 | Telegram customer location moved into message text | Google Maps location now appears as an inline HTML link under the address instead of a separate workflow button |
+| 2026-06-27 | Telegram app orders can be prepared before pickup | `confirmed` orders show both pickup and prepare actions; `preparing` can still record pickup later without changing status |
 
 ## Known Risks
 
 - Migrations contain legacy `admin_pin` RPCs, while current admin UI uses Supabase Auth. Treat PIN-based admin flows as legacy until audited.
 - RLS/live database state may differ from checked-in migrations. Verify live Supabase state before sensitive database changes.
 - `ALLOWED_ORIGIN` controls CORS strictness; if missing, Edge Functions fall back to `*`.
+- Gemini key rotation still requires a manual Google AI Studio key replacement and Supabase `GEMINI_API_KEY` secret update.
+- Inventory collector assignment from Telegram remains intentionally disabled; do not treat `reserved` as an Inventory driver assignment until that workflow is designed.
 
 ## Next Steps
 

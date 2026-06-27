@@ -9,13 +9,15 @@ lerna-debug.log*
 
 # Dependencies & Build
 node_modules
-dist
+dist/
+dev-dist/
 dist-ssr
 
 # Environment & Secrets
 *.local
 .env
 .env.*
+.env.local
 
 # Editor directories and files
 .vscode/*

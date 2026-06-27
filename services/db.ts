@@ -18,7 +18,7 @@ export interface CompletedOrder {
   customerName: string;
   customerPhone: string;
   customerAddress?: string;
-  orderType: 'delivery' | 'pickup';
+  orderType: 'delivery' | 'shipping' | 'pickup';
   paymentMethod: string;
   notes?: string;
   subtotal: number;

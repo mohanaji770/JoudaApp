@@ -36,6 +36,8 @@
 - Keep callback data under 64 characters.
 - Use `fmtDate()` for Telegram dates.
 - Use service role only inside server-side functions.
+- In app order callbacks, `reserved` means the team/courier accepted the order in Telegram. Do not re-enable Inventory collector assignment until the project explicitly decides to wire driver assignment into Inventory.
+- `wf_*` button labels are order-type aware: delivery orders use delivery wording, while `shipping` orders use shipping-company wording.
 - When adding env vars, update `AGENTS.md` and this file.
 
 ## Related Context

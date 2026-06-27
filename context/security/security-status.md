@@ -3,6 +3,7 @@
 ## Current Security Model
 
 - Frontend uses anon key only.
+- Gemini analysis is routed through the `analyze-product` Edge Function; the frontend must not define or read `VITE_GEMINI_API_KEY`.
 - Privileged writes happen server-side through Edge Functions or live RLS-authenticated admin paths.
 - Admin login uses Supabase Auth.
 - `update-inventory` validates a JWT and restricts access to `joudafood@gmail.com`.
@@ -13,6 +14,7 @@
 - Inventory RLS/API/webhook audit remains open.
 - Legacy `admin_pin` functions remain in migrations and need a final decision.
 - CORS falls back to `*` when `ALLOWED_ORIGIN` is not set.
+- The previously exposed Gemini key must be rotated manually in Google AI Studio and replaced in Supabase Edge Function secrets.
 - SECURITY DEFINER functions and grants should be reviewed against live database state.
 
 ## Existing Security Documentation

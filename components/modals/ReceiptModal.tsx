@@ -13,7 +13,7 @@ interface ReceiptModalProps {
   customerName: string;
   address: string;
   notes: string;
-  orderType: 'delivery' | 'pickup';
+  orderType: 'delivery' | 'shipping' | 'pickup';
   subtotal?: number;
   deliveryFee?: number;
   total?: number;
@@ -53,6 +53,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const d = new Date();
   const orderDate = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   const orderId = orderNumber || `#${Math.floor(1000 + Math.random() * 9000)}`;
+  const isPickup = orderType === 'pickup';
+  const addressLabel = orderType === 'shipping' ? 'عنوان الشحن' : orderType === 'delivery' ? 'عنوان التوصيل' : 'تستلم من';
+  const feeLabel = orderType === 'shipping' ? 'رسوم الشحن' : 'سعر التوصيل';
 
   const handleShare = async () => {
     if (!receiptRef.current) return;
@@ -92,7 +95,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="w-full max-w-sm flex flex-col gap-4 my-auto">
         
         {/* Header Actions */}
@@ -152,14 +155,14 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                         </div>
                     </div>
                     <div className="flex items-start gap-2 pt-2 border-t border-gray-100">
-                        {orderType === 'delivery' ? (
+                        {!isPickup ? (
                              <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                         ) : (
                              <Store className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
                         )}
                         <div>
                             <span className="block text-gray-400 text-[10px]">
-                                {orderType === 'delivery' ? 'عنوان التوصيل' : 'تستلم من'}
+                                {addressLabel}
                             </span>
                             <span className="font-medium">{address}</span>
                         </div>
@@ -215,9 +218,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                               <span>-{discount} ريال</span>
                           </div>
                         )}
-                        {deliveryFee !== undefined && orderType === 'delivery' && (
+                        {deliveryFee !== undefined && !isPickup && (
                           <div className="flex justify-between font-bold text-gray-700">
-                              <span>سعر التوصيل</span>
+                              <span>{feeLabel}</span>
                               <span>{deliveryFee === 0 ? 'مجاناً' : `${deliveryFee} ريال`}</span>
                           </div>
                         )}

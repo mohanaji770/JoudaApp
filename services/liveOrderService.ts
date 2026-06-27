@@ -15,6 +15,7 @@ export interface LiveOrder {
   notes: string | null;
   status: string;
   created_at: string;
+  order_items?: { id: string }[];
 }
 
 export interface LiveOrderItem {
@@ -37,7 +38,7 @@ export const fetchLiveOrders = async (phone: string): Promise<LiveOrder[]> => {
 
   const { data, error } = await client
     .from('customer_orders')
-    .select('*')
+    .select('*, order_items(id)')
     .eq('customer_phone', cleanPhone)
     .order('created_at', { ascending: false })
     .limit(50);

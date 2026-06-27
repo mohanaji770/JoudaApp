@@ -11,6 +11,10 @@ export interface ActionDef {
   label: string;
   /** Emoji prefix */
   emoji: string;
+  /** Optional label override for shipping/province orders */
+  shippingLabel?: string;
+  /** Optional emoji override for shipping/province orders */
+  shippingEmoji?: string;
   /** If true, only admins can perform this action */
   adminOnly?: boolean;
   /** If true, requires user confirmation before execution */
@@ -21,6 +25,24 @@ export interface ActionDef {
 
 type InlineBtn = { text: string; callback_data: string };
 
+export function isShippingOrder(orderType?: string | null): boolean {
+  return orderType === 'shipping';
+}
+
+export function getActionDisplay(
+  def: ActionDef,
+  orderType?: string | null,
+): { label: string; emoji: string } {
+  if (isShippingOrder(orderType)) {
+    return {
+      label: def.shippingLabel || def.label,
+      emoji: def.shippingEmoji || def.emoji,
+    };
+  }
+
+  return { label: def.label, emoji: def.emoji };
+}
+
 // ─── App Order Workflow (wf_*) ──────────────────────────
 // Status values stored in: customer_orders.status
 //
@@ -29,6 +51,8 @@ type InlineBtn = { text: string; callback_data: string };
 //          → reject  → cancelled                                → deliver → delivered
 //                                                                          → paid → deposited
 //
+// For app orders, `reserved` means the team/courier accepted responsibility
+// for the order workflow. Inventory stock deduction happens earlier at approve.
 // Cancel available at: confirmed, reserved, preparing
 
 export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
@@ -51,8 +75,17 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
   confirmed: {
     reserve: {
       nextStatus: 'reserved',
-      label: 'حجز الطلب',
-      emoji: '📦',
+      label: 'استلمت الطلب',
+      emoji: '🚚',
+      shippingLabel: 'استلمت مهمة الشحن',
+      shippingEmoji: '📌',
+    },
+    prepare: {
+      nextStatus: 'preparing',
+      label: 'بدء التجهيز',
+      emoji: '👨‍🍳',
+      shippingLabel: 'تجهيز الشحنة',
+      shippingEmoji: '📦',
     },
     cancel: {
       nextStatus: 'cancelled',
@@ -65,8 +98,10 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
   reserved: {
     prepare: {
       nextStatus: 'preparing',
-      label: 'تجهيز الطلب',
+      label: 'بدء التجهيز',
       emoji: '👨‍🍳',
+      shippingLabel: 'تجهيز الشحنة',
+      shippingEmoji: '📦',
     },
     cancel: {
       nextStatus: 'cancelled',
@@ -77,10 +112,19 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
     },
   },
   preparing: {
+    reserve: {
+      nextStatus: 'preparing',
+      label: 'استلمت الطلب',
+      emoji: '🚚',
+      shippingLabel: 'استلمت مهمة الشحن',
+      shippingEmoji: '📌',
+    },
     deliver: {
       nextStatus: 'delivered',
-      label: 'تم التوصيل',
-      emoji: '🚚',
+      label: 'تم التسليم',
+      emoji: '✅',
+      shippingLabel: 'سُلّمت لشركة الشحن',
+      shippingEmoji: '🚛',
     },
     cancel: {
       nextStatus: 'cancelled',
@@ -139,24 +183,20 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
 export function appOrderButtons(
   orderId: string,
   status: string,
-  latitude?: number | null,
-  longitude?: number | null,
+  orderType?: string | null,
 ): any[][] {
   const actions = APP_ACTIONS[status];
   if (!actions) return [];
-  const buttons: any[][] = Object.entries(actions).map(([action, def]) => [
-    {
-      text: `${def.emoji} ${def.label}`,
-      callback_data: `wf_${action}_${orderId}`,
-    },
-  ]);
-  
-  if (latitude && longitude) {
-    buttons.push([
-      { text: '📍 موقع العميل (خرائط جوجل)', url: `https://www.google.com/maps?q=${latitude},${longitude}` }
-    ]);
-  }
-  
+  const buttons: any[][] = Object.entries(actions).map(([action, def]) => {
+    const display = getActionDisplay(def, orderType);
+    return [
+      {
+        text: `${display.emoji} ${display.label}`,
+        callback_data: `wf_${action}_${orderId}`,
+      },
+    ];
+  });
+
   return buttons;
 }
 

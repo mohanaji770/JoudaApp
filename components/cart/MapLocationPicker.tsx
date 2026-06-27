@@ -53,7 +53,14 @@ function MapController({ position }: { position: [number, number] }) {
     return () => clearTimeout(timer);
   }, [map]);
 
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      map.setView(position, map.getZoom(), { animate: false });
+      return;
+    }
     map.flyTo(position, map.getZoom(), { animate: true, duration: 1 });
   }, [position, map]);
 

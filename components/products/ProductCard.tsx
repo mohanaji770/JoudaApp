@@ -64,6 +64,53 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const canIncrease = canAddQuantity(product, quantity);
   const lowStockLabel = getLowStockLabel(product);
 
+  // تحديد الشارة النشطة حسب الأولويات المطلوبة لمنع الازدحام
+  const renderBadge = () => {
+    if (!product.inStock) {
+      return (
+        <span className="bg-red-650 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border border-red-500/20">
+          خلصت الكمية
+        </span>
+      );
+    }
+    if (lowStockLabel) {
+      return (
+        <span className="bg-orange-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border border-orange-400/30">
+          {lowStockLabel}
+        </span>
+      );
+    }
+    if (isPackage) {
+      return (
+        <span className="bg-amber-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-400/30">
+          <Gift className="w-2.5 h-2.5" /> بكج توفيري
+        </span>
+      );
+    }
+    if (product.tags?.includes('discount')) {
+      return (
+        <span className="bg-red-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-red-400/30">
+          <Sparkles className="w-2.5 h-2.5" /> خصم
+        </span>
+      );
+    }
+    if (product.tags?.includes('best_seller')) {
+      return (
+        <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-amber-600 dark:text-amber-400 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-200 dark:border-amber-900/50">
+          <BadgeCheck className="w-2.5 h-2.5" /> الأكثر طلباً 🔥
+        </span>
+      );
+    }
+    if (product.tags?.includes('gift')) {
+      return (
+        <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-green-600 dark:text-green-400 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-green-200 dark:border-green-900/50">
+          <Gift className="w-2.5 h-2.5" /> هدية
+        </span>
+      );
+    }
+    return null;
+  };
+
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   const isFirstRender = useRef(true);
 
@@ -100,36 +147,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="w-full aspect-[4/3] bg-white relative overflow-hidden shrink-0">
         {/* UI Badges */}
         <div className="absolute top-2 right-2 z-30 flex flex-col gap-1 items-end pointer-events-none">
-          {isPackage && (
-            <span className="bg-amber-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-400/30">
-              <Gift className="w-2.5 h-2.5" /> بكج توفيري
-            </span>
-          )}
-          {product.tags?.includes('discount') && (
-            <span className="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-red-400/30">
-              <Sparkles className="w-3 h-3" /> خصم
-            </span>
-          )}
-          {product.tags?.includes('best_seller') && (
-            <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-amber-200 dark:border-amber-900/50">
-              <BadgeCheck className="w-3 h-3" /> الأكثر طلباً 🔥
-            </span>
-          )}
-          {product.tags?.includes('gift') && (
-            <span className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-green-600 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-green-200 dark:border-green-900/50">
-              <Gift className="w-3 h-3" /> هدية مجانية
-            </span>
-          )}
-          {isPackage && product.bundle_items && product.bundle_items.length > 0 && (
-            <span className="bg-gray-900/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-gray-700/50">
-              {product.bundle_items.length} منتجات
-            </span>
-          )}
-          {lowStockLabel && (
-            <span className="bg-orange-500/90 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm border border-orange-400/30">
-              {lowStockLabel}
-            </span>
-          )}
+          {renderBadge()}
         </div>
         
         {product.image ? (

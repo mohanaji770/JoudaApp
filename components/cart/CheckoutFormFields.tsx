@@ -114,7 +114,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
 
           {/* Phone and Map side-by-side for Sana'a, or Phone full-width for Provinces */}
           {deliveryZone === 'sanaa' ? (
-            <div className="grid grid-cols-2 gap-3 items-start">
+            <div className="grid grid-cols-[1.18fr_0.82fr] gap-3 items-start">
               {/* Customer Phone */}
               <div>
                 <label htmlFor="cart-phone" className="text-xs font-bold text-gray-550 dark:text-gray-400 block mb-1.5">

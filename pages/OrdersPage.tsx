@@ -14,21 +14,113 @@ import { getCachedProducts } from '../services/db';
 import { Product } from '../services/supabaseService';
 import { STORE_CONFIG } from '../constants';
 import { ReceiptModal } from '../components/modals/ReceiptModal';
+import { OrderDetailsBottomSheet } from '../components/modals/OrderDetailsBottomSheet';
 
 interface DisplayOrder extends LiveOrder {
   isLocal?: boolean;
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  submitted: { label: 'أُرسل', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', icon: <Send className="w-3.5 h-3.5" /> },
-  confirmed: { label: 'تم التأكيد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-  reserved: { label: 'تم التأكيد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-  preparing: { label: 'قيد التجهيز', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: <Clock className="w-3.5 h-3.5" /> },
-  delivered: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
-  paid: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
-  deposited: { label: 'تم التسليم', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Truck className="w-3.5 h-3.5" /> },
-  cancelled: { label: 'ملغي', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <X className="w-3.5 h-3.5" /> },
-  failed: { label: 'فشل', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <AlertCircle className="w-3.5 h-3.5" /> },
+export const getOrderStatusInfo = (status: string, orderType: string | null) => {
+  const isShipping = orderType === 'shipping';
+  switch (status) {
+    case 'submitted':
+      return { label: 'أُرسل', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', icon: <Send className="w-3.5 h-3.5" /> };
+    case 'confirmed':
+      return { label: 'تم التأكيد', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> };
+    case 'reserved':
+      return {
+        label: isShipping ? 'مهمة الشحن مستلمة' : 'استلمه المندوب',
+        color: '#7c3aed',
+        bg: 'rgba(124,58,237,0.08)',
+        icon: isShipping ? <ShieldCheck className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5" />
+      };
+    case 'preparing':
+      return {
+        label: isShipping ? 'تجهيز الشحنة' : 'قيد التجهيز',
+        color: '#d97706',
+        bg: 'rgba(217,119,6,0.08)',
+        icon: <Clock className="w-3.5 h-3.5" />
+      };
+    case 'delivered':
+      return {
+        label: isShipping ? 'سُلّمت للشحن' : 'تم التسليم',
+        color: '#16a34a',
+        bg: 'rgba(22,163,74,0.08)',
+        icon: isShipping ? <Package className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />
+      };
+    case 'paid':
+      return { label: 'تم استلام المبلغ', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <Check className="w-3.5 h-3.5" /> };
+    case 'deposited':
+      return { label: 'تم الإيداع', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', icon: <CheckCircle2 className="w-3.5 h-3.5" /> };
+    case 'cancelled':
+      return { label: 'ملغي', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <X className="w-3.5 h-3.5" /> };
+    case 'failed':
+      return { label: 'فشل', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <AlertCircle className="w-3.5 h-3.5" /> };
+    default:
+      return { label: status, color: '#666', bg: '#f5f5f5', icon: <Package className="w-3.5 h-3.5" /> };
+  }
+};
+
+const isShippingOrder = (order: DisplayOrder) => order.order_type === 'shipping';
+
+const getProgressLabels = (order: DisplayOrder) => (
+  isShippingOrder(order)
+    ? ['أُرسل', 'تم التأكيد', 'تجهيز الشحنة', 'شركة الشحن']
+    : ['أُرسل', 'تم التأكيد', 'قيد التجهيز', 'تم التسليم']
+);
+
+const getOrderStepDetails = (order: DisplayOrder) => {
+  const isShipping = isShippingOrder(order);
+  
+  switch (order.status) {
+    case 'submitted':
+      return {
+        explanation: 'تم استلام الطلب من الفريق وسيبدأ التقديم والتأكيد قريباً.',
+        nextStep: 'تأكيد الطلب وتجهيز الفاتورة 🧾'
+      };
+    case 'confirmed':
+      return {
+        explanation: isShipping 
+          ? 'تم تأكيد طلبك وتعيين مسؤول للتجهيز والشحن.' 
+          : 'تم تأكيد طلبك وجاري تحضيره للتسليم.',
+        nextStep: isShipping 
+          ? 'تجهيز الشحنة وتعبئتها 📦' 
+          : 'بدء تجهيز الطلب 🛵'
+      };
+    case 'reserved':
+      return {
+        explanation: isShipping 
+          ? 'تم استلام مهمة الشحن وجاري مراجعة شركة النقل.' 
+          : 'المندوب استلم طلبك وجاري تحضيره للتجهيز والتوصيل.',
+        nextStep: isShipping 
+          ? 'تجهيز الشحنة وتعبئتها 📦' 
+          : 'بدء التجهيز والتعبئة 📦'
+      };
+    case 'preparing':
+      return {
+        explanation: isShipping 
+          ? 'جاري تغليف شحنتك وتجهيزها للنقل البري.' 
+          : 'جاري تجهيز وتغليف منتجاتك الطازجة لك.',
+        nextStep: isShipping 
+          ? 'تسليم الشحنة لشركة النقل البري 🚚' 
+          : 'خروج المندوب للتوصيل 🛵'
+      };
+    case 'delivered':
+    case 'paid':
+    case 'deposited':
+      return {
+        explanation: isShipping 
+          ? 'سُلّمت الشحنة لشركة النقل البري. يرجى التواصل معهم للاستلام.' 
+          : 'تم تسليم طلبك بنجاح. بالعافية وصحة وهنا! 💚',
+        nextStep: 'طلب مكتمل ✅'
+      };
+    case 'cancelled':
+    default:
+      return {
+        explanation: 'الطلب ملغي. إذا كان هناك أي استفسار يرجى التواصل معنا.',
+        nextStep: 'طلب ملغي 🚫'
+      };
+  }
 };
 
 export const OrdersPage: React.FC = () => {
@@ -48,6 +140,8 @@ export const OrdersPage: React.FC = () => {
   const [savedPhone, setSavedPhone] = useState<string>('');
   const [addingFavoriteId, setAddingFavoriteId] = useState<string | null>(null);
   const [viewingReceiptForOrder, setViewingReceiptForOrder] = useState<DisplayOrder | null>(null);
+  const [activeSheetOrder, setActiveSheetOrder] = useState<DisplayOrder | null>(null);
+  const [loadingItemsOrderId, setLoadingItemsOrderId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -103,15 +197,59 @@ export const OrdersPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [savedPhone]);
 
-  const toggleExpand = async (orderId: string) => {
-    if (expandedOrder === orderId) { setExpandedOrder(null); return; }
-    setExpandedOrder(orderId);
-    if (!orderItems[orderId]) {
+  const handleOpenBottomSheet = async (order: DisplayOrder) => {
+    setActiveSheetOrder(order);
+    if (!orderItems[order.id]) {
+      setLoadingItemsOrderId(order.id);
       try {
-        const items = await fetchLiveOrderItems(orderId, savedPhone);
-        setOrderItems(prev => ({ ...prev, [orderId]: items }));
+        const items = await fetchLiveOrderItems(order.id, savedPhone);
+        setOrderItems(prev => ({ ...prev, [order.id]: items }));
       } catch { /* silent */ }
+      setLoadingItemsOrderId(null);
     }
+  };
+
+  const handleShareWhatsApp = (order: DisplayOrder, items: any[]) => {
+    const storeItems = items.filter((i: any) => i.source === 'store' || !i.source);
+    const bakeryItems = items.filter((i: any) => i.source === 'bakery');
+
+    let msg = `*فاتورة طلبك من جوده* 🧾✨\n`;
+    msg += `*رقم الطلب:* ${order.order_number}\n\n`;
+    
+    if (order.customer_name) msg += `👤 *الاسم:* ${order.customer_name}\n`;
+    if (order.customer_address) msg += `📍 *عنوان التوصيل:* ${order.customer_address}\n`;
+    
+    msg += `\n------------------\n`;
+    
+    if (storeItems.length > 0) {
+      msg += `*🛒 طلبات المتجر:*\n`;
+      storeItems.forEach((i: any) => {
+        msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
+      });
+      msg += `\n`;
+    }
+
+    if (bakeryItems.length > 0) {
+      msg += `*🧁 طلبات المخبز:*\n`;
+      bakeryItems.forEach((i: any) => {
+        msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
+      });
+      msg += `\n`;
+    }
+
+    msg += `------------------\n`;
+    if (order.delivery_fee === 0) {
+      msg += `🚚 *التوصيل:* مجاناً\n`;
+    } else if (order.delivery_fee) {
+      msg += `🚚 *التوصيل:* ${order.delivery_fee} ريال\n`;
+    }
+    msg += `💳 *الحساب الإجمالي:* ${order.total} ريال\n`;
+    msg += `------------------\n`;
+    msg += `صحتكم تهمنا.. وبالعافية مقدماً! 💖`;
+
+    const encoded = encodeURIComponent(msg);
+    const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
+    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
   };
 
   const handleRepeatOrder = async (order: DisplayOrder) => {
@@ -157,11 +295,19 @@ export const OrdersPage: React.FC = () => {
 
   const formatDate = (iso: string) => {
     try { 
-      return new Date(iso).toLocaleDateString('ar-EG', { 
-        year: 'numeric', month: 'short', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit',
-        calendar: 'gregory'
-      }); 
+      const d = new Date(iso);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // Hour '0' should be '12'
+      const hoursStr = String(hours).padStart(2, '0');
+
+      return `${year}/${month}/${day} ${hoursStr}:${minutes} ${ampm}`;
     }
     catch { return iso; }
   };
@@ -288,7 +434,7 @@ export const OrdersPage: React.FC = () => {
           )}
 
           {displayOrders.map(order => {
-            const statusInfo = STATUS_MAP[order.status] || { label: order.status, color: '#666', bg: '#f5f5f5', icon: '📦' };
+            const statusInfo = getOrderStatusInfo(order.status, order.order_type);
             const isExpanded = expandedOrder === order.id;
             const items = orderItems[order.id] || [];
             const isActiveOrder = ['submitted', 'confirmed', 'preparing'].includes(order.status);
@@ -396,11 +542,13 @@ export const OrdersPage: React.FC = () => {
                     const mappedStatus = mapStatusToStep(order.status);
                     const steps = ['submitted', 'confirmed', 'preparing', 'delivered'];
                     const currentIdx = steps.indexOf(mappedStatus);
+                    const labels = getProgressLabels(order);
+                    const stepDetails = getOrderStepDetails(order);
                     
                     return (
                       <div className="mb-4 pt-1">
                         {/* Progress Tracker Bar */}
-                        <div className="relative h-1.5 bg-gray-100 dark:bg-gray-700/60 rounded-full overflow-hidden mb-2">
+                        <div className="relative h-2.5 bg-gray-100 dark:bg-gray-700/60 rounded-full overflow-hidden mb-2">
                           <div 
                             className="absolute right-0 top-0 h-full bg-gradient-to-l from-emerald-400 to-green-500 dark:from-emerald-500 dark:to-green-600 transition-all duration-500 rounded-full"
                             style={{
@@ -409,159 +557,46 @@ export const OrdersPage: React.FC = () => {
                           />
                         </div>
                         {/* Labels */}
-                        <div className="flex justify-between text-[9px] font-extrabold text-gray-400 dark:text-gray-500 px-0.5">
-                          <span className={currentIdx >= 0 ? 'text-gray-800 dark:text-gray-200' : ''}>أُرسل</span>
-                          <span className={currentIdx >= 1 ? 'text-gray-800 dark:text-gray-200' : ''}>تم التأكيد</span>
-                          <span className={currentIdx >= 2 ? 'text-gray-800 dark:text-gray-200' : ''}>قيد التجهيز</span>
-                          <span className={currentIdx >= 3 ? 'text-gray-800 dark:text-gray-200' : ''}>تم التسليم</span>
+                        <div className="flex justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 px-0.5 mb-3">
+                          {labels.map((label, idx) => (
+                            <span 
+                              key={label} 
+                              className={currentIdx >= idx ? 'text-gray-800 dark:text-gray-200 font-extrabold' : 'text-gray-400 dark:text-gray-600'}
+                            >
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Next Step Info Box */}
+                        <div className="bg-brand-50/40 dark:bg-brand-900/10 p-3 rounded-xl border border-brand-100/20 dark:border-brand-900/15 text-xs mt-1">
+                          <span className="font-extrabold text-brand-700 dark:text-brand-400 block mb-0.5">💡 الخطوة التالية:</span>
+                          <p className="text-gray-800 dark:text-gray-200 font-bold leading-normal">{stepDetails.nextStep}</p>
+                          <p className="text-[11px] text-gray-505 dark:text-gray-450 mt-0.5">{stepDetails.explanation}</p>
                         </div>
                       </div>
                     );
                   })()}
 
-                  {/* Summary & Toggle */}
+                  {/* Summary & Clickable Action Button */}
                   <div className="flex items-center justify-between pt-3.5 border-t border-gray-50 dark:border-gray-700/50">
                     <span className="text-sm font-black text-gray-900 dark:text-white">
                       المجموع: <span className="font-mono">{formatPrice(order.total)}</span><span className="saudi-riyal mr-1">{"\u00ea"}</span>
                     </span>
-                    <button 
-                      onClick={() => toggleExpand(order.id)} 
-                      className="text-xs font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors flex items-center gap-1"
-                    >
-                      <span>{isExpanded ? 'إخفاء الأصناف' : 'عرض الأصناف'}</span>
-                      <span className="text-[10px] bg-brand-50 dark:bg-brand-950/30 px-1.5 py-0.5 rounded-md font-bold">
-                        {items.length || 0}
-                      </span>
-                    </button>
+                    {(() => {
+                      const itemCount = order.order_items?.length || orderItems[order.id]?.length || 0;
+                      return (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleOpenBottomSheet(order); }} 
+                          className="text-[11px] font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-all flex items-center gap-1 py-1.5 px-3 rounded-xl bg-brand-50/50 dark:bg-brand-900/10 active:scale-95 border border-brand-100/25 dark:border-brand-900/20 shadow-sm"
+                        >
+                          <span>{itemCount > 0 ? `عرض الأصناف (${itemCount})` : 'تفاصيل الطلب'}</span>
+                          <span className="text-xs font-light leading-none mr-0.5">←</span>
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
-
-                {isExpanded && (
-                  <div className="border-t border-gray-100 dark:border-gray-700/60 p-4 bg-gray-50 dark:bg-gray-900/30 space-y-4 relative z-10">
-                    {items.length > 0 ? (
-                      <div className="space-y-2.5">
-                        {items.map(item => (
-                          <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800/40 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-5.5 h-5.5 shrink-0 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold flex items-center justify-center">
-                                {item.quantity}x
-                              </span>
-                              <span className="text-xs text-gray-800 dark:text-gray-200 font-bold truncate">
-                                {item.product_name}
-                              </span>
-                            </div>
-                            <span className="text-xs font-mono text-gray-500 dark:text-gray-400 shrink-0">
-                              {formatPrice(item.unit_price)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-400 text-center py-3">جاري تحميل الأصناف...</p>
-                    )}
-
-                    {order.notes && (
-                      <div className="text-[11px] text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-850 p-3 rounded-xl border border-gray-50 dark:border-gray-800/30">
-                        <span className="font-extrabold text-gray-800 dark:text-gray-200 block mb-0.5">ملاحظات العميل:</span> 
-                        {order.notes}
-                      </div>
-                    )}
-
-                    {/* Bottom CTA Actions */}
-                    <div className="pt-1.5 space-y-2">
-                      {order.status === 'delivered' && (
-                        <button
-                          onClick={() => handleRepeatOrder(order)}
-                          disabled={repeatingOrder === order.id}
-                          className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 text-white rounded-xl text-xs font-bold hover:bg-brand-700 transition-all disabled:opacity-70 shadow-sm active:scale-[0.98]"
-                        >
-                          {repeatingOrder === order.id ? (
-                            <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />جاري التكرار...</>
-                          ) : (
-                            <><Repeat className="w-3.5 h-3.5" />إعادة طلب هذه الأصناف</>
-                          )}
-                        </button>
-                      )}
-                      
-                      {/* Receipt & Share Actions */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setViewingReceiptForOrder(order)}
-                          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-[0.98]"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          عرض الفاتورة
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const items = orderItems[order.id] || [];
-                            const storeItems = items.filter((i: any) => i.source === 'store' || !i.source);
-                            const bakeryItems = items.filter((i: any) => i.source === 'bakery');
-
-                            let msg = `*فاتورة طلبك من جوده* 🧾✨\n`;
-                            msg += `*رقم الطلب:* ${order.order_number}\n\n`;
-                            
-                            if (order.customer_name) msg += `👤 *الاسم:* ${order.customer_name}\n`;
-                            if (order.customer_address) msg += `📍 *عنوان التوصيل:* ${order.customer_address}\n`;
-                            
-                            msg += `\n------------------\n`;
-                            
-                            if (storeItems.length > 0) {
-                              msg += `*🛒 طلبات المتجر:*\n`;
-                              storeItems.forEach((i: any) => {
-                                msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
-                              });
-                              msg += `\n`;
-                            }
-
-                            if (bakeryItems.length > 0) {
-                              msg += `*🧁 طلبات المخبز:*\n`;
-                              bakeryItems.forEach((i: any) => {
-                                msg += `- ${i.product_name} *(الكمية: ${i.quantity})*\n`;
-                              });
-                              msg += `\n`;
-                            }
-
-                            msg += `------------------\n`;
-                            if (order.delivery_fee === 0) {
-                              msg += `🚚 *التوصيل:* مجاناً\n`;
-                            } else if (order.delivery_fee) {
-                              msg += `🚚 *التوصيل:* ${order.delivery_fee} ريال\n`;
-                            }
-                            msg += `💳 *الحساب الإجمالي:* ${order.total} ريال\n`;
-                            msg += `------------------\n`;
-                            msg += `صحتكم تهمنا.. وبالعافية مقدماً! 💖`;
-
-                            const encoded = encodeURIComponent(msg);
-                            const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
-                            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
-                          }}
-                          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                          شارك الفاتورة
-                        </button>
-                      </div>
-
-                      {order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'failed' && (
-                        <button
-                          onClick={() => {
-                            const statusLabel = STATUS_MAP[order.status]?.label || order.status;
-                            const message = `مرحباً متجر جوده، أود الاستفسار عن طلبي رقم: *${order.order_number}* 📦\nالحالة الحالية: ${statusLabel}`;
-                            const encoded = encodeURIComponent(message);
-                            const phone = STORE_CONFIG.PHONE.replace(/\D/g, '');
-                            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
-                          }}
-                          className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          تواصل واستفسر عبر واتساب
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             );
 
@@ -675,13 +710,31 @@ export const OrdersPage: React.FC = () => {
           customerName={viewingReceiptForOrder.customer_name}
           address={viewingReceiptForOrder.customer_address || ''}
           notes={viewingReceiptForOrder.notes || ''}
-          orderType={viewingReceiptForOrder.order_type === 'pickup' ? 'pickup' : 'delivery'}
+          orderType={viewingReceiptForOrder.order_type === 'pickup' ? 'pickup' : viewingReceiptForOrder.order_type === 'shipping' ? 'shipping' : 'delivery'}
           subtotal={viewingReceiptForOrder.subtotal}
           deliveryFee={viewingReceiptForOrder.delivery_fee}
           total={viewingReceiptForOrder.total}
           phone={viewingReceiptForOrder.customer_phone}
           orderNumber={viewingReceiptForOrder.order_number}
           onClose={() => setViewingReceiptForOrder(null)}
+        />
+      )}
+
+      {activeSheetOrder && (
+        <OrderDetailsBottomSheet
+          order={activeSheetOrder}
+          items={orderItems[activeSheetOrder.id] || []}
+          isLoadingItems={loadingItemsOrderId === activeSheetOrder.id}
+          onClose={() => setActiveSheetOrder(null)}
+          onRepeatOrder={handleRepeatOrder}
+          isRepeating={repeatingOrder === activeSheetOrder.id}
+          onViewReceipt={(o) => {
+            setViewingReceiptForOrder(o);
+          }}
+          onShareWhatsApp={handleShareWhatsApp}
+          formatPrice={formatPrice}
+          formatDate={formatDate}
+          statusInfo={getOrderStatusInfo(activeSheetOrder.status, activeSheetOrder.order_type)}
         />
       )}
     </div>
