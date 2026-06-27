@@ -181,6 +181,8 @@ export const CartDrawer: React.FC = () => {
                         setPhone={checkout.setPhone}
                         customerLat={checkout.customerLat}
                         customerLng={checkout.customerLng}
+                        locationConfirmed={checkout.locationConfirmed}
+                        isLocationTooCloseToStore={checkout.isLocationTooCloseToStore}
                         address={checkout.address}
                         setAddress={checkout.setAddress}
                         notes={checkout.notes}
@@ -244,16 +246,15 @@ export const CartDrawer: React.FC = () => {
 
       {showMap && (
         <MapLocationPicker
-          onLocationSelected={(lat, lng) => {
-            checkout.setCustomerLat(lat);
-            checkout.setCustomerLng(lng);
-          }}
+          onLocationSelected={checkout.confirmLocation}
           onClose={() => setShowMap(false)}
           defaultLat={checkout.customerLat || undefined}
           defaultLng={checkout.customerLng || undefined}
+          initialLocationSelected={checkout.locationConfirmed}
           storeLat={checkout.storeLat}
           storeLng={checkout.storeLng}
           pricePerKm={checkout.pricePerKm}
+          minCustomerDistanceKm={checkout.minCustomerDistanceKm}
         />
       )}
 

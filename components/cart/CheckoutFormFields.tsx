@@ -14,6 +14,8 @@ interface CheckoutFormFieldsProps {
   setPhone: (v: string) => void;
   customerLat: number | null;
   customerLng: number | null;
+  locationConfirmed: boolean;
+  isLocationTooCloseToStore: boolean;
   address: string;
   setAddress: (v: string) => void;
   notes: string;
@@ -35,6 +37,8 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
   setPhone,
   customerLat,
   customerLng,
+  locationConfirmed,
+  isLocationTooCloseToStore,
   address,
   setAddress,
   notes,
@@ -150,16 +154,41 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                   type="button"
                   onClick={onOpenMap}
                   className={`w-full h-[46px] px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border shadow-sm ${
-                    customerLat && customerLng 
+                    locationConfirmed && customerLat && customerLng && !isLocationTooCloseToStore
                       ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-400' 
+                      : isLocationTooCloseToStore
+                        ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400'
                       : 'bg-white border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-brand-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  <Map className={`w-4 h-4 shrink-0 ${customerLat && customerLng ? 'text-green-500' : 'text-brand-500'}`} />
+                  <Map className={`w-4 h-4 shrink-0 ${
+                    locationConfirmed && customerLat && customerLng && !isLocationTooCloseToStore
+                      ? 'text-green-500'
+                      : isLocationTooCloseToStore
+                        ? 'text-red-500'
+                        : 'text-brand-500'
+                  }`} />
                   <span className="truncate">
-                    {customerLat && customerLng ? 'تم تحديد الموقع ✓' : 'حدد على الخريطة 📍'}
+                    {locationConfirmed && customerLat && customerLng && !isLocationTooCloseToStore
+                      ? 'تم تأكيد الموقع ✓'
+                      : isLocationTooCloseToStore
+                        ? 'أعد تحديد الموقع'
+                        : 'حدد على الخريطة 📍'}
                   </span>
                 </button>
+                {isLocationTooCloseToStore ? (
+                  <p className="text-[10px] text-red-500 font-bold mt-1.5 leading-relaxed">
+                    الموقع قريب جداً من جوده. حدد موقع بيتك بدقة.
+                  </p>
+                ) : locationConfirmed && customerLat && customerLng ? (
+                  <p className="text-[10px] text-green-600 dark:text-green-400 font-bold mt-1.5">
+                    تم تأكيد موقعك لحساب التوصيل.
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-gray-400 font-bold mt-1.5 leading-relaxed">
+                    لازم تؤكد موقعك على الخريطة عشان نحسب التوصيل صح.
+                  </p>
+                )}
               </div>
             </div>
           ) : (

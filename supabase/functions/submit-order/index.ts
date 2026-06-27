@@ -48,6 +48,8 @@ interface RpcItem {
   expiry_date: string | null;
 }
 
+const MIN_CUSTOMER_DISTANCE_KM = 0.2;
+
 // --- 1. HTTP Helpers ---
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -105,6 +107,40 @@ function validatePayload(body: any): OrderPayload {
   }
 
   return body as OrderPayload;
+}
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+async function validateDeliveryLocation(payload: OrderPayload, joudaClient: SupabaseClient) {
+  if (payload.order_type !== 'delivery') return;
+
+  if (typeof payload.latitude !== 'number' || typeof payload.longitude !== 'number') {
+    throw new Error('حدد موقع التوصيل على الخريطة قبل إرسال الطلب.');
+  }
+
+  const { data } = await joudaClient
+    .from('app_settings_public')
+    .select('store_latitude, store_longitude')
+    .eq('id', 1)
+    .single();
+
+  const storeLat = Number(data?.store_latitude ?? 15.3980555);
+  const storeLng = Number(data?.store_longitude ?? 44.2094444);
+  const distanceKm = calculateDistanceKm(storeLat, storeLng, payload.latitude, payload.longitude);
+
+  if (distanceKm < MIN_CUSTOMER_DISTANCE_KM) {
+    throw new Error('الموقع قريب جداً من جوده. حدد موقع بيتك بدقة على الخريطة.');
+  }
 }
 
 // --- 3. Business Logic Helpers ---
@@ -357,7 +393,9 @@ Deno.serve(async (req: Request) => {
 
     const joudaClient = createClient(config.joudaUrl, config.joudaServiceKey, { auth: { persistSession: false } });
     const inventoryClient = createClient(config.inventoryUrl, config.inventoryKey, { auth: { persistSession: false } });
-    
+
+    await validateDeliveryLocation(payload, joudaClient);
+
     const invoiceId = crypto.randomUUID();
     const idempotencyKey = crypto.randomUUID();
 

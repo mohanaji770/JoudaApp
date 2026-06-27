@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { calculateDistance, calculateDeliveryFeeDetails } from '../../../utils/distanceUtils';
 
+const MIN_CUSTOMER_DISTANCE_KM = 0.2;
+
 export const useCheckout = (
   items: any[], 
   cachedProducts: any[],
@@ -20,6 +22,8 @@ export const useCheckout = (
   
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
+  const [locationSource, setLocationSource] = useState<'gps' | 'map_click' | 'search' | null>(null);
   
   const [deliveryZone, setDeliveryZone] = useState<'sanaa' | 'provinces'>(
     () => (localStorage.getItem('jouda_delivery_zone') as 'sanaa' | 'provinces') || 'sanaa'
@@ -129,11 +133,24 @@ export const useCheckout = (
     return { currentFee: 0, rawFee: 0, isFreeDelivery: true, distanceKm: 0, qualifiesForFree: false };
   }, [customerLat, customerLng, storeLat, storeLng, pricePerKm, deliveryZone, currentSubtotal]);
 
+  const isLocationTooCloseToStore = deliveryZone === 'sanaa' &&
+    customerLat !== null &&
+    customerLng !== null &&
+    calculateDistance(storeLat, storeLng, customerLat, customerLng) < MIN_CUSTOMER_DISTANCE_KM;
+
   const grandTotal = currentSubtotal + currentFee;
   const isFormValid = customerName.trim() !== '' && 
     phone.trim().length >= 9 && 
     address.trim() !== '' && 
-    (deliveryZone === 'provinces' || (customerLat !== null && customerLng !== null));
+    (
+      deliveryZone === 'provinces' ||
+      (
+        customerLat !== null &&
+        customerLng !== null &&
+        locationConfirmed &&
+        !isLocationTooCloseToStore
+      )
+    );
 
   const isSaved = (key: string, val: string) => !!val && localStorage.getItem(key) === val;
 
@@ -162,6 +179,12 @@ export const useCheckout = (
       }
       if (deliveryZone === 'sanaa' && (customerLat === null || customerLng === null)) {
         missingFields.push('تحديد موقع التوصيل على الخريطة 📍');
+      }
+      if (deliveryZone === 'sanaa' && customerLat !== null && customerLng !== null && !locationConfirmed) {
+        missingFields.push('تأكيد موقع التوصيل من الخريطة');
+      }
+      if (deliveryZone === 'sanaa' && isLocationTooCloseToStore) {
+        missingFields.push('الموقع قريب جداً من جوده، حدد موقع بيتك بدقة');
       }
 
       alert(`فضلاً، أكمل البيانات التالية لتأكيد طلبك:\n\n• ${missingFields.join('\n• ')}`);
@@ -220,6 +243,23 @@ export const useCheckout = (
     setNotes('');
     setCustomerLat(null);
     setCustomerLng(null);
+    setLocationConfirmed(false);
+    setLocationSource(null);
+  };
+
+  const confirmLocation = (lat: number, lng: number, source: 'gps' | 'map_click' | 'search') => {
+    setCustomerLat(lat);
+    setCustomerLng(lng);
+    setLocationConfirmed(true);
+    setLocationSource(source);
+  };
+
+  const updateDeliveryZone = (zone: 'sanaa' | 'provinces') => {
+    setDeliveryZone(zone);
+    setCustomerLat(null);
+    setCustomerLng(null);
+    setLocationConfirmed(false);
+    setLocationSource(null);
   };
 
   return {
@@ -229,7 +269,12 @@ export const useCheckout = (
     phone, setPhone,
     customerLat, setCustomerLat,
     customerLng, setCustomerLng,
-    deliveryZone, setDeliveryZone,
+    locationConfirmed,
+    locationSource,
+    isLocationTooCloseToStore,
+    minCustomerDistanceKm: MIN_CUSTOMER_DISTANCE_KM,
+    confirmLocation,
+    deliveryZone, setDeliveryZone: updateDeliveryZone,
     storeLat, storeLng, pricePerKm,
     submitting,
     submitResult,

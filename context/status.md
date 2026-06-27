@@ -29,6 +29,7 @@ Jouda is a React/Vite customer app with Supabase Edge Functions and a Capacitor 
 | 2026-06-27 | Gemini frontend exposure paths removed | Frontend no longer declares `VITE_GEMINI_API_KEY`; Gemini stays behind the `analyze-product` Edge Function |
 | 2026-06-27 | Telegram customer location moved into message text | Google Maps location now appears as an inline HTML link under the address instead of a separate workflow button |
 | 2026-06-27 | Telegram app orders can be prepared before pickup | `confirmed` orders show both pickup and prepare actions; `preparing` can still record pickup later without changing status |
+| 2026-06-27 | Checkout location confirmation hardened | Sana'a delivery now requires an explicit confirmed map/GPS/search selection and rejects locations too close to the store in both frontend and `submit-order` |
 
 ## Known Risks
 
