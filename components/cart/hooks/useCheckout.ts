@@ -147,6 +147,8 @@ export const useCheckout = (
   };
 
   const handleSubmitOrder = async (onSuccess: () => void) => {
+    if (submitting) return;
+
     if (!isFormValid) {
       const missingFields = [];
       if (!customerName.trim()) {

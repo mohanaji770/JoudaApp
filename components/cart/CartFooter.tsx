@@ -60,10 +60,10 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         ) : (
           <button
             onClick={handleSubmitOrder}
-            disabled={submitting}
+            disabled={!canSubmitOrder || submitting}
             className={`w-full text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-lg shadow-lg ${
-              !canSubmitOrder
-                ? 'bg-gray-400 dark:bg-gray-700 cursor-pointer'
+              !canSubmitOrder || submitting
+                ? 'bg-gray-400 dark:bg-gray-700 cursor-not-allowed opacity-80'
                 : 'bg-brand-600 hover:bg-brand-700 shadow-brand-200 dark:shadow-none'
             }`}
           >
