@@ -32,25 +32,158 @@ export const JoudaPage: React.FC = () => {
   const TESTIMONIALS = [
     {
       id: 1,
-      name: "Ashley Muharram",
+      name: "Ahlam Ali",
       image: "https://lh3.googleusercontent.com/a/ACg8ocJM-X5iJ1aNKpsmDDWvB1qKf9mc7dPXlS6ebeI3oLVzVTJtwQ=s120-c-rp-mo-br100",
-      time: "قبل 4 أشهر",
-      text: "متجر جوده من أوائل المتاجر التي ساعدتنا كسيلياكيين، وفروا لنا أشياء كنا فعلاً نحتاجها ومابخلو علينا بأي معلومة."
+      time: "قبل 7 أشهر",
+      text: "تعامل راقي وجميل، اهتمام بنظافة وشكل الطلبات، شكراً جودة."
     },
     {
       id: 2,
-      name: "Really Ali Abdo",
-      image: "https://lh3.googleusercontent.com/a/ACg8ocKX90ddwtzLPDL4dKLXgOAESZWXZlKgUPdvTG_x8t-VYixxeA=s120-c-rp-mo-br100",
-      time: "قبل 3 أشهر",
-      text: "متجر جوده شكراً كثير لكم. وفرتم لنا الراحة والأمان في خياراتنا الغذائية."
+      name: "قصي الماوري",
+      image: "https://lh3.googleusercontent.com/a/ACg8ocI5fpjHxdtVpYOnMylOVNKfFzAnLgqxFitqYYZpRHsscdNfHQ=s120-c-rp-mo-br100",
+      time: "قبل 11 شهر",
+      text: "حبيت أشكر متجر جوده على خدماته وتوفيره كل ما نحتاجه من دقيق لكل المخبوزات والمعجنات، وحتى الحلويات متوفرة بكل أشكالها وطعمها جميل."
     },
     {
       id: 3,
-      name: "قصي الماوري",
-      image: "https://lh3.googleusercontent.com/a/ACg8ocI5fpjHxdtVpYOnMylOVNKfFzAnLgqxFitqYYZpRHsscdNfHQ=s120-c-rp-mo-br100",
-      time: "قبل 4 أشهر",
-      text: "كل شي كنت محروم منه حصلته عندهم، دقيق ومخبوزات. تعامل راقي وأخلاق عالية."
-    }
+      name: "Mram Al ahmadi",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "من أجمل المتاجر، تعامل راقي ومنتج مناسب، وخدمة عملاء ومعلومات واستشارات من أجمل ما يكون."
+    },
+    {
+      id: 4,
+      name: "Reem Al Dhamari",
+      image: "",
+      time: "قبل 3 أشهر",
+      text: "شكراً جوده لتعاملكم الراقي وأصنافكم اللذيذة."
+    },
+    {
+      id: 5,
+      name: "Ashley Muharram",
+      image: "",
+      time: "قبل 11 شهر",
+      text: "متجر جوده من أوائل المتاجر الذي ساعدنا كسيلياكيين ووفر لنا أشياء كنا فعلاً نحتاجها، وما بخلوا علينا بأي معلومة ممكن تفيدنا في رحلتنا مع السيلياك."
+    },
+    {
+      id: 6,
+      name: "Fog Master",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "أول متجر تخصصي بالمنتجات الخالية من الجلوتين في اليمن. شخصياً كسيلياكية أطلب كل ما أحتاجه من متجر جوده ومعتمدة عليه بعد الله."
+    },
+    {
+      id: 7,
+      name: "امين خالد",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "أحب أشكر متجر جوده الأكثر من رائع وعلى جهودهم المبذولة، بما أنهم يحسوا بنا كونهم سيلياكيين مثلنا ويوفروا أغلب المنتجات اللي محرومين منها."
+    },
+    {
+      id: 8,
+      name: "loly abdo",
+      image: "",
+      time: "قبل 7 أشهر",
+      text: "متجر أكثر من رائع، كل الحب من أجلكم."
+    },
+    {
+      id: 9,
+      name: "حماس الدعيس",
+      image: "",
+      time: "قبل 11 شهر",
+      text: "أول وأفضل متجر في اليمن وفر احتياجاتنا كسيلياكيين، ومن معاناة أصحابه عرفوا يوصلوا رسالتهم ويفهمونا، وتعاملهم راقي جداً."
+    },
+    {
+      id: 10,
+      name: "Vvv by High",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "The quality of the store is very excellent, and the flavors and products are soothing to the patient."
+    },
+    {
+      id: 11,
+      name: "ahlam naif",
+      image: "",
+      time: "قبل 11 شهر",
+      text: "أشكر متجر جوده اللي يكون حاضراً في عز احتياجنا لمنتجات خالية من الجلوتين، ولجهودهم في توفير أكبر قدر ممكن من هذه المنتجات وبأسعار مناسبة."
+    },
+    {
+      id: 12,
+      name: "Abdulqader Naji",
+      image: "",
+      time: "قبل 11 شهر",
+      text: "من أفضل المنتجات ومتوفر بأغلب الأوقات، وخدمة عملاء ممتازة. أتمنى لكم دوام التقدم والنجاح."
+    },
+    {
+      id: 13,
+      name: "Shaima'a Khaled",
+      image: "",
+      time: "قبل 8 أشهر",
+      text: "متجر جوده أعتقد أنه ما فيش كلام نقدر نوصل به شكرنا لكم ولا في وصف ممكن يوصف حبنا واحترامنا الكبير لكم."
+    },
+    {
+      id: 14,
+      name: "dany hakim",
+      image: "",
+      time: "قبل 10 أشهر",
+      text: "متجر رائع وأمين وفر لي منتجات خالية من الجلوتين بجودة بدون قلق أو معاناة. شكراً من القلب."
+    },
+    {
+      id: 15,
+      name: "Emad Muthana",
+      image: "",
+      time: "قبل 11 شهر",
+      text: "من أفضل المتاجر الذي تعاملت معها."
+    },
+    {
+      id: 16,
+      name: "هيام الذبحاني",
+      image: "",
+      time: "قبل 6 أشهر",
+      text: "أجمل متجر بالحياة."
+    },
+    {
+      id: 17,
+      name: "أم عمير",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "يكفينا الثقة في المنتجات، نأخذ بدون قلق."
+    },
+    {
+      id: 18,
+      name: "Really Ali Abdo",
+      image: "https://lh3.googleusercontent.com/a/ACg8ocKX90ddwtzLPDL4dKLXgOAESZWXZlKgUPdvTG_x8t-VYixxeA=s120-c-rp-mo-br100",
+      time: "قبل 9 أشهر",
+      text: "متجر جوده شكراً كثير لكم."
+    },
+    {
+      id: 19,
+      name: "Haime Fahmi",
+      image: "",
+      time: "قبل 9 أشهر",
+      text: "جوده الشركة الحب لحياتي."
+    },
+    {
+      id: 20,
+      name: "Ghofran Nasr",
+      image: "",
+      time: "قبل 7 أشهر",
+      text: "Very Nice."
+    },
+    {
+      id: 21,
+      name: "laila mohmmed",
+      image: "",
+      time: "قبل 23 ساعة",
+      text: "شكراً على جهودكم، من أحلى وأحب المتاجر اللي أتعامل معها من جودة، وسرعة، ودقة، وأسعار مناسبة لنا كسلياكيين."
+    },
+    {
+      id: 22,
+      name: "Ameer Haill",
+      image: "",
+      time: "قبل يوم",
+      text: "متجر رائع وتعامل راقي، وثقتنا بهم لأنهم سيلياكيين مثلنا يحسوا فينا."
+    },
   ];
 
   return (
@@ -102,11 +235,23 @@ export const JoudaPage: React.FC = () => {
               {TESTIMONIALS.map((review) => (
                  <div key={review.id} className="relative overflow-hidden bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 duration-300">
                     <Quote className="absolute top-2 left-2 w-16 h-16 text-gray-100 dark:text-gray-700 opacity-50 z-0 rotate-180" />
-                    <img src={review.image} alt={review.name} className="w-12 h-12 rounded-full shrink-0 relative z-10 border-2 border-white dark:border-gray-700 shadow-sm" />
+                    {review.image ? (
+                      <img src={review.image} alt={review.name} className="w-12 h-12 rounded-full shrink-0 relative z-10 border-2 border-white dark:border-gray-700 shadow-sm" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full shrink-0 relative z-10 border-2 border-white dark:border-gray-700 shadow-sm bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 flex items-center justify-center font-black text-sm">
+                        {review.name.trim().charAt(0)}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0 relative z-10">
-                       <div className="flex items-center gap-2 mb-1.5">
+                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
                           <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white">{review.name}</h4>
                           <span className="text-xs text-gray-400">{review.time}</span>
+                          <span className="text-[10px] font-black text-gray-400 bg-gray-50 dark:bg-gray-900/60 px-2 py-0.5 rounded-full">Google</span>
+                       </div>
+                       <div className="flex items-center gap-0.5 text-yellow-400 mb-2" aria-label="تقييم 5 من 5">
+                         {[1, 2, 3, 4, 5].map((star) => (
+                           <Star key={star} className="w-3.5 h-3.5 fill-current" />
+                         ))}
                        </div>
                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">"{review.text}"</p>
                     </div>
