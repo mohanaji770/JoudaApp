@@ -11,17 +11,17 @@
 //   telegram.ts  → Telegram API helpers
 //   format.ts    → Date/phone/message formatting
 //   workflow.ts  → State machines (wf_* & inv_*)
-//   commands.ts  → Text commands (/help, /orders, /status)
+//   commands.ts  → Admin text commands (/help, /today, /queue, /money)
 //   wf-callbacks → App order buttons (wf_*)
 //   inv-callbacks→ POS invoice buttons (inv_*)
 //   incoming.ts  → DB webhook (new/reversed invoices)
 
 import { answerCallback, sendMessage } from './telegram.ts';
-import { env, getInventoryUserId } from './config.ts';
+import { env } from './config.ts';
 import { handleWfCallback } from './wf-callbacks.ts';
 import { handleInvCallback } from './inv-callbacks.ts';
 import { handleNewInvoice, handleReversedInvoice } from './incoming.ts';
-import { handleHelp, handleOrders, handleStatus, handleCash, handleMyCash } from './commands.ts';
+import { handleHelp, handleToday, handleQueue, handleMoney } from './commands.ts';
 
 // ─── Main Server ────────────────────────────────────────
 
@@ -147,29 +147,14 @@ Deno.serve(async (req: Request) => {
     const chatId = String(message.chat.id);
     const text = message.text.trim();
 
-    // Group chats: only /chatid is allowed
+    // Group chats: text commands are disabled; workflow buttons still work above.
     if (chatId.startsWith('-')) {
-      if (text === '/chatid' || text.startsWith('/chatid@')) {
-        await sendMessage(
-          botToken,
-          chatId,
-          `معرف المجموعة:\n<code>${chatId}</code>`,
-        );
-      }
       return new Response('OK');
     }
 
-    // Private chats: must be admin OR a mapped driver
-    if (!env.adminIds().includes(chatId) && !getInventoryUserId(chatId)) {
-      if (text === '/chatid') {
-        await sendMessage(
-          botToken,
-          chatId,
-          `معرف المحادثة:\n<code>${chatId}</code>`,
-        );
-      } else {
-        await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة فريق جوده.');
-      }
+    // Private text commands are admin-only.
+    if (!env.adminIds().includes(chatId)) {
+      await sendMessage(botToken, chatId, 'هذا البوت خاص بإدارة جوده.');
       return new Response('OK');
     }
 
@@ -185,20 +170,16 @@ Deno.serve(async (req: Request) => {
         await handleHelp(botToken, chatId);
         break;
 
-      case '/orders':
-        await handleOrders(botToken, chatId);
+      case '/today':
+        await handleToday(botToken, chatId);
         break;
 
-      case '/status':
-        await handleStatus(botToken, chatId);
+      case '/queue':
+        await handleQueue(botToken, chatId);
         break;
 
-      case '/cash':
-        await handleCash(botToken, chatId);
-        break;
-
-      case '/mycash':
-        await handleMyCash(botToken, chatId);
+      case '/money':
+        await handleMoney(botToken, chatId);
         break;
 
       default:

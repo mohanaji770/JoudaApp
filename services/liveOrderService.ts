@@ -68,3 +68,21 @@ export const fetchLiveOrderItems = async (orderId: string, phone: string): Promi
   }
   return (data || []) as LiveOrderItem[];
 };
+
+/**
+ * Fetch items for a batch of order IDs.
+ */
+export const fetchLiveOrdersItemsBatch = async (orderIds: string[], phone: string): Promise<LiveOrderItem[]> => {
+  const cleanPhone = phone.replace(/[\s\-]/g, '');
+  const client = getSupabaseClient(cleanPhone);
+  const { data, error } = await client
+    .from('order_items')
+    .select('*')
+    .in('order_id', orderIds);
+
+  if (error) {
+    console.error('fetchLiveOrdersItemsBatch error:', error);
+    return [];
+  }
+  return (data || []) as LiveOrderItem[];
+};

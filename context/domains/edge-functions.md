@@ -23,7 +23,7 @@
 `telegram-bot` is the only multi-file function:
 
 - `index.ts`: routing and auth checks
-- `commands.ts`: text commands
+- `commands.ts`: admin-only text dashboard commands (`/today`, `/queue`, `/money`)
 - `wf-callbacks.ts`: app order callbacks
 - `inv-callbacks.ts`: POS invoice callbacks
 - `incoming.ts`: incoming Inventory invoice webhook

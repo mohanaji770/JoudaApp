@@ -126,44 +126,7 @@ export const JoudaPage: React.FC = () => {
            </button>
         </div>
 
-        {/* 5. FAQ */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
-           <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-6">أسئلة شائعة وإجابات تهمّك</h3>
-           <div className="max-w-2xl mx-auto space-y-2">
-              {isLoadingFaqs ? (
-                 [1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
-                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4"></div>
-                    </div>
-                 ))
-              ) : faqs.length > 0 ? (
-                 faqs.map((faq) => (
-                     <div key={faq.id} className="border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden bg-warm-50 dark:bg-gray-700/30">
-                        <button 
-                           onClick={() => toggleFaq(faq.id)}
-                           aria-expanded={openFaqId === faq.id}
-                           className="w-full flex items-center justify-between p-4 text-right hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <span className={`font-bold text-sm ${openFaqId === faq.id ? 'text-brand-600' : 'text-gray-700 dark:text-gray-200'}`}>
-                             {faq.question}
-                          </span>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${openFaqId === faq.id ? 'rotate-180 text-brand-600' : ''}`} />
-                        </button>
-                        <div className={`grid transition-all duration-300 ease-in-out ${openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                           <div className="overflow-hidden">
-                              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed px-4 pb-4 pt-0">
-                                 {faq.answer}
-                              </p>
-                           </div>
-                        </div>
-                     </div>
-                 ))
-              ) : (
-                 <p className="text-center text-sm text-gray-400 py-4">ما في أسئلة شائعة حالياً، بس تقدر تسألنا مباشرة على الواتساب! 💬</p>
-              )}
-           </div>
-        </div>
+
 
         {/* 6. Contact Channels (Secondary Exit Actions) */}
         <div className="space-y-3 pt-2">

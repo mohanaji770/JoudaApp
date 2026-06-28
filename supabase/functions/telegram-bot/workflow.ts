@@ -103,6 +103,13 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
       shippingLabel: 'تجهيز الشحنة',
       shippingEmoji: '📦',
     },
+    deliver: {
+      nextStatus: 'delivered',
+      label: 'تم التسليم',
+      emoji: '✅',
+      shippingLabel: 'سُلّمت لشركة الشحن',
+      shippingEmoji: '🚛',
+    },
     cancel: {
       nextStatus: 'cancelled',
       label: 'إلغاء الطلب',
@@ -113,7 +120,7 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
   },
   preparing: {
     reserve: {
-      nextStatus: 'preparing',
+      nextStatus: 'reserved',
       label: 'استلمت الطلب',
       emoji: '🚚',
       shippingLabel: 'استلمت مهمة الشحن',

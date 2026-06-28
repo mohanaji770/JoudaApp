@@ -104,7 +104,7 @@ npx cap open android
 | `telegram.ts` | Telegram API helpers |
 | `format.ts` | `fmtDate()`, `formatPhone()`, `whatsappButton()`, `paymentLabel()` |
 | `workflow.ts` | State machines وأزرار `wf_*` و`inv_*` |
-| `commands.ts` | `/help`, `/orders`, `/status` |
+| `commands.ts` | أوامر الإدارة النصية: `/help`, `/today`, `/queue`, `/money` |
 | `wf-callbacks.ts` | أزرار طلبات التطبيق |
 | `inv-callbacks.ts` | أزرار فواتير POS |
 | `incoming.ts` | استقبال فواتير Inventory الجديدة |

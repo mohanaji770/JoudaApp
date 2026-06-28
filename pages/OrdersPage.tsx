@@ -7,7 +7,7 @@ import {
   Info, ChevronLeft, FileText, Share2
 } from 'lucide-react';
 import { getCompletedOrders, deleteCompletedOrder, CompletedOrder } from '../services/db';
-import { fetchLiveOrders, fetchLiveOrderItems, type LiveOrder, type LiveOrderItem } from '../services/liveOrderService';
+import { fetchLiveOrders, fetchLiveOrderItems, fetchLiveOrdersItemsBatch, type LiveOrder, type LiveOrderItem } from '../services/liveOrderService';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { getCachedProducts } from '../services/db';
@@ -75,23 +75,23 @@ const getOrderStepDetails = (order: DisplayOrder) => {
   switch (order.status) {
     case 'submitted':
       return {
-        explanation: 'تم استلام الطلب من الفريق وسيبدأ التقديم والتأكيد قريباً.',
-        nextStep: 'تأكيد الطلب وتجهيز الفاتورة 🧾'
+        explanation: 'وصلنا طلبك وبدأنا نراجعه لتأكيده قريباً. 📝',
+        nextStep: 'اعتماد الطلب وتجهيز الفاتورة 🧾'
       };
     case 'confirmed':
       return {
         explanation: isShipping 
-          ? 'تم تأكيد طلبك وتعيين مسؤول للتجهيز والشحن.' 
-          : 'تم تأكيد طلبك وجاري تحضيره للتسليم.',
+          ? 'أكدنا طلبك وعينا فريق شغال على شحن طلبك.' 
+          : 'طلبك اتأكد وجاري تجهيزه للتسليم.',
         nextStep: isShipping 
           ? 'تجهيز الشحنة وتعبئتها 📦' 
-          : 'بدء تجهيز الطلب 🛵'
+          : 'بدء تجهيز طلبك 🛵'
       };
     case 'reserved':
       return {
         explanation: isShipping 
           ? 'تم استلام مهمة الشحن وجاري مراجعة شركة النقل.' 
-          : 'المندوب استلم طلبك وجاري تحضيره للتجهيز والتوصيل.',
+          : 'المندوب استلم طلبك وهو في الطريق إليك! 🛵',
         nextStep: isShipping 
           ? 'تجهيز الشحنة وتعبئتها 📦' 
           : 'بدء التجهيز والتعبئة 📦'
@@ -99,10 +99,10 @@ const getOrderStepDetails = (order: DisplayOrder) => {
     case 'preparing':
       return {
         explanation: isShipping 
-          ? 'جاري تغليف شحنتك وتجهيزها للنقل البري.' 
-          : 'جاري تجهيز وتغليف منتجاتك الطازجة لك.',
+          ? 'شغالين نغلف طلبك ونجهزها للنقل.' 
+          : 'شغالين نجهز ونغلف منتجاتك بكل حب. 📦',
         nextStep: isShipping 
-          ? 'تسليم الشحنة لشركة النقل البري 🚚' 
+          ? 'تسليم الطلب لشركة النقل 🚚' 
           : 'خروج المندوب للتوصيل 🛵'
       };
     case 'delivered':
@@ -117,7 +117,7 @@ const getOrderStepDetails = (order: DisplayOrder) => {
     case 'cancelled':
     default:
       return {
-        explanation: 'الطلب ملغي. إذا كان هناك أي استفسار يرجى التواصل معنا.',
+        explanation: 'الطلب ملغي. إذا كان عندك أي استفسار تواصل معنا وبنساعدك.',
         nextStep: 'طلب ملغي 🚫'
       };
   }
@@ -141,6 +141,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
   const storedName = localStorage.getItem('jouda_customer_name') || 'صديق جوده';
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, LiveOrderItem[]>>({});
+  const [productImages, setProductImages] = useState<Record<string, string>>({});
   const [repeatingOrder, setRepeatingOrder] = useState<string | null>(null);
   const [savedPhone, setSavedPhone] = useState<string>('');
   const [addingFavoriteId, setAddingFavoriteId] = useState<string | null>(null);
@@ -156,6 +157,17 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
         getCachedProducts(),
       ]);
       setLocalOrders(saved);
+
+      const imagesMap: Record<string, string> = {};
+      allProducts.forEach(p => {
+        if (p.barcode && p.image) {
+          imagesMap[p.barcode] = p.image;
+        }
+        if (p.name && p.image) {
+          imagesMap[p.name.trim()] = p.image;
+        }
+      });
+      setProductImages(imagesMap);
 
       const localItemsMap: Record<string, LiveOrderItem[]> = {};
       saved.forEach(o => {
@@ -181,6 +193,18 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
       if (phone) {
         const live = await fetchLiveOrders(phone);
         setLiveOrders(live);
+        if (live.length > 0) {
+          const liveIds = live.map(o => o.id);
+          const liveItems = await fetchLiveOrdersItemsBatch(liveIds, phone);
+          const liveItemsMap: Record<string, LiveOrderItem[]> = {};
+          liveItems.forEach(item => {
+            if (!liveItemsMap[item.order_id]) {
+              liveItemsMap[item.order_id] = [];
+            }
+            liveItemsMap[item.order_id].push(item);
+          });
+          setOrderItems(prev => ({ ...prev, ...liveItemsMap }));
+        }
       }
     } catch (e) {
       console.error('Failed to load orders', e);
@@ -197,6 +221,18 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
       try {
         const live = await fetchLiveOrders(savedPhone);
         setLiveOrders(live);
+        if (live.length > 0) {
+          const liveIds = live.map(o => o.id);
+          const liveItems = await fetchLiveOrdersItemsBatch(liveIds, savedPhone);
+          const liveItemsMap: Record<string, LiveOrderItem[]> = {};
+          liveItems.forEach(item => {
+            if (!liveItemsMap[item.order_id]) {
+              liveItemsMap[item.order_id] = [];
+            }
+            liveItemsMap[item.order_id].push(item);
+          });
+          setOrderItems(prev => ({ ...prev, ...liveItemsMap }));
+        }
       } catch { /* silent */ }
     }, 30000);
     return () => clearInterval(interval);
@@ -472,13 +508,13 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
             return (
               <div 
                 key={order.id} 
-                className={`bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border-r-4 ${borderClass} border border-y-gray-100 border-l-gray-100 dark:border-y-gray-700/60 dark:border-l-gray-700/60 transition-all duration-300 hover:shadow-md relative group/card`}
+                className={`bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border-r-4 ${borderClass} border border-y-gray-100 border-l-gray-100 dark:border-y-gray-700/60 dark:border-l-gray-700/60 transition-all duration-300 hover:shadow-md relative group/card`}
               >
                 <div className="p-5 relative z-10">
                   {/* Top Header Grid */}
                   <div className="flex items-center justify-between gap-4 mb-4">
+                    {/* Right: Order Number & Date */}
                     <div>
-                      {/* Order Number & Source info */}
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-base font-black text-gray-900 dark:text-white tracking-tight">
                           طلب #{order.order_number?.split('-').pop() || '—'}
@@ -489,34 +525,56 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
                           </span>
                         )}
                       </div>
-                      
-                      {/* Date */}
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium flex items-center gap-1">
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 font-bold flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {formatDate(order.created_at)}
                       </p>
                     </div>
 
-                    {/* Status Badge */}
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <span 
-                        style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
-                        className="px-3 py-1 rounded-full font-bold text-xs inline-flex items-center justify-center tracking-wide min-w-[75px] text-center"
-                      >
-                        {statusInfo.label}
-                      </span>
-                      {isActiveOrder && (
-                        <span className="flex items-center gap-1 text-[9px] font-bold text-brand-600 dark:text-brand-400 animate-pulse bg-brand-50/50 dark:bg-brand-950/20 px-2 py-0.5 rounded-full">
-                          <span className="w-1 h-1 rounded-full bg-brand-600 dark:bg-brand-400"></span>
-                          نشط الآن
+                    {/* Left: Product circular overlapping thumbnails */}
+                    {(() => {
+                      const displayItems = items.slice(0, 3);
+                      return displayItems.length > 0 ? (
+                        <div className="flex items-center -space-x-2 rtl:space-x-reverse select-none shrink-0 pl-1">
+                          {displayItems.map((item, idx) => {
+                            const imageUrl = productImages[item.product_barcode] || productImages[item.product_name.trim()];
+                            return (
+                              <div 
+                                key={idx} 
+                                className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-750 overflow-hidden shadow-sm shrink-0 flex items-center justify-center text-[10px] font-black text-brand-600 relative"
+                                style={{ zIndex: 30 - idx }}
+                                title={item.product_name}
+                              >
+                                {imageUrl ? (
+                                  <img src={imageUrl} alt={item.product_name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold">{item.product_name[0]}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {items.length > 3 && (
+                            <div 
+                              className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 text-[9px] font-black flex items-center justify-center shadow-sm shrink-0 z-0"
+                            >
+                              +{items.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span 
+                          style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
+                          className="px-3 py-1 rounded-full font-bold text-xs inline-flex items-center justify-center tracking-wide min-w-[75px] text-center"
+                        >
+                          {statusInfo.label}
                         </span>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </div>
 
-                  {/* Metadata & Actions tags */}
+                  {/* Metadata Address & Status info */}
                   {order.customer_address && (
-                    <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl p-2.5 mb-4 border border-gray-50 dark:border-gray-750">
+                    <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl p-2.5 mb-4 border border-gray-100 dark:border-gray-750">
                       <div className="flex items-center gap-2 min-w-0">
                         <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
                         <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold truncate">
@@ -535,49 +593,88 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
                     </div>
                   )}
 
-                  {/* Minimal Compact Progress Bar */}
+                  {/* Horizontal Progress Tracker (Custom iOS Widget Style) */}
                   {order.status !== 'cancelled' && order.status !== 'failed' && (() => {
-                    const mapStatusToStep = (status: string): string => {
-                      if (['submitted'].includes(status)) return 'submitted';
-                      if (['confirmed', 'reserved'].includes(status)) return 'confirmed';
-                      if (['preparing'].includes(status)) return 'preparing';
-                      if (['delivered', 'paid', 'deposited'].includes(status)) return 'delivered';
-                      return status;
-                    };
-                    const mappedStatus = mapStatusToStep(order.status);
-                    const steps = ['submitted', 'confirmed', 'preparing', 'delivered'];
-                    const currentIdx = steps.indexOf(mappedStatus);
-                    const labels = getProgressLabels(order);
-                    const stepDetails = getOrderStepDetails(order);
+                    const isShipping = order.order_type === 'shipping';
                     
+                    // Setup stages and mapping
+                    const stages = isShipping 
+                      ? ['مؤكد', 'جاري التجهيز', 'تم التسليم لشركة الشحن']
+                      : ['مؤكد', 'قيد التجهيز', 'في الطريق إليك', 'تم التسليم'];
+
+                    let currentIdx = -1;
+                    if (isShipping) {
+                      if (order.status === 'confirmed') currentIdx = 0;
+                      else if (order.status === 'preparing') currentIdx = 1;
+                      else if (['delivered', 'paid', 'deposited'].includes(order.status)) currentIdx = 2;
+                    } else {
+                      if (order.status === 'confirmed') currentIdx = 0;
+                      else if (order.status === 'preparing') currentIdx = 1;
+                      else if (order.status === 'reserved') currentIdx = 2;
+                      else if (['delivered', 'paid', 'deposited'].includes(order.status)) currentIdx = 3;
+                    }
+
+                    const stepDetails = getOrderStepDetails(order);
+                    const totalStages = stages.length;
+                    const progressPercent = currentIdx >= 0 
+                      ? (currentIdx / (totalStages - 1)) * 100 
+                      : 0;
+
                     return (
-                      <div className="mb-4 pt-1">
-                        {/* Progress Tracker Bar */}
-                        <div className="relative h-2.5 bg-gray-100 dark:bg-gray-700/60 rounded-full overflow-hidden mb-2">
-                          <div 
-                            className="absolute right-0 top-0 h-full bg-gradient-to-l from-emerald-400 to-green-500 dark:from-emerald-500 dark:to-green-600 transition-all duration-500 rounded-full"
-                            style={{
-                              width: `${((currentIdx + 1) / steps.length) * 100}%`
-                            }}
-                          />
-                        </div>
-                        {/* Labels */}
-                        <div className="flex justify-between text-[11px] font-bold text-gray-400 dark:text-gray-500 px-0.5 mb-3">
-                          {labels.map((label, idx) => (
-                            <span 
-                              key={label} 
-                              className={currentIdx >= idx ? 'text-gray-800 dark:text-gray-200 font-extrabold' : 'text-gray-400 dark:text-gray-600'}
-                            >
-                              {label}
-                            </span>
-                          ))}
+                      <div className="mb-4 pt-2">
+                        {/* Horizontal dots and connecting lines */}
+                        <div className="relative flex items-start justify-between w-full px-2 mb-2">
+                          
+                          {/* Background Connector Line */}
+                          <div className="absolute right-5 left-5 top-3 h-0.5 bg-gray-100 dark:bg-gray-750 -translate-y-1/2 z-0">
+                            {/* Active Connector Line (growing from right to left) */}
+                            <div 
+                              className="h-full bg-brand-600 transition-all duration-500 rounded-full"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+
+                          {stages.map((stage, idx) => {
+                            const isCompleted = idx <= currentIdx;
+                            const isCurrent = idx === currentIdx;
+
+                            return (
+                              <div key={idx} className="flex flex-col items-center gap-1.5 relative z-10 select-none">
+                                {/* Circle Node */}
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 shrink-0 ${
+                                  isCompleted 
+                                    ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
+                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-transparent'
+                                }`}>
+                                  {isCompleted ? (
+                                    <Check className="w-3.5 h-3.5 stroke-[3.5]" />
+                                  ) : (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" />
+                                  )}
+                                </div>
+                                <span className={`text-[9px] font-black text-center whitespace-nowrap ${
+                                  isCurrent 
+                                    ? 'text-brand-600 dark:text-brand-400 font-black' 
+                                    : isCompleted 
+                                      ? 'text-gray-700 dark:text-gray-300 font-bold'
+                                      : 'text-gray-400 dark:text-gray-500'
+                                }`}>
+                                  {stage}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Next Step Info Box */}
-                        <div className="bg-brand-50/40 dark:bg-brand-900/10 p-3 rounded-xl border border-brand-100/20 dark:border-brand-900/15 text-xs mt-1">
-                          <span className="font-extrabold text-brand-700 dark:text-brand-400 block mb-0.5">💡 الخطوة التالية:</span>
-                          <p className="text-gray-800 dark:text-gray-200 font-bold leading-normal">{stepDetails.nextStep}</p>
-                          <p className="text-[11px] text-gray-505 dark:text-gray-450 mt-0.5">{stepDetails.explanation}</p>
+                        {/* Status Label & Fractions (iOS Style) */}
+                        <div className="flex justify-between items-center mt-3 pt-2.5 text-[11px] font-bold text-gray-550 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700/50">
+                          <span className="truncate max-w-[80%] text-right font-bold text-gray-600 dark:text-gray-350 flex items-center gap-1">
+                            {order.status === 'delivered' && <span className="text-emerald-500">💚</span>}
+                            {stepDetails.explanation}
+                          </span>
+                          <span className="font-mono text-gray-450 dark:text-gray-500 shrink-0">
+                            {currentIdx + 1 > 0 ? `${currentIdx + 1} من ${stages.length}` : `0 من ${stages.length}`}
+                          </span>
                         </div>
                       </div>
                     );
@@ -588,18 +685,13 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ isDarkMode, toggleDarkMo
                     <span className="text-sm font-black text-gray-900 dark:text-white">
                       المجموع: <span className="font-mono">{formatPrice(order.total)}</span><span className="saudi-riyal mr-1">{"\u00ea"}</span>
                     </span>
-                    {(() => {
-                      const itemCount = order.order_items?.length || orderItems[order.id]?.length || 0;
-                      return (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleOpenBottomSheet(order); }} 
-                          className="text-[11px] font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-all flex items-center gap-1 py-1.5 px-3 rounded-xl bg-brand-50/50 dark:bg-brand-900/10 active:scale-95 border border-brand-100/25 dark:border-brand-900/20 shadow-sm"
-                        >
-                          <span>{itemCount > 0 ? `عرض الأصناف (${itemCount})` : 'تفاصيل الطلب'}</span>
-                          <span className="text-xs font-light leading-none mr-0.5">←</span>
-                        </button>
-                      );
-                    })()}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleOpenBottomSheet(order); }} 
+                      className="text-[11px] font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-all flex items-center gap-1 py-1.5 px-3 rounded-xl bg-brand-50/50 dark:bg-brand-900/10 active:scale-95 border border-brand-100/25 dark:border-brand-900/20 shadow-sm"
+                    >
+                      <span>{items.length > 0 ? `عرض الأصناف (${items.length})` : 'تفاصيل الطلب'}</span>
+                      <span className="text-xs font-light leading-none mr-0.5">←</span>
+                    </button>
                   </div>
                 </div>
               </div>

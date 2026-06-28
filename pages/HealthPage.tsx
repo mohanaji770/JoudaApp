@@ -40,8 +40,7 @@ export const HealthPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Segmented Sliding Tab Header */}
-      <div className="bg-gray-100/80 dark:bg-gray-800/60 p-1 rounded-2xl flex mb-6 border border-gray-200/20 max-w-xs shrink-0 select-none">
+      <div className="bg-gray-100/80 dark:bg-gray-800/60 p-1 rounded-2xl flex mb-6 border border-gray-200/20 w-full select-none">
         <button
           onClick={() => setActiveSubTab('articles')}
           className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${

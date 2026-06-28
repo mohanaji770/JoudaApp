@@ -25,7 +25,7 @@ export const BottomNav: React.FC = () => {
                   <NavLink
                     to={tab.path}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-500 to-orange-500 dark:from-brand-600 dark:to-orange-600 shadow-[0_8px_20px_rgba(234,88,12,0.3)] text-white hover:scale-105 active:scale-95 transition-all relative"
+                    className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-500 to-brand-700 dark:from-brand-600 dark:to-brand-800 shadow-[0_8px_20px_rgba(211,47,47,0.3)] text-white hover:scale-105 active:scale-95 transition-all relative"
                     aria-label="صحتك"
                   >
                     {tab.icon}

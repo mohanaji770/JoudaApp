@@ -164,14 +164,14 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
           {/* Cart Button */}
           <button 
             onClick={() => setIsCartOpen(true)}
-            className="px-3.5 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white transition-colors relative font-black text-xs shadow-sm shadow-orange-550/20 active:scale-95"
+            className="px-3.5 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors relative font-black text-xs shadow-sm shadow-brand-700/20 active:scale-95"
             title="فتح سلتك"
             aria-label="سلتك"
           >
             <ShoppingCart className="w-4.5 h-4.5" />
             <span>سلتك</span>
             {totalItems > 0 && (
-              <span className="bg-white text-orange-600 text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-sm leading-none shrink-0">
+              <span className="bg-white text-brand-600 text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-sm leading-none shrink-0">
                 {totalItems}
               </span>
             )}

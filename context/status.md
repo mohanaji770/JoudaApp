@@ -30,6 +30,8 @@ Jouda is a React/Vite customer app with Supabase Edge Functions and a Capacitor 
 | 2026-06-27 | Telegram customer location moved into message text | Google Maps location now appears as an inline HTML link under the address instead of a separate workflow button |
 | 2026-06-27 | Telegram app orders can be prepared before pickup | `confirmed` orders show both pickup and prepare actions; `preparing` can still record pickup later without changing status |
 | 2026-06-27 | Checkout location confirmation hardened | Sana'a delivery now requires an explicit confirmed map/GPS/search selection and rejects locations too close to the store in both frontend and `submit-order` |
+| 2026-06-27 | Telegram text commands reset for admin dashboard use | Legacy `/orders`, `/status`, `/cash`, `/mycash`, and `/chatid` were removed in favor of admin-only `/today`, `/queue`, and `/money` |
+| 2026-06-28 | Orders page cards simplified | Customer order cards now show a lighter status summary while detailed address/items/actions stay in the details sheet |
 
 ## Known Risks
 
