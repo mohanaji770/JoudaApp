@@ -15,6 +15,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHelpClick, isAdmin, onAdminLogout, onLogoClick }) => {
+  const installPromptEnabled = false;
   const { setIsCartOpen, totalItems } = useCart();
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
@@ -84,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, onHe
     }
   };
 
-  const showInstallButton = !isStandalone && (isIOS || !!deferredPrompt);
+  const showInstallButton = installPromptEnabled && !isStandalone && (isIOS || !!deferredPrompt);
 
   return (
     <header className="bg-warm-white dark:bg-gray-900 sticky top-0 z-40 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5)] transition-colors duration-300">

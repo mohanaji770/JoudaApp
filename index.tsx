@@ -38,6 +38,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // Register PWA Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    if ('caches' in window) {
+      Promise.all([
+        caches.delete('supabase-storage-images'),
+        caches.delete('images-cache'),
+      ]).catch((err) => {
+        console.warn('Failed to clear legacy image caches:', err);
+      });
+    }
+
     navigator.serviceWorker.register('/sw.js')
       .then((reg) => {
         console.log('PWA Service Worker registered:', reg.scope);

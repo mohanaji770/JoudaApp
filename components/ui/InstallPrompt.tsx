@@ -7,11 +7,14 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const InstallPrompt: React.FC = () => {
+  const installPromptEnabled = false;
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [promptType, setPromptType] = useState<'android' | 'ios' | null>(null);
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
+    if (!installPromptEnabled) return;
+
     const handleShowIOSGuide = () => {
       setPromptType('ios');
       setShowBanner(true);
@@ -22,6 +25,8 @@ export const InstallPrompt: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!installPromptEnabled) return;
+
     // 1. Check if already running in standalone mode (PWA installed)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     if (isStandalone) return;

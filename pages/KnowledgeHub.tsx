@@ -23,6 +23,14 @@ export const KnowledgeHub: React.FC = () => {
     load();
   }, []);
 
+  useEffect(() => {
+    if (articles.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev === articles.length - 1 ? 0 : prev + 1));
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [activeIndex, articles.length]);
+
   const handlePrev = () => {
     if (articles.length === 0) return;
     setActiveIndex((prev) => (prev === 0 ? articles.length - 1 : prev - 1));

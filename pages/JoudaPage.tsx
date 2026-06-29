@@ -32,6 +32,7 @@ export const JoudaPage: React.FC = () => {
   const TESTIMONIALS = [
     {
       id: 1,
+      rating: 5,
       name: "Ahlam Ali",
       image: "https://lh3.googleusercontent.com/a/ACg8ocJM-X5iJ1aNKpsmDDWvB1qKf9mc7dPXlS6ebeI3oLVzVTJtwQ=s120-c-rp-mo-br100",
       time: "قبل 7 أشهر",
@@ -39,6 +40,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 2,
+      rating: 5,
       name: "قصي الماوري",
       image: "https://lh3.googleusercontent.com/a/ACg8ocI5fpjHxdtVpYOnMylOVNKfFzAnLgqxFitqYYZpRHsscdNfHQ=s120-c-rp-mo-br100",
       time: "قبل 11 شهر",
@@ -46,6 +48,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 3,
+      rating: 5,
       name: "Mram Al ahmadi",
       image: "",
       time: "قبل 9 أشهر",
@@ -53,6 +56,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 4,
+      rating: 5,
       name: "Reem Al Dhamari",
       image: "",
       time: "قبل 3 أشهر",
@@ -60,6 +64,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 5,
+      rating: 5,
       name: "Ashley Muharram",
       image: "",
       time: "قبل 11 شهر",
@@ -67,6 +72,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 6,
+      rating: 5,
       name: "Fog Master",
       image: "",
       time: "قبل 9 أشهر",
@@ -74,6 +80,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 7,
+      rating: 5,
       name: "امين خالد",
       image: "",
       time: "قبل 9 أشهر",
@@ -81,6 +88,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 8,
+      rating: 5,
       name: "loly abdo",
       image: "",
       time: "قبل 7 أشهر",
@@ -88,6 +96,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 9,
+      rating: 5,
       name: "حماس الدعيس",
       image: "",
       time: "قبل 11 شهر",
@@ -95,6 +104,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 10,
+      rating: 5,
       name: "Vvv by High",
       image: "",
       time: "قبل 9 أشهر",
@@ -102,6 +112,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 11,
+      rating: 5,
       name: "ahlam naif",
       image: "",
       time: "قبل 11 شهر",
@@ -109,6 +120,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 12,
+      rating: 5,
       name: "Abdulqader Naji",
       image: "",
       time: "قبل 11 شهر",
@@ -116,6 +128,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 13,
+      rating: 5,
       name: "Shaima'a Khaled",
       image: "",
       time: "قبل 8 أشهر",
@@ -123,6 +136,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 14,
+      rating: 5,
       name: "dany hakim",
       image: "",
       time: "قبل 10 أشهر",
@@ -130,6 +144,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 15,
+      rating: 5,
       name: "Emad Muthana",
       image: "",
       time: "قبل 11 شهر",
@@ -137,6 +152,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 16,
+      rating: 5,
       name: "هيام الذبحاني",
       image: "",
       time: "قبل 6 أشهر",
@@ -144,6 +160,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 17,
+      rating: 5,
       name: "أم عمير",
       image: "",
       time: "قبل 9 أشهر",
@@ -151,6 +168,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 18,
+      rating: 5,
       name: "Really Ali Abdo",
       image: "https://lh3.googleusercontent.com/a/ACg8ocKX90ddwtzLPDL4dKLXgOAESZWXZlKgUPdvTG_x8t-VYixxeA=s120-c-rp-mo-br100",
       time: "قبل 9 أشهر",
@@ -158,6 +176,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 19,
+      rating: 5,
       name: "Haime Fahmi",
       image: "",
       time: "قبل 9 أشهر",
@@ -165,6 +184,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 20,
+      rating: 5,
       name: "Ghofran Nasr",
       image: "",
       time: "قبل 7 أشهر",
@@ -172,6 +192,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 21,
+      rating: 5,
       name: "laila mohmmed",
       image: "",
       time: "قبل 23 ساعة",
@@ -179,6 +200,7 @@ export const JoudaPage: React.FC = () => {
     },
     {
       id: 22,
+      rating: 5,
       name: "Ameer Haill",
       image: "",
       time: "قبل يوم",
@@ -248,9 +270,12 @@ export const JoudaPage: React.FC = () => {
                           <span className="text-xs text-gray-400">{review.time}</span>
                           <span className="text-[10px] font-black text-gray-400 bg-gray-50 dark:bg-gray-900/60 px-2 py-0.5 rounded-full">Google</span>
                        </div>
-                       <div className="flex items-center gap-0.5 text-yellow-400 mb-2" aria-label="تقييم 5 من 5">
+                       <div className="flex items-center gap-0.5 text-yellow-400 mb-2" aria-label={`تقييم ${review.rating} من 5`}>
                          {[1, 2, 3, 4, 5].map((star) => (
-                           <Star key={star} className="w-3.5 h-3.5 fill-current" />
+                           <Star
+                             key={star}
+                             className={`w-3.5 h-3.5 ${review.rating >= star ? 'fill-current' : 'fill-none text-gray-300 dark:text-gray-600'}`}
+                           />
                          ))}
                        </div>
                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">"{review.text}"</p>
