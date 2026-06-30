@@ -13,6 +13,11 @@ export const JoudaPage: React.FC = () => {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastInteractionTime = useRef<number>(0);
+
+  const registerInteraction = () => {
+    lastInteractionTime.current = Date.now();
+  };
 
   const handleScroll = () => {
     const container = scrollRef.current;
@@ -244,16 +249,48 @@ export const JoudaPage: React.FC = () => {
     },
   ];
 
+  // Auto-play logic for testimonials
+  useEffect(() => {
+    if (TESTIMONIALS.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      // If user interacted in the last 8 seconds, skip auto-scrolling
+      if (now - lastInteractionTime.current < 8000) {
+        return;
+      }
+
+      const nextIndex = (activeIndex + 1) % TESTIMONIALS.length;
+      setActiveIndex(nextIndex);
+
+      const container = scrollRef.current;
+      if (container) {
+        const isMobile = window.innerWidth < 768;
+        const cardWidth = isMobile ? 290 : 350;
+        const gap = 16;
+        const stepWidth = cardWidth + gap;
+        const targetLeft = -(stepWidth * nextIndex);
+
+        container.scrollTo({
+          left: targetLeft,
+          behavior: 'smooth'
+        });
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeIndex, TESTIMONIALS.length]);
+
   return (
     <div className="pb-32 md:pb-12 animate-fade-in px-4 w-full max-w-3xl mx-auto">
       
       {/* 1. Header */}
       <div className="text-center py-8 md:py-12">
          <div className="relative w-24 h-24 md:w-28 md:h-28 mx-auto mb-6">
-             <div className="absolute inset-0 bg-brand-400 dark:bg-brand-500 blur-2xl opacity-20 dark:opacity-30 rounded-full"></div>
-             <div className="relative w-full h-full rounded-full overflow-hidden shadow-xl ring-4 ring-white dark:ring-gray-800">
-                <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-cover" />
-             </div>
+              <div className="absolute inset-0 bg-brand-400 dark:bg-brand-500 blur-2xl opacity-20 dark:opacity-30 rounded-full"></div>
+              <div className="relative w-full h-full rounded-full overflow-hidden shadow-xl ring-4 ring-white dark:ring-gray-800">
+                 <img src={APP_LOGO} alt="Jouda" className="w-full h-full object-cover" />
+              </div>
          </div>
          <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">{STORE_CONFIG.NAME}</h1>
          <p className="text-base text-gray-500 dark:text-gray-400 font-medium max-w-lg mx-auto leading-relaxed">
@@ -294,6 +331,8 @@ export const JoudaPage: React.FC = () => {
            <div
               ref={scrollRef}
               onScroll={handleScroll}
+              onTouchStart={registerInteraction}
+              onMouseDown={registerInteraction}
               className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
            >
@@ -310,19 +349,18 @@ export const JoudaPage: React.FC = () => {
                         {review.name.trim().charAt(0)}
                       </div>
                     )}
-                    <div className="flex-1 min-w-0 relative z-10">
-                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                          <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white truncate max-w-[120px]">{review.name}</h4>
-                          <span className="text-[10px] text-gray-400 shrink-0">{review.time}</span>
-                          <span className="text-[9px] font-black text-gray-400 bg-gray-50 dark:bg-gray-900/60 px-2 py-0.5 rounded-full shrink-0">Google</span>
-                       </div>
-                       <div className="flex items-center gap-0.5 text-yellow-400 mb-2" aria-label={`تقييم ${review.rating} من 5`}>
-                         {[1, 2, 3, 4, 5].map((star) => (
-                           <Star
-                             key={star}
-                             className={`w-3.5 h-3.5 ${review.rating >= star ? 'fill-current' : 'fill-none text-gray-300 dark:text-gray-600'}`}
-                           />
-                         ))}
+                    <div className="flex-1 min-w-0 relative z-10 text-right">
+                       <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white leading-normal mb-1">{review.name}</h4>
+                       <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-0.5 text-yellow-400 shrink-0" aria-label={`تقييم ${review.rating} من 5`}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-3 h-3 md:w-3.5 md:h-3.5 ${review.rating >= star ? 'fill-current' : 'fill-none text-gray-300 dark:text-gray-600'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[10px] md:text-xs text-gray-400 shrink-0 font-medium">{review.time}</span>
                        </div>
                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium line-clamp-4">
                          "{review.text}"
@@ -337,7 +375,10 @@ export const JoudaPage: React.FC = () => {
                  {TESTIMONIALS.map((_, idx) => (
                     <button
                        key={idx}
-                       onClick={() => scrollToSlide(idx)}
+                       onClick={() => {
+                          registerInteraction();
+                          scrollToSlide(idx);
+                       }}
                        className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
                           idx === activeIndex
                              ? 'w-4 bg-brand-600 dark:bg-brand-500'
@@ -369,7 +410,7 @@ export const JoudaPage: React.FC = () => {
               className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-green-200 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all shadow-sm group active:scale-[0.99]"
            >
               <div className="flex items-center gap-3.5 flex-1 min-w-0 text-right">
-                 <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600 dark:text-green-400 shrink-0">
+                 <div className="bg-green-100 dark:bg-green-950/30 p-3 rounded-full text-green-600 dark:text-green-400 shrink-0">
                     <MessageCircle className="w-5 h-5" />
                  </div>
                  <div className="min-w-0">
