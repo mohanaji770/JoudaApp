@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, ChevronDown, Quote, Star, ArrowUpRight, Instagram, Facebook, Globe, ShoppingBag, MessageCircle } from 'lucide-react';
 import { STORE_CONFIG, APP_LOGO } from '../constants';
@@ -10,6 +10,42 @@ export const JoudaPage: React.FC = () => {
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [isLoadingFaqs, setIsLoadingFaqs] = useState(true);
   const whatsappLink = `https://api.whatsapp.com/send?phone=${STORE_CONFIG.PHONE.replace(/\D/g, '')}`;
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const scrollLeft = Math.abs(container.scrollLeft);
+    const isMobile = window.innerWidth < 768;
+    const cardWidth = isMobile ? 290 : 350;
+    const gap = 16;
+    const stepWidth = cardWidth + gap;
+
+    const index = Math.round(scrollLeft / stepWidth);
+    if (index >= 0 && index < TESTIMONIALS.length && index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
+
+  const scrollToSlide = (index: number) => {
+    setActiveIndex(index);
+    const container = scrollRef.current;
+    if (container) {
+      const isMobile = window.innerWidth < 768;
+      const cardWidth = isMobile ? 290 : 350;
+      const gap = 16;
+      const stepWidth = cardWidth + gap;
+      const targetLeft = -(stepWidth * index);
+
+      container.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     const loadFaqs = async () => {
@@ -244,7 +280,7 @@ export const JoudaPage: React.FC = () => {
            </div>
         </div>
 
-        {/* 3. Testimonials (Social Proof) */}
+        {/* 3. Testimonials (Social Proof Carousel) */}
         <div>
            <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900 dark:text-white text-xl">ناس حبّتنا وجربتنا</h3>
@@ -253,9 +289,19 @@ export const JoudaPage: React.FC = () => {
                  <span className="text-xs font-bold">5.0</span>
               </div>
            </div>
-           <div className="space-y-4">
+
+           {/* حاوية الكاروسيل الأفقي */}
+           <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+           >
               {TESTIMONIALS.map((review) => (
-                 <div key={review.id} className="relative overflow-hidden bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 duration-300">
+                 <div 
+                    key={review.id} 
+                    className="min-w-[290px] max-w-[290px] md:min-w-[350px] md:max-w-[350px] min-h-[170px] snap-center shrink-0 relative overflow-hidden bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-1 duration-300"
+                 >
                     <Quote className="absolute top-2 left-2 w-16 h-16 text-gray-100 dark:text-gray-700 opacity-50 z-0 rotate-180" />
                     {review.image ? (
                       <img src={review.image} alt={review.name} className="w-12 h-12 rounded-full shrink-0 relative z-10 border-2 border-white dark:border-gray-700 shadow-sm" />
@@ -266,9 +312,9 @@ export const JoudaPage: React.FC = () => {
                     )}
                     <div className="flex-1 min-w-0 relative z-10">
                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                          <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white">{review.name}</h4>
-                          <span className="text-xs text-gray-400">{review.time}</span>
-                          <span className="text-[10px] font-black text-gray-400 bg-gray-50 dark:bg-gray-900/60 px-2 py-0.5 rounded-full">Google</span>
+                          <h4 className="font-bold text-sm md:text-base text-gray-900 dark:text-white truncate max-w-[120px]">{review.name}</h4>
+                          <span className="text-[10px] text-gray-400 shrink-0">{review.time}</span>
+                          <span className="text-[9px] font-black text-gray-400 bg-gray-50 dark:bg-gray-900/60 px-2 py-0.5 rounded-full shrink-0">Google</span>
                        </div>
                        <div className="flex items-center gap-0.5 text-yellow-400 mb-2" aria-label={`تقييم ${review.rating} من 5`}>
                          {[1, 2, 3, 4, 5].map((star) => (
@@ -278,15 +324,35 @@ export const JoudaPage: React.FC = () => {
                            />
                          ))}
                        </div>
-                       <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">"{review.text}"</p>
+                       <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium line-clamp-4">
+                         "{review.text}"
+                       </p>
                     </div>
                  </div>
               ))}
            </div>
+           {/* النقاط الإرشادية للنقل (Dots Indicator) */}
+           {TESTIMONIALS.length > 1 && (
+              <div className="flex justify-center items-center gap-1.5 mt-2">
+                 {TESTIMONIALS.map((_, idx) => (
+                    <button
+                       key={idx}
+                       onClick={() => scrollToSlide(idx)}
+                       className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
+                          idx === activeIndex
+                             ? 'w-4 bg-brand-600 dark:bg-brand-500'
+                             : 'w-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                       }`}
+                       aria-label={`الذهاب إلى الشريحة ${idx + 1}`}
+                    />
+                 ))}
+              </div>
+           )}
         </div>
 
-        {/* 4. Primary CTA (Call to Action) - Swapped Above FAQ for Higher Conversion */}
-        <div className="pt-2">
+        {/* 4. Actions Section (CTA + Contact) */}
+        <div className="space-y-3 pt-2">
+           {/* Primary CTA */}
            <button
               onClick={() => navigate('/products')}
               className="w-full bg-brand-600 hover:bg-brand-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-brand-200 dark:shadow-none transition-all active:scale-[0.98] text-base"
@@ -294,26 +360,29 @@ export const JoudaPage: React.FC = () => {
               <ShoppingBag className="w-5 h-5" />
               <span>تصفح المتجر وابدأ تسوقك الآن 🛒</span>
            </button>
-        </div>
 
-
-
-        {/* 6. Contact Channels (Secondary Exit Actions) */}
-        <div className="space-y-3 pt-2">
-           <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-green-200 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all group">
-              <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600 dark:text-green-400">
-                 <MessageCircle className="w-5 h-5" />
+           {/* Whatsapp Contact Card */}
+           <a 
+              href={whatsappLink} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-green-200 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all shadow-sm group active:scale-[0.99]"
+           >
+              <div className="flex items-center gap-3.5 flex-1 min-w-0 text-right">
+                 <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full text-green-600 dark:text-green-400 shrink-0">
+                    <MessageCircle className="w-5 h-5" />
+                 </div>
+                 <div className="min-w-0">
+                    <span className="block text-[15px] font-bold text-gray-900 dark:text-white group-hover:text-green-700 leading-normal">تواصل معنا واتساب</span>
+                    <span className="text-xs text-gray-500 truncate block mt-0.5">لأي استفسار أو طلب خاص بخاطرك</span>
+                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                 <span className="block text-sm font-bold text-gray-900 dark:text-white group-hover:text-green-700">تواصل معنا واتساب</span>
-                 <span className="text-xs text-gray-500 truncate block">لأي استفسار أو طلب خاص بخاطرك</span>
-              </div>
-              <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-green-500" />
+              <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-green-500 shrink-0" />
            </a>
         </div>
 
         {/* Footer */}
-        <div className="pt-6 text-center pb-4">
+        <div className="pt-2 text-center pb-4">
            <div className="flex items-center justify-center gap-3 mb-4">
               <a href="https://www.facebook.com/joudafood" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-center transition-colors"><Facebook className="w-5 h-5" /></a>
               <a href="https://www.instagram.com/joudafood/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20 flex items-center justify-center transition-colors"><Instagram className="w-5 h-5" /></a>

@@ -116,9 +116,9 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
             </div>
           </div>
 
-          {/* Phone and Map side-by-side for Sana'a, or Phone full-width for Provinces */}
+          {/* Phone and map for Sana'a, or phone full-width for provinces */}
           {deliveryZone === 'sanaa' ? (
-            <div className="grid grid-cols-[1.18fr_0.82fr] gap-3 items-start">
+            <div className="space-y-4">
               {/* Customer Phone */}
               <div>
                 <label htmlFor="cart-phone" className="text-xs font-bold text-gray-550 dark:text-gray-400 block mb-1.5">
@@ -156,7 +156,7 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                 <button
                   type="button"
                   onClick={onOpenMap}
-                  className={`w-full h-[46px] px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border shadow-sm ${
+                  className={`w-full min-h-[50px] px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all border shadow-sm active:scale-[0.98] ${
                     locationConfirmed && customerLat && customerLng && !isLocationTooCloseToStore
                       ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-400' 
                       : isLocationTooCloseToStore
