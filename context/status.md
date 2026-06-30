@@ -36,6 +36,7 @@ Jouda is a React/Vite customer app with Supabase Edge Functions and a Capacitor 
 | 2026-06-29 | Inventory quotation item verification added | `submit-order` now compares requested `p_items` with Inventory `invoice_items` and voids mismatched quotations to prevent accepted app orders with missing invoice lines |
 | 2026-06-30 | Product availability labels clarified | Admin product labels now distinguish Inventory active state, app hiding, and stock tracking to reduce confusion around always-available products |
 | 2026-06-30 | Checkout location search moved to TomTom | `MapLocationPicker` now uses TomTom Search API for Sana'a location search with Photon as fallback |
+| 2026-06-30 | Checkout submit button explains missing fields | Disabled-looking order submit now remains tappable and tells customers exactly which delivery fields are incomplete |
 
 ## Known Risks
 

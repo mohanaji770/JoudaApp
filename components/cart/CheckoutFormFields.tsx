@@ -143,6 +143,9 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
                 {phone.length > 0 && phone.length < 9 && (
                   <p className="text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1">📱 الرقم ناقص، لازم يكون 9 أرقام</p>
                 )}
+                <p className="text-[10px] text-gray-400 font-bold mt-1.5 leading-relaxed">
+                  مهم: اكتب رقم الواتساب عشان نقدر نأكد الطلب ونتواصل معك.
+                </p>
               </div>
 
               {/* Map picker */}
@@ -216,6 +219,9 @@ export const CheckoutFormFields: React.FC<CheckoutFormFieldsProps> = ({
               {phone.length > 0 && phone.length < 9 && (
                 <p className="text-[10px] text-red-500 font-bold mt-1.5 flex items-center gap-1">📱 الرقم ناقص، لازم يكون 9 أرقام</p>
               )}
+              <p className="text-[10px] text-gray-400 font-bold mt-1.5 leading-relaxed">
+                مهم: اكتب رقم الواتساب عشان نقدر نأكد الطلب ونتواصل معك.
+              </p>
             </div>
           )}
 

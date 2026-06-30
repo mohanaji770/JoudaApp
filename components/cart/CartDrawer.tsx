@@ -223,7 +223,7 @@ export const CartDrawer: React.FC = () => {
               <CartFooter
                 isFormValid={checkout.isFormValid}
                 canSubmitOrder={canSubmitOrder}
-                validationMessage={stockValidationMessage}
+                validationMessage={stockValidationMessage || checkout.validationMessage}
                 submitting={checkout.submitting}
                 submitResult={checkout.submitResult}
                 handleSendOrder={checkout.handleSendOrder}

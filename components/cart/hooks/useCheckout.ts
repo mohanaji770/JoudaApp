@@ -139,6 +139,33 @@ export const useCheckout = (
     calculateDistance(storeLat, storeLng, customerLat, customerLng) < MIN_CUSTOMER_DISTANCE_KM;
 
   const grandTotal = currentSubtotal + currentFee;
+  const missingFields = useMemo(() => {
+    const fields: string[] = [];
+    if (!customerName.trim()) {
+      fields.push('الاسم الكريم');
+    }
+    if (phone.trim().length < 9) {
+      fields.push('رقم الجوال');
+    }
+    if (!address.trim()) {
+      fields.push(deliveryZone === 'sanaa' ? 'تفاصيل عنوان التوصيل' : 'تفاصيل عنوان الشحن');
+    }
+    if (deliveryZone === 'sanaa' && (customerLat === null || customerLng === null)) {
+      fields.push('تحديد الموقع على الخريطة');
+    }
+    if (deliveryZone === 'sanaa' && customerLat !== null && customerLng !== null && !locationConfirmed) {
+      fields.push('تأكيد الموقع من الخريطة');
+    }
+    if (deliveryZone === 'sanaa' && isLocationTooCloseToStore) {
+      fields.push('اختيار موقع أبعد من فرع جوده');
+    }
+    return fields;
+  }, [address, customerLat, customerLng, customerName, deliveryZone, isLocationTooCloseToStore, locationConfirmed, phone]);
+
+  const validationMessage = missingFields.length > 0
+    ? `باقي: ${missingFields.join('، ')}`
+    : '';
+
   const isFormValid = customerName.trim() !== '' && 
     phone.trim().length >= 9 && 
     address.trim() !== '' && 
@@ -167,26 +194,6 @@ export const useCheckout = (
     if (submitting) return;
 
     if (!isFormValid) {
-      const missingFields = [];
-      if (!customerName.trim()) {
-        missingFields.push('الاسم الكريم');
-      }
-      if (phone.trim().length < 9) {
-        missingFields.push('رقم الجوال (9 أرقام على الأقل)');
-      }
-      if (!address.trim()) {
-        missingFields.push(deliveryZone === 'sanaa' ? 'تفاصيل العنوان (رقم البيت/الشقة)' : 'تفاصيل عنوان الشحن (المحافظة/المدينة)');
-      }
-      if (deliveryZone === 'sanaa' && (customerLat === null || customerLng === null)) {
-        missingFields.push('تحديد موقع التوصيل على الخريطة 📍');
-      }
-      if (deliveryZone === 'sanaa' && customerLat !== null && customerLng !== null && !locationConfirmed) {
-        missingFields.push('تأكيد موقع التوصيل من الخريطة');
-      }
-      if (deliveryZone === 'sanaa' && isLocationTooCloseToStore) {
-        missingFields.push('الموقع قريب جداً من جوده، حدد موقع بيتك بدقة');
-      }
-
       alert(`فضلاً، أكمل البيانات التالية لتأكيد طلبك:\n\n• ${missingFields.join('\n• ')}`);
       return;
     }
@@ -291,6 +298,8 @@ export const useCheckout = (
     provincesFreeLimit: PROVINCES_FREE_LIMIT,
     grandTotal,
     isFormValid,
+    missingFields,
+    validationMessage,
     isSaved,
     handleSendOrder,
     handleSubmitOrder,
