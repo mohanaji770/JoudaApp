@@ -220,7 +220,9 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 // RECIPES
 // ==========================
 
-export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
+let recipesFetchPromise: Promise<Recipe[]> | null = null;
+
+const fetchRecipesFresh = async (): Promise<Recipe[]> => {
   try {
     const { data, error } = await supabase
       .from('recipes')
@@ -258,6 +260,16 @@ export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
     } catch (e) {}
     return [];
   }
+};
+
+export const fetchRecipesFromSupabase = async (): Promise<Recipe[]> => {
+  if (!recipesFetchPromise) {
+    recipesFetchPromise = fetchRecipesFresh().finally(() => {
+      recipesFetchPromise = null;
+    });
+  }
+
+  return recipesFetchPromise;
 };
 
 // ==========================

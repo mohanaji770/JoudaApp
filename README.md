@@ -77,6 +77,7 @@
    ```env
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_TOMTOM_API_KEY=your_tomtom_search_api_key
    ```
 
    Gemini is configured only on the Supabase Edge Function side as `GEMINI_API_KEY`; do not add a `VITE_GEMINI_API_KEY` to frontend environments.

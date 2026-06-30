@@ -51,3 +51,5 @@ dev-dist/registerSW.js
 .gitignore
 dev-dist/workbox-15ec2ecc.js
 docs/*
+mapbox-search-test.html
+tomtom-search-test.html

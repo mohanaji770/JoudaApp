@@ -10,9 +10,9 @@ import {
   planRecipeCartAdditions,
 } from '../../utils/recipeCartUtils';
 
-const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
 const RECIPE_DATE_KEY = 'jouda_recipe_date_v2';
+const LEGACY_RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const FAVORITES_KEY = 'jouda_recipe_favorites_v1';
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -61,32 +61,26 @@ export const RecipeOfTheDay: React.FC = () => {
     const load = async () => {
       const cachedDate = localStorage.getItem(RECIPE_DATE_KEY);
       const today = new Date().toDateString();
-
-      if (cachedDate === today) {
-        const cachedList = localStorage.getItem(RECIPE_LIST_KEY);
-        const cachedIdx = localStorage.getItem(RECIPE_IDX_KEY);
-        if (cachedList && cachedIdx) {
-          try {
-            const list = JSON.parse(cachedList);
-            setRecipes(list);
-            setCurrentIndex(parseInt(cachedIdx, 10));
-            setLoading(false);
-            return;
-          } catch {}
-        }
-      }
+      localStorage.removeItem(LEGACY_RECIPE_LIST_KEY);
 
       try {
         const data = await fetchRecipesFromSupabase();
         if (data.length > 0) {
-          const dayOfYear = Math.floor(
-            (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-            (1000 * 60 * 60 * 24)
-          );
-          const idx = dayOfYear % data.length;
+          let idx = 0;
+          if (cachedDate === today) {
+            const cachedIdx = Number.parseInt(localStorage.getItem(RECIPE_IDX_KEY) || '', 10);
+            idx = Number.isInteger(cachedIdx) && cachedIdx >= 0 && cachedIdx < data.length
+              ? cachedIdx
+              : 0;
+          } else {
+            const dayOfYear = Math.floor(
+              (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
+              (1000 * 60 * 60 * 24)
+            );
+            idx = dayOfYear % data.length;
+          }
           setRecipes(data);
           setCurrentIndex(idx);
-          localStorage.setItem(RECIPE_LIST_KEY, JSON.stringify(data));
           localStorage.setItem(RECIPE_IDX_KEY, String(idx));
           localStorage.setItem(RECIPE_DATE_KEY, today);
         }

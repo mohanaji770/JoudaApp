@@ -8,7 +8,7 @@ export const ProductCard: React.FC<{ product: Product; onClick: () => void }> = 
     <div 
       onClick={onClick}
       className={`group bg-white dark:bg-gray-900 border p-2 rounded-xl cursor-pointer active:scale-[0.98] md:hover:border-brand-300 md:dark:hover:border-brand-700 md:hover:shadow-md transition-all flex items-center justify-between gap-2 md:gap-4 ${
-        product.is_hidden_in_app ? 'border-dashed border-gray-300 dark:border-gray-700 opacity-75' : 'border-gray-100 dark:border-gray-800 shadow-sm'
+        product.is_active === false || product.is_hidden_in_app ? 'border-dashed border-gray-300 dark:border-gray-700 opacity-75' : 'border-gray-100 dark:border-gray-800 shadow-sm'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -18,7 +18,7 @@ export const ProductCard: React.FC<{ product: Product; onClick: () => void }> = 
             <img 
               src={product.image_url} 
               alt={product.name} 
-              className={`w-full h-full object-cover ${product.is_hidden_in_app || product.force_out_of_stock ? 'grayscale' : ''}`} 
+              className={`w-full h-full object-cover ${product.is_active === false || product.is_hidden_in_app || product.force_out_of_stock ? 'grayscale' : ''}`} 
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           ) : (
@@ -29,7 +29,7 @@ export const ProductCard: React.FC<{ product: Product; onClick: () => void }> = 
         {/* Info Layout */}
         <div className="min-w-0 flex-1 flex flex-col md:flex-row md:items-center md:justify-between gap-0.5 md:gap-4">
           <div className="flex items-center gap-2 min-w-0">
-            <h3 className={`font-black text-xs md:text-sm truncate ${product.is_hidden_in_app ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+            <h3 className={`font-black text-xs md:text-sm truncate ${product.is_active === false || product.is_hidden_in_app ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
               {product.name}
             </h3>
             <span className="font-bold text-gray-400 text-[9px] md:text-[10px] bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded whitespace-nowrap border border-gray-100 dark:border-gray-800">

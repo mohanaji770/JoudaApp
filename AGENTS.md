@@ -266,6 +266,7 @@ Callback data:
 |---|---|
 | `VITE_SUPABASE_URL` | رابط JoudaApp |
 | `VITE_SUPABASE_ANON_KEY` | anon key للعميل |
+| `VITE_TOMTOM_API_KEY` | مفتاح TomTom Search API لبحث موقع العميل في خريطة التوصيل |
 
 ### Edge Functions
 

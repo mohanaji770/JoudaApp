@@ -34,6 +34,17 @@ interface MapLocationPickerProps {
   minCustomerDistanceKm?: number;
 }
 
+interface LocationSearchResult {
+  id: string;
+  name: string;
+  description?: string;
+  lat: number;
+  lng: number;
+}
+
+const TOMTOM_API_KEY = String((import.meta as any).env?.VITE_TOMTOM_API_KEY || '').trim();
+const SEARCH_RADIUS_METERS = 30000;
+
 // Custom component to handle map clicks
 function MapEvents({ onLocationClick }: { onLocationClick: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -86,7 +97,7 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
     initialLocationSelected ? 'map_click' : null,
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<LocationSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -99,6 +110,73 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
     onClose();
   };
 
+  const searchWithTomTom = async (query: string): Promise<LocationSearchResult[]> => {
+    if (!TOMTOM_API_KEY) return [];
+
+    const params = new URLSearchParams({
+      key: TOMTOM_API_KEY,
+      lat: String(storeLat),
+      lon: String(storeLng),
+      radius: String(SEARCH_RADIUS_METERS),
+      limit: '5',
+      countrySet: 'YE',
+      language: 'ar',
+      typeahead: 'true',
+      idxSet: 'POI,PAD,Addr,Geo,Str,XStr',
+      maxFuzzyLevel: '3',
+    });
+
+    const response = await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?${params.toString()}`);
+    if (!response.ok) throw new Error(`TomTom API Error: ${response.status}`);
+
+    const data = await response.json();
+    return (data.results || [])
+      .filter((result: any) => result.position?.lat && result.position?.lon)
+      .map((result: any, index: number) => {
+        const address = result.address || {};
+        const name = result.poi?.name
+          || address.freeformAddress
+          || address.municipalitySubdivision
+          || address.municipality
+          || result.type
+          || 'موقع بدون اسم';
+        const description = address.freeformAddress
+          || [address.municipalitySubdivision, address.municipality, address.country]
+            .filter(Boolean)
+            .join('، ');
+
+        return {
+          id: result.id || `tomtom-${index}-${result.position.lat}-${result.position.lon}`,
+          name,
+          description,
+          lat: Number(result.position.lat),
+          lng: Number(result.position.lon),
+        };
+      });
+  };
+
+  const searchWithPhoton = async (query: string): Promise<LocationSearchResult[]> => {
+    // bbox for Yemen: minLon, minLat, maxLon, maxLat
+    const bbox = '41.5,12.0,54.5,19.0';
+    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&bbox=${bbox}&limit=5`);
+    if (!response.ok) throw new Error(`Photon API Error: ${response.status}`);
+
+    const data = await response.json();
+    return (data.features || [])
+      .filter((feature: any) => Array.isArray(feature.geometry?.coordinates))
+      .map((feature: any, index: number) => {
+        const [lng, lat] = feature.geometry.coordinates;
+        const props = feature.properties || {};
+        return {
+          id: props.osm_id ? `photon-${props.osm_type || 'item'}-${props.osm_id}` : `photon-${index}-${lat}-${lng}`,
+          name: props.name || props.street || props.city || 'موقع بدون اسم',
+          description: [props.state, props.city, props.country].filter(Boolean).join('، '),
+          lat: Number(lat),
+          lng: Number(lng),
+        };
+      });
+  };
+
   const fetchSearchResults = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -108,20 +186,23 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
 
     setIsSearching(true);
     try {
-      // bbox for Yemen: minLon, minLat, maxLon, maxLat
-      const bbox = '41.5,12.0,54.5,19.0';
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&bbox=${bbox}&limit=5`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-      const data = await response.json();
-      if (data && data.features) {
-        setSearchResults(data.features);
-        setShowDropdown(true);
+      let results = await searchWithTomTom(query);
+      if (results.length === 0) {
+        results = await searchWithPhoton(query);
       }
+      setSearchResults(results);
+      setShowDropdown(results.length > 0);
     } catch (err) {
       console.error('Search error:', err);
+      try {
+        const fallbackResults = await searchWithPhoton(query);
+        setSearchResults(fallbackResults);
+        setShowDropdown(fallbackResults.length > 0);
+      } catch (fallbackErr) {
+        console.error('Fallback search error:', fallbackErr);
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
     } finally {
       setIsSearching(false);
     }
@@ -140,12 +221,11 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
     }, 500); // Debounce
   };
 
-  const selectResult = (result: any) => {
-    const [lon, lat] = result.geometry.coordinates;
-    setPosition([lat, lon]);
+  const selectResult = (result: LocationSearchResult) => {
+    setPosition([result.lat, result.lng]);
     setHasUserSelectedLocation(true);
     setSelectionSource('search');
-    setSearchQuery(result.properties.name || '');
+    setSearchQuery(result.name);
     setShowDropdown(false);
   };
 
@@ -232,9 +312,9 @@ export const MapLocationPicker: React.FC<MapLocationPickerProps> = ({
                   >
                     <MapIcon className="w-4 h-4 text-gray-400 shrink-0" />
                     <div className="flex flex-col items-start">
-                      <span className="font-bold text-gray-800 dark:text-gray-200 text-sm">{res.properties.name}</span>
-                      {res.properties.state && (
-                        <span className="text-xs text-gray-500">{res.properties.state}, {res.properties.country}</span>
+                      <span className="font-bold text-gray-800 dark:text-gray-200 text-sm">{res.name}</span>
+                      {res.description && (
+                        <span className="text-xs text-gray-500">{res.description}</span>
                       )}
                     </div>
                   </button>

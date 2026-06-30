@@ -254,6 +254,38 @@ async function createInventoryQuotation(payload: OrderPayload, rpcItems: RpcItem
   };
 }
 
+async function verifyInventoryQuotationItems(quotationId: string, rpcItems: RpcItem[], inventoryClient: SupabaseClient) {
+  const expectedQty = new Map<string, number>();
+  for (const item of rpcItems) {
+    expectedQty.set(item.product_barcode, (expectedQty.get(item.product_barcode) || 0) + item.quantity);
+  }
+
+  const { data: invoiceItems, error } = await inventoryClient
+    .from('invoice_items')
+    .select('product_barcode, quantity')
+    .eq('invoice_id', quotationId);
+
+  if (error) {
+    throw new Error(`تعذر التحقق من عناصر فاتورة المخزون: ${error.message}`);
+  }
+
+  const actualQty = new Map<string, number>();
+  for (const item of invoiceItems || []) {
+    const barcode = String(item.product_barcode || '');
+    if (!barcode) continue;
+    actualQty.set(barcode, (actualQty.get(barcode) || 0) + Number(item.quantity || 0));
+  }
+
+  const missingOrMismatched = Array.from(expectedQty.entries()).filter(([barcode, expected]) => {
+    return (actualQty.get(barcode) || 0) !== expected;
+  });
+
+  if (missingOrMismatched.length > 0) {
+    const barcodes = missingOrMismatched.map(([barcode]) => barcode).join(', ');
+    throw new Error(`فشل إنشاء الفاتورة في نظام المخزون: بعض المنتجات لم تُسجل في الفاتورة (${barcodes}).`);
+  }
+}
+
 async function saveOrderLocally(payload: OrderPayload, quotationId: string, orderNumber: string, rpcSuccess: boolean, joudaClient: SupabaseClient) {
   const total = payload.subtotal + (payload.delivery_fee || 0);
 
@@ -443,6 +475,16 @@ Deno.serve(async (req: Request) => {
     
     // 6. Create Quotation in Inventory
     const { quotationId, success: rpcSuccess } = await createInventoryQuotation(payload, rpcItems, packageDiscount, config, inventoryClient, invoiceId, idempotencyKey, orderNumber);
+
+    if (rpcSuccess) {
+      try {
+        await verifyInventoryQuotationItems(quotationId, rpcItems, inventoryClient);
+      } catch (verifyErr: any) {
+        console.error('Inventory quotation item verification failed:', verifyErr);
+        await voidQuotation(quotationId, config, inventoryClient);
+        return jsonResponse({ success: false, message: verifyErr.message || 'فشل التحقق من عناصر فاتورة المخزون.' }, 200);
+      }
+    }
 
     // 7. Save to JoudaApp & Compensate on Failure
     let orderRecord: any = null;

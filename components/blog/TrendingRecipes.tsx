@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Flame, ChefHat, ArrowLeft, ArrowRight, BarChart3, ArrowUpLeft, Layers } from 'lucide-react';
+import { Clock, ChefHat, ArrowLeft } from 'lucide-react';
 import { fetchRecipesFromSupabase, Recipe } from '../../services/supabaseService';
 
-const RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 const RECIPE_IDX_KEY = 'jouda_recipe_idx_v2';
+const LEGACY_RECIPE_LIST_KEY = 'jouda_recipe_list_v2';
 
 export const TrendingRecipes: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -14,16 +14,8 @@ export const TrendingRecipes: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        let list: Recipe[] = [];
-        const cachedList = localStorage.getItem(RECIPE_LIST_KEY);
-        if (cachedList) {
-          list = JSON.parse(cachedList);
-        } else {
-          list = await fetchRecipesFromSupabase();
-          if (list.length > 0) {
-            localStorage.setItem(RECIPE_LIST_KEY, JSON.stringify(list));
-          }
-        }
+        localStorage.removeItem(LEGACY_RECIPE_LIST_KEY);
+        const list = await fetchRecipesFromSupabase();
 
         if (list.length > 0) {
           const todayIdxStr = localStorage.getItem(RECIPE_IDX_KEY);

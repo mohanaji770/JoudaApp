@@ -114,11 +114,20 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
             </div>
           </div>
 
+          {product.is_active === false && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-4">
+              <p className="text-sm font-black text-red-700 dark:text-red-300 mb-1">غير نشط في Inventory</p>
+              <p className="text-xs leading-relaxed text-red-600 dark:text-red-300 font-bold">
+                هذا المنتج لن يظهر للعملاء حتى لو كان غير مخفي أو غير مرتبط بالمخزون. فعّله من Inventory ثم انتظر مزامنة المنتجات.
+              </p>
+            </div>
+          )}
+
           {/* Section 2: Store Status */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
             <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
               <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-brand-500" /> ظهور المنتج للعملاء
+                <SlidersHorizontal className="w-4 h-4 text-brand-500" /> ظهور وتوفر المنتج في التطبيق
               </h3>
             </div>
             <div className="p-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -129,8 +138,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 }`}
               >
                 <div className="flex flex-col items-start gap-1">
-                  <span className={`font-bold text-sm ${isHidden ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>إخفاء تماماً</span>
-                  <span className="text-[10px] text-gray-500">لا يظهر بتاتاً.</span>
+                  <span className={`font-bold text-sm ${isHidden ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>إخفاء من التطبيق</span>
+                  <span className="text-[10px] text-gray-500">يخفيه عن العملاء فقط.</span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-1 transition-colors flex shrink-0 ${isHidden ? 'bg-red-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                   <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isHidden ? '-translate-x-5' : 'translate-x-0'}`} />
@@ -147,8 +156,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 }`}
               >
                 <div className="flex flex-col items-start gap-1">
-                  <span className={`font-bold text-sm ${isOutOfStock ? 'text-amber-700 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>نفاذ الكمية</span>
-                  <span className="text-[10px] text-gray-500">يظهر كمنتج منتهي.</span>
+                  <span className={`font-bold text-sm ${isOutOfStock ? 'text-amber-700 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>إظهاره كنافد</span>
+                  <span className="text-[10px] text-gray-500">يبقى ظاهرًا بدون طلب.</span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-1 transition-colors flex shrink-0 ${isOutOfStock ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                   <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isOutOfStock ? '-translate-x-5' : 'translate-x-0'}`} />
@@ -167,9 +176,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, cat
                 <div className="flex flex-col items-start gap-1">
                   <span className={`font-bold text-sm flex items-center gap-1 ${isAlwaysAvailable ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
                     <Infinity className="w-3.5 h-3.5" />
-                    دائماً متوفر
+                    غير مرتبط بالمخزون
                   </span>
-                  <span className="text-[10px] text-gray-500">لا يرتبط بكمية المخزون.</span>
+                  <span className="text-[10px] text-gray-500">لا يعني أنه ظاهر للعملاء.</span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-1 transition-colors flex shrink-0 ${isAlwaysAvailable ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                   <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isAlwaysAvailable ? '-translate-x-5' : 'translate-x-0'}`} />

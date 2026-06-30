@@ -3,6 +3,7 @@ import { Product, Recipe, Article, FAQItem } from './supabaseService';
 
 const DB_NAME = 'JoudaDB';
 const DB_VERSION = 2;
+const MAX_COMPLETED_ORDERS = 50;
 
 export interface CompletedOrder {
   id: string;
@@ -454,6 +455,7 @@ export async function getStorageInfo(): Promise<{
 export async function saveCompletedOrder(order: CompletedOrder): Promise<void> {
   const db = await getDB();
   await db.put('completedOrders', order);
+  await pruneCompletedOrders(db);
 }
 
 export async function getCompletedOrders(): Promise<CompletedOrder[]> {
@@ -476,6 +478,18 @@ export async function deleteCompletedOrder(id: string): Promise<void> {
 export async function clearCompletedOrders(): Promise<void> {
   const db = await getDB();
   await db.clear('completedOrders');
+}
+
+async function pruneCompletedOrders(db: IDBPDatabase<JoudaDBSchema>): Promise<void> {
+  const orders = await db.getAllFromIndex('completedOrders', 'by-date');
+  const excessCount = orders.length - MAX_COMPLETED_ORDERS;
+  if (excessCount <= 0) return;
+
+  const tx = db.transaction('completedOrders', 'readwrite');
+  for (const order of orders.slice(0, excessCount)) {
+    await tx.store.delete(order.id);
+  }
+  await tx.done;
 }
 
 // ==========================

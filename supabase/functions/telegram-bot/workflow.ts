@@ -120,7 +120,7 @@ export const APP_ACTIONS: Record<string, Record<string, ActionDef>> = {
   },
   preparing: {
     reserve: {
-      nextStatus: 'reserved',
+      nextStatus: 'preparing',
       label: 'استلمت الطلب',
       emoji: '🚚',
       shippingLabel: 'استلمت مهمة الشحن',

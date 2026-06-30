@@ -33,6 +33,9 @@ Jouda is a React/Vite customer app with Supabase Edge Functions and a Capacitor 
 | 2026-06-27 | Telegram text commands reset for admin dashboard use | Legacy `/orders`, `/status`, `/cash`, `/mycash`, and `/chatid` were removed in favor of admin-only `/today`, `/queue`, and `/money` |
 | 2026-06-28 | Orders page cards simplified | Customer order cards now show a lighter status summary while detailed address/items/actions stay in the details sheet |
 | 2026-06-28 | Google review testimonials expanded on Jouda page | `JoudaPage` now hardcodes the written Google reviews from the provided extract until reviews move to Supabase |
+| 2026-06-29 | Inventory quotation item verification added | `submit-order` now compares requested `p_items` with Inventory `invoice_items` and voids mismatched quotations to prevent accepted app orders with missing invoice lines |
+| 2026-06-30 | Product availability labels clarified | Admin product labels now distinguish Inventory active state, app hiding, and stock tracking to reduce confusion around always-available products |
+| 2026-06-30 | Checkout location search moved to TomTom | `MapLocationPicker` now uses TomTom Search API for Sana'a location search with Photon as fallback |
 
 ## Known Risks
 
